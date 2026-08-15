@@ -6,11 +6,12 @@ export default async function WorksPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <h1 className="font-editorial mb-2 text-2xl">Exhibition</h1>
-      <p className="mb-8 max-w-lg text-sm text-ink-soft">
-        지금 이 순간,
-        <br />
-        누군가의 손끝에서 완성된 이야기들.
+      <p className="mb-3 text-xs font-semibold tracking-[0.15em] text-gold uppercase">Exhibition</p>
+      <h1 className="font-editorial mb-4 text-2xl leading-snug md:text-3xl">
+        시간을 견뎌낼 가치, 미래의 유산이 될 컬렉션.
+      </h1>
+      <p className="mb-8 max-w-lg text-sm leading-7 text-ink-soft">
+        미술사의 맥락 속에서 엄선된 작가들의 고유한 세계관을 만납니다.
       </p>
       <WorksBrowser artworks={artworks} />
     </div>

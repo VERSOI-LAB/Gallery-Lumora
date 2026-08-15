@@ -9,6 +9,7 @@ import type { Session } from "@supabase/supabase-js";
 const LINKS = [
   { href: "/works", label: "Exhibition" },
   { href: "/artists", label: "Artists" },
+  { href: "/commission", label: "Commission" },
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/about", label: "About" },

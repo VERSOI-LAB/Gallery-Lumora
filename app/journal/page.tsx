@@ -6,11 +6,12 @@ export default async function JournalPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <h1 className="font-editorial mb-2 text-2xl">Journal</h1>
-      <p className="mb-8 max-w-lg text-sm text-ink-soft">
-        미술사와 작가의 목소리,
-        <br />
-        컬렉팅의 이야기들 — 예술이 조금 더 가까워지는 시간.
+      <p className="mb-3 text-xs font-semibold tracking-[0.15em] text-gold uppercase">Journal</p>
+      <h1 className="font-editorial mb-4 text-2xl leading-snug md:text-3xl">
+        아는 만큼 깊어지는 예술의 울림, 루모라 저널.
+      </h1>
+      <p className="mb-8 max-w-lg text-sm leading-7 text-ink-soft">
+        미술의 역사적 흐름을 이해할 때 비로소 작품이 지닌 참된 가치가 보이기 시작합니다.
       </p>
       <JournalBrowser posts={posts} />
     </div>
