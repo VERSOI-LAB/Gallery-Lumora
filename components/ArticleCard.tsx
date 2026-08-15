@@ -1,0 +1,26 @@
+import Link from "next/link";
+import PlaceholderArt from "./PlaceholderArt";
+import { formatDate } from "@/lib/format";
+import { getJournalCategoryLabel } from "@/lib/journalTaxonomy";
+import type { JournalPost } from "@/lib/types";
+
+export default function ArticleCard({ post }: { post: JournalPost }) {
+  return (
+    <Link href={`/journal/${post.slug}`} className="group block">
+      <div className="aspect-[4/3] overflow-hidden border border-line">
+        <PlaceholderArt
+          hue={post.coverHue}
+          variant={post.coverVariant}
+          className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+        />
+      </div>
+      <div className="pt-2.5">
+        <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
+          {getJournalCategoryLabel(post.category)}
+        </span>
+        <h3 className="mt-1.5 text-sm leading-snug font-semibold text-ink">{post.title}</h3>
+        <div className="mt-1 text-xs text-ink-faint">{formatDate(post.publishedAt)}</div>
+      </div>
+    </Link>
+  );
+}

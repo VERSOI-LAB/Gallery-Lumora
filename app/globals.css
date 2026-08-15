@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #ffffff;
+  --paper-raised: #f8f7f2;
+  --ink: #1c1b16;
+  --ink-soft: #5c5748;
+  --ink-faint: #8a8471;
+  --line: #ddd6c1;
+  --line-strong: #c7bd9e;
+  --patina: #4b5d45;
+  --patina-soft: #e3e8da;
+  --gold: #a4772f;
+  --gold-soft: #f0e3c5;
+
+  /* Fixed warm-cream "directory board" treatment for the navbar and the
+     medium category menu. Unlike the page canvas above (pure white), this
+     never follows the system theme -- it's a deliberate cream panel that
+     sets the site chrome apart from the white page, same on every device. */
+  --board: #f2efe5;
+  --board-raised: #e9e3d0;
+  --board-ink: #1c1b16;
+  --board-ink-soft: #5c5748;
+  --board-ink-faint: #8a8471;
+  --board-line: #ddd6c1;
+  --board-accent: #4b5d45;
+  --board-accent-soft: #e3e8da;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-patina: var(--patina);
+  --color-patina-soft: var(--patina-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+
+  --color-board: var(--board);
+  --color-board-raised: var(--board-raised);
+  --color-board-ink: var(--board-ink);
+  --color-board-ink-soft: var(--board-ink-soft);
+  --color-board-ink-faint: var(--board-ink-faint);
+  --color-board-line: var(--board-line);
+  --color-board-accent: var(--board-accent);
+  --color-board-accent-soft: var(--board-accent-soft);
+
+  --font-display: "Nanum Myeongjo", "Noto Serif KR", "Apple SD Gothic Neo", Georgia,
+    "Times New Roman", serif;
+  --font-sans: "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+* {
+  border-color: var(--line);
+}
+
+/* Dual-thumb range slider: two overlapping <input type="range"> with a
+   transparent track (the visible track/fill is rendered separately behind
+   them) and pointer-events limited to the thumb so both handles stay
+   independently draggable. */
+.dual-range {
+  position: relative;
+  height: 16px;
+}
+.dual-range input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.dual-range input[type="range"]::-webkit-slider-runnable-track {
+  background: transparent;
+}
+.dual-range input[type="range"]::-moz-range-track {
+  background: transparent;
+}
+.dual-range input[type="range"]::-webkit-slider-thumb {
+  pointer-events: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--paper-raised);
+  border: 2px solid var(--patina);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
+.dual-range input[type="range"]::-moz-range-thumb {
+  pointer-events: auto;
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: var(--paper-raised);
+  border: 2px solid var(--patina);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}
