@@ -1,5 +1,3 @@
-import PlaceholderArt from "@/components/PlaceholderArt";
-
 const PILLARS = [
   { tag: "ACQUIRE", title: "완성작 구매", body: "작가가 올린 원작을 즉시 소장" },
   { tag: "COMMISSION", title: "1:1 커미션", body: "같은 화풍으로 나만의 작품 의뢰" },
@@ -25,11 +23,13 @@ const PRINCIPLES = [
 export default function AboutPage() {
   return (
     <div>
-      <PlaceholderArt
-        hue={96}
-        variant={1}
-        seed="lumora-about-hero"
-        className="h-[220px] w-full border-b border-line md:h-[340px]"
+      <video
+        src="/videos/about-hero.mp4"
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="block h-auto w-full border-b border-line"
       />
 
       <div className="mx-auto max-w-2xl px-5 py-10 md:px-8">

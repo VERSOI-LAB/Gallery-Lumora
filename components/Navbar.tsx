@@ -13,7 +13,6 @@ const LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/about", label: "About" },
-  { href: "/mypage", label: "마이페이지" },
 ];
 
 export default function Navbar() {
@@ -41,11 +40,11 @@ export default function Navbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-board-line bg-board">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
-        <Link href="/" className="font-display text-lg font-bold tracking-tight text-board-ink">
+        <Link href="/" className="font-editorial text-lg tracking-[0.08em] text-board-ink">
           GALLERY <span className="text-board-accent">LUMORA</span>
         </Link>
 
-        <nav className="hidden items-center gap-8 text-sm text-board-ink-soft md:flex">
+        <nav className="font-editorial hidden items-center gap-8 text-sm tracking-wide text-board-ink-soft md:flex">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} className="hover:text-board-ink">
               {l.label}
@@ -89,7 +88,7 @@ export default function Navbar() {
               key={l.href}
               href={l.href}
               onClick={() => setOpen(false)}
-              className="px-1 py-2.5 text-sm text-board-ink-soft"
+              className="font-editorial px-1 py-2.5 text-sm tracking-wide text-board-ink-soft"
             >
               {l.label}
             </Link>

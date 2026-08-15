@@ -6,7 +6,7 @@ export default async function WorksPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <h1 className="mb-8 font-display text-2xl">작품 둘러보기</h1>
+      <h1 className="mb-8 font-display text-2xl">Exhibition</h1>
       <WorksBrowser artworks={artworks} />
     </div>
   );

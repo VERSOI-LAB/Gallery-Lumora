@@ -27,7 +27,7 @@ export default async function WorkDetailPage({
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
       <p className="mb-6 text-xs text-ink-faint">
         <Link href="/works" className="hover:text-ink">
-          작품 둘러보기
+          Exhibition
         </Link>{" "}
         / {mediumType?.nameKo ?? artwork.mediumTypeCode} / {artist.name}
       </p>
