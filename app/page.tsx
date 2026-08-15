@@ -23,19 +23,19 @@ export default async function HomePage() {
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-patina">
             Gallery Lumora
           </p>
-          <h1 className="mb-4 max-w-xl text-3xl leading-tight font-display text-balance md:text-5xl">
-            다음 작품을,
-            <br />그 작가와 함께 짓다
+          <h1 className="font-editorial mb-4 max-w-xl text-3xl leading-tight md:text-5xl">
+            세상에 없던 한 점을,
+            <br />
+            내가 고른 작가와 함께 만들어가다
           </h1>
           <p className="mb-8 max-w-md text-sm text-ink-soft md:text-base">
-            완성작을 소장하거나, 마음에 든 화풍으로 나만의 한 점을 의뢰하세요.
+            이미 완성된 순간을 소장하거나,
+            <br />
+            아직 태어나지 않은 한 점을 함께 기다려보세요.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/works" className={buttonClasses("ghost")}>
               작품 둘러보기
-            </Link>
-            <Link href="/artists" className={buttonClasses("primary")}>
-              커미션 시작하기
             </Link>
           </div>
         </div>
@@ -43,7 +43,7 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-5 py-12 md:px-8">
         <div className="mb-6 flex items-baseline justify-between">
-          <h2 className="font-display text-xl">이 주의 작가</h2>
+          <h2 className="font-editorial text-xl">지금, 이 순간의 작가들</h2>
           <Link href="/artists" className="text-xs text-ink-soft hover:text-ink">
             전체 보기 →
           </Link>
@@ -58,7 +58,7 @@ export default async function HomePage() {
       <section className="border-t border-line">
         <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
           <div className="mb-6 flex items-baseline justify-between">
-            <h2 className="font-display text-xl">신작</h2>
+            <h2 className="font-editorial text-xl">새로 태어난 작품들</h2>
             <Link href="/works" className="text-xs text-ink-soft hover:text-ink">
               전체 보기 →
             </Link>

@@ -34,25 +34,23 @@ export default function AboutPage() {
 
       <div className="mx-auto max-w-2xl px-5 py-10 md:px-8">
         <p className="mb-4 text-xs font-semibold tracking-wide text-patina uppercase">About Lumora</p>
-        <h1 className="mb-4 font-display text-2xl leading-snug md:text-3xl">
-          완성작을 파는 곳이 아니라,
+        <h1 className="font-editorial mb-4 text-2xl leading-snug md:text-3xl">
+          완성된 그림이 아니라,
           <br />
-          다음 작품을 함께 짓는 곳
+          당신의 이야기를 써내려가는 곳
         </h1>
         <p className="mb-4 text-sm leading-8 text-ink-soft">
-          15세기 메디치 가문은 완성된 그림이 아니라 화가의 화풍을 보고 다음 작품을 주문했습니다.
-          Lumora는 이 후원(patronage) 모델을 오늘의 커머스로 옮깁니다.
+          15세기 피렌체, 메디치 가문은 완성된 그림이 아니라 화가의 손끝에서 다음에 태어날 이야기를 상상하며 작품을 주문했습니다. 그 오래된 후원(patronage)의 마음을, Lumora는 지금 이 순간의 컬렉터에게 다시 건넵니다.
         </p>
         <p className="text-sm leading-8 text-ink-soft">
-          작가는 자신의 작품을 올려 판매하고, 컬렉터는 그 작품을 그대로 소장하거나 같은 화풍으로
-          자신만의 한 점을 의뢰할 수 있습니다.
+          작가는 자신의 이야기를 캔버스에 옮기고, 컬렉터는 그 이야기의 다음 장을 함께 씁니다.
         </p>
       </div>
 
       <div className="border-t border-line">
         <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
           <h2 className="mb-1 font-display text-xl">Lumora가 하는 일</h2>
-          <p className="mb-8 text-sm text-ink-faint">네 가지 축으로 미술을 잇습니다</p>
+          <p className="mb-8 text-sm text-ink-faint">Lumora가 잇는 네 가지 순간</p>
           <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
             {PILLARS.map((p) => (
               <div key={p.tag} className="border border-line p-5">

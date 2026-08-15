@@ -6,9 +6,11 @@ export default async function JournalPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <h1 className="mb-2 font-display text-2xl">Journal</h1>
+      <h1 className="font-editorial mb-2 text-2xl">Journal</h1>
       <p className="mb-8 max-w-lg text-sm text-ink-soft">
-        미술사, 작가 인터뷰, 컬렉팅 가이드 — 미술을 낯설지 않게 만드는 이야기들.
+        미술사와 작가의 목소리,
+        <br />
+        컬렉팅의 이야기들 — 예술이 조금 더 가까워지는 시간.
       </p>
       <JournalBrowser posts={posts} />
     </div>

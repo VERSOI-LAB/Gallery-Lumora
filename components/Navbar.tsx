@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
@@ -65,9 +64,6 @@ export default function Navbar() {
               로그인
             </Link>
           )}
-          <Link href="/artists" className={buttonClasses("primary", "sm")}>
-            커미션 시작하기
-          </Link>
         </div>
 
         <button
@@ -110,13 +106,6 @@ export default function Navbar() {
               로그인
             </Link>
           )}
-          <Link
-            href="/artists"
-            onClick={() => setOpen(false)}
-            className={`mt-2 justify-center ${buttonClasses("primary", "sm")}`}
-          >
-            커미션 시작하기
-          </Link>
         </div>
       )}
     </header>
