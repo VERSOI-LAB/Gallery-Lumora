@@ -12,7 +12,12 @@ export default async function HomePage() {
   return (
     <div>
       <section className="border-b border-line">
-        <PlaceholderArt hue={96} variant={1} className="h-[220px] w-full md:h-[340px]" />
+        <PlaceholderArt
+          hue={96}
+          variant={1}
+          seed="lumora-home-hero"
+          className="h-[220px] w-full md:h-[340px]"
+        />
         <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-14">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-patina">
             Gallery Lumora

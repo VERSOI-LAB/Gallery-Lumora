@@ -42,14 +42,15 @@ export default async function JournalDetailPage({
       <PlaceholderArt
         hue={post.coverHue}
         variant={post.coverVariant}
-        className="mb-8 aspect-[3/1] w-full border border-line"
+        seed={post.slug}
+        className="mb-8 aspect-[3/1] w-full"
       />
 
       <div className="mx-auto max-w-2xl">
         <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
           {getJournalCategoryLabel(post.category)}
         </span>
-        <h1 className="mt-2 mb-3 font-display text-2xl leading-snug md:text-3xl">{post.title}</h1>
+        <h1 className="font-editorial mt-2 mb-3 text-2xl leading-snug italic md:text-3xl">{post.title}</h1>
         <div className="mb-8 text-xs text-ink-faint">
           {formatDate(post.publishedAt)} · {post.readMinutes}분 읽기 · {post.author}
         </div>
@@ -71,6 +72,8 @@ export default async function JournalDetailPage({
                   <div className="mx-auto mb-2 h-20 w-20 overflow-hidden rounded-full border border-line">
                     <PlaceholderArt
                       hue={relatedArtist.hue}
+                      seed={relatedArtist.slug}
+                      kind="portrait"
                       className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
@@ -80,10 +83,11 @@ export default async function JournalDetailPage({
               )}
               {relatedArtwork && (
                 <Link href={`/works/${relatedArtwork.slug}`} className="group block text-center">
-                  <div className="mx-auto mb-2 aspect-square w-20 overflow-hidden border border-line">
+                  <div className="mx-auto mb-2 aspect-square w-20 overflow-hidden">
                     <PlaceholderArt
                       hue={relatedArtwork.hue}
                       variant={relatedArtwork.variant}
+                      seed={relatedArtwork.slug}
                       className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>

@@ -118,8 +118,13 @@ export default function CheckoutForm({
 
         <aside className="h-fit border border-line p-5">
           <div className="mb-4 flex gap-3">
-            <div className="h-[70px] w-[56px] flex-none overflow-hidden border border-line">
-              <PlaceholderArt hue={artwork.hue} variant={artwork.variant} className="h-full w-full" />
+            <div className="h-[70px] w-[56px] flex-none overflow-hidden">
+              <PlaceholderArt
+                hue={artwork.hue}
+                variant={artwork.variant}
+                seed={artwork.slug}
+                className="h-full w-full"
+              />
             </div>
             <div>
               <div className="text-sm font-medium">{artwork.title}</div>

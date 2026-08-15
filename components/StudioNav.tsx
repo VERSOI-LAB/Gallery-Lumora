@@ -22,8 +22,8 @@ export default function StudioNav() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`block px-3 py-2 text-sm ${
-                  active ? "bg-patina-soft font-medium text-ink" : "text-ink-soft hover:text-ink"
+                className={`block border-l-2 px-3 py-2 text-sm ${
+                  active ? "border-patina font-medium text-ink" : "border-transparent text-ink-soft hover:text-ink"
                 }`}
               >
                 {item.label}

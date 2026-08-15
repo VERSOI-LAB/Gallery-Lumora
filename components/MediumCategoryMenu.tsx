@@ -46,7 +46,7 @@ export default function MediumCategoryMenu({
               </button>
 
               {isOpen && (
-                <div className="border-board-line bg-board-raised md:absolute md:top-0 md:left-full md:z-20 md:w-56 md:border md:shadow-lg">
+                <div className="border-board-line bg-board-raised md:absolute md:top-0 md:left-full md:z-20 md:w-56 md:border">
                   {category.types.map((type) => {
                     const checked = selected.includes(type.code);
                     return (
@@ -73,13 +73,13 @@ export default function MediumCategoryMenu({
       </div>
 
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 border-t border-board-line p-3">
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-board-line p-3">
           {selected.map((code) => (
             <button
               key={code}
               type="button"
               onClick={() => onToggle(code)}
-              className="flex items-center gap-1 bg-board-accent-soft px-2 py-1 text-[11px] text-board-accent"
+              className="flex items-center gap-1 text-[11px] text-board-accent hover:underline"
             >
               {getMediumTypeLabel(code)}
               <span aria-hidden>✕</span>

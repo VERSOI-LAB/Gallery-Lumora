@@ -7,10 +7,11 @@ import type { MerchProduct } from "@/lib/types";
 export default function MerchProductCard({ product }: { product: MerchProduct }) {
   return (
     <Link href={`/shop/${product.slug}`} className="group block">
-      <div className="relative aspect-square overflow-hidden border border-line">
+      <div className="relative aspect-square overflow-hidden">
         <PlaceholderArt
           hue={product.hue}
           variant={product.variant}
+          seed={product.slug}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
         {product.fulfillment === "edition" && (

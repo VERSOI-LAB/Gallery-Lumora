@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import ArtworkCard from "./ArtworkCard";
-import { buttonClasses } from "@/lib/ui";
+import { buttonClasses, tabClasses } from "@/lib/ui";
 import { getMediumTypeLabel } from "@/lib/mediumTaxonomy";
 import type { Artist, Artwork } from "@/lib/types";
 
@@ -21,16 +21,9 @@ export default function ArtistProfileTabs({
 
   return (
     <div className="pb-16">
-      <div className="mb-8 flex gap-6 overflow-x-auto border-b border-line text-sm text-ink-faint">
+      <div className="mb-8 flex gap-6 overflow-x-auto border-b border-line">
         {TABS.map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setTab(t)}
-            className={`-mb-px shrink-0 border-b-2 pb-3 ${
-              tab === t ? "border-patina text-ink" : "border-transparent hover:text-ink"
-            }`}
-          >
+          <button key={t} type="button" onClick={() => setTab(t)} className={`-mb-px shrink-0 ${tabClasses(tab === t)}`}>
             {t}
             {t === "작품" ? ` (${works.length})` : ""}
           </button>
@@ -56,22 +49,23 @@ export default function ArtistProfileTabs({
               현재 {artist.name} 작가는 신규 커미션을 받지 않고 있습니다. 대기 등록은 가능합니다.
             </p>
           )}
-          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <div className="border border-line p-4">
-              <div className="mb-1 text-xs text-ink-faint uppercase">가능 매체</div>
-              <div className="text-sm font-semibold">
-                {artist.commission.media.map(getMediumTypeLabel).join(" · ")}
+          <dl className="mb-8">
+            {[
+              { label: "가능 매체", value: artist.commission.media.map(getMediumTypeLabel).join(" · ") },
+              { label: "평균 제작 기간", value: artist.commission.leadTime },
+              { label: "커미션 가격대", value: artist.commission.priceRange },
+            ].map((row, i) => (
+              <div
+                key={row.label}
+                className={`flex flex-col gap-1 py-3 sm:flex-row sm:gap-6 ${i > 0 ? "border-t border-line" : ""}`}
+              >
+                <dt className="w-full flex-none text-xs tracking-wide text-ink-faint uppercase sm:w-36">
+                  {row.label}
+                </dt>
+                <dd className="text-sm font-semibold">{row.value}</dd>
               </div>
-            </div>
-            <div className="border border-line p-4">
-              <div className="mb-1 text-xs text-ink-faint uppercase">평균 제작 기간</div>
-              <div className="text-sm font-semibold">{artist.commission.leadTime}</div>
-            </div>
-            <div className="border border-line p-4">
-              <div className="mb-1 text-xs text-ink-faint uppercase">커미션 가격대</div>
-              <div className="text-sm font-semibold">{artist.commission.priceRange}</div>
-            </div>
-          </div>
+            ))}
+          </dl>
           <Link href={`/artists/${artist.slug}/commission`} className={buttonClasses("primary")}>
             {artist.commission.accepting ? "커미션 의뢰하기" : "대기 등록하기"}
           </Link>

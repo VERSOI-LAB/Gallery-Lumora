@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
+import { supabase } from "@/lib/supabase";
+import type { Session } from "@supabase/supabase-js";
 
 const LINKS = [
   { href: "/works", label: "Exhibition" },
@@ -10,10 +13,30 @@ const LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/about", label: "About" },
+  { href: "/mypage", label: "마이페이지" },
 ];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setOpen(false);
+    router.push("/");
+    router.refresh();
+  }
+
+  const displayName = (session?.user.user_metadata?.name as string | undefined) || session?.user.email || "";
 
   return (
     <header className="sticky top-0 z-30 border-b border-board-line bg-board">
@@ -30,9 +53,23 @@ export default function Navbar() {
           ))}
         </nav>
 
-        <Link href="/artists" className={`hidden md:inline-flex ${buttonClasses("primary", "sm")}`}>
-          커미션 시작하기
-        </Link>
+        <div className="hidden items-center gap-4 md:flex">
+          {session ? (
+            <div className="flex items-center gap-3 text-sm text-board-ink-soft">
+              <span className="max-w-[10rem] truncate">{displayName} 님</span>
+              <button type="button" onClick={handleLogout} className="hover:text-board-ink">
+                로그아웃
+              </button>
+            </div>
+          ) : (
+            <Link href="/login" className="text-sm text-board-ink-soft hover:text-board-ink">
+              로그인
+            </Link>
+          )}
+          <Link href="/artists" className={buttonClasses("primary", "sm")}>
+            커미션 시작하기
+          </Link>
+        </div>
 
         <button
           type="button"
@@ -57,6 +94,23 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
+          {session ? (
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-1 py-2.5 text-left text-sm text-board-ink-soft"
+            >
+              로그아웃 ({displayName})
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setOpen(false)}
+              className="px-1 py-2.5 text-sm text-board-ink-soft"
+            >
+              로그인
+            </Link>
+          )}
           <Link
             href="/artists"
             onClick={() => setOpen(false)}

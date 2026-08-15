@@ -21,6 +21,8 @@ export default function ArtistCard({
       >
         <PlaceholderArt
           hue={artist.hue}
+          seed={artist.slug}
+          kind="portrait"
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
       </div>

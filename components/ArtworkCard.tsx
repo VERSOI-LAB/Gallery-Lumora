@@ -6,10 +6,11 @@ import type { Artwork } from "@/lib/types";
 export default function ArtworkCard({ artwork }: { artwork: Artwork }) {
   return (
     <Link href={`/works/${artwork.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden border border-line">
+      <div className="relative aspect-[4/5] overflow-hidden">
         <PlaceholderArt
           hue={artwork.hue}
           variant={artwork.variant}
+          seed={artwork.slug}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
         {artwork.sold && (

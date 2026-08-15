@@ -33,16 +33,17 @@ export default async function WorkDetailPage({
       </p>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.3fr_1fr]">
-        <div className="border border-line">
+        <div>
           <PlaceholderArt
             hue={artwork.hue}
             variant={artwork.variant}
+            seed={artwork.slug}
             className="aspect-[4/5] w-full"
           />
         </div>
 
         <div>
-          <h1 className="mb-1 font-display text-2xl">{artwork.title}</h1>
+          <h1 className="font-editorial mb-1 text-2xl italic">{artwork.title}</h1>
           <Link href={`/artists/${artist.slug}`} className="text-sm text-patina hover:underline">
             {artist.name} →
           </Link>

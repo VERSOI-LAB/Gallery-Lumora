@@ -25,7 +25,12 @@ const PRINCIPLES = [
 export default function AboutPage() {
   return (
     <div>
-      <PlaceholderArt hue={96} variant={1} className="h-[220px] w-full border-b border-line md:h-[340px]" />
+      <PlaceholderArt
+        hue={96}
+        variant={1}
+        seed="lumora-about-hero"
+        className="h-[220px] w-full border-b border-line md:h-[340px]"
+      />
 
       <div className="mx-auto max-w-2xl px-5 py-10 md:px-8">
         <p className="mb-4 text-xs font-semibold tracking-wide text-patina uppercase">About Lumora</p>

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import ArticleCard from "@/components/ArticleCard";
 import PlaceholderArt from "@/components/PlaceholderArt";
+import { tabClasses } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
 import { JOURNAL_CATEGORIES, getJournalCategoryLabel } from "@/lib/journalTaxonomy";
 import type { JournalPost } from "@/lib/types";
@@ -21,25 +22,12 @@ export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setCategory(null)}
-          className={`border px-3 py-1.5 text-xs ${
-            category === null ? "border-patina text-patina font-semibold" : "border-line text-ink-soft"
-          }`}
-        >
+      <div className="mb-6 flex flex-wrap gap-6 border-b border-line">
+        <button type="button" onClick={() => setCategory(null)} className={tabClasses(category === null, "sm")}>
           전체
         </button>
         {JOURNAL_CATEGORIES.map((c) => (
-          <button
-            key={c.code}
-            type="button"
-            onClick={() => setCategory(c.code)}
-            className={`border px-3 py-1.5 text-xs ${
-              category === c.code ? "border-patina text-patina font-semibold" : "border-line text-ink-soft"
-            }`}
-          >
+          <button key={c.code} type="button" onClick={() => setCategory(c.code)} className={tabClasses(category === c.code, "sm")}>
             {c.nameKo}
           </button>
         ))}
@@ -48,12 +36,13 @@ export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
       {category === null && featured && (
         <Link
           href={`/journal/${featured.slug}`}
-          className="group mb-10 grid grid-cols-1 gap-0 border border-line md:grid-cols-[1.1fr_1fr]"
+          className="group mb-10 grid grid-cols-1 gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10"
         >
           <div className="aspect-[4/3] overflow-hidden md:aspect-auto">
             <PlaceholderArt
               hue={featured.coverHue}
               variant={featured.coverVariant}
+              seed={featured.slug}
               className="h-full w-full min-h-[200px] transition-transform duration-500 group-hover:scale-105"
             />
           </div>

@@ -7,10 +7,11 @@ import type { JournalPost } from "@/lib/types";
 export default function ArticleCard({ post }: { post: JournalPost }) {
   return (
     <Link href={`/journal/${post.slug}`} className="group block">
-      <div className="aspect-[4/3] overflow-hidden border border-line">
+      <div className="aspect-[4/3] overflow-hidden">
         <PlaceholderArt
           hue={post.coverHue}
           variant={post.coverVariant}
+          seed={post.slug}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
       </div>

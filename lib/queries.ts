@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 import type { Database } from "./database.types";
-import type { Artist, Artwork, CommissionInquiry, JournalPost, MerchProduct, MerchVariant } from "./types";
+import type { Artist, Artwork, CommissionInquiry, JournalPost, MerchOrder, MerchProduct, MerchVariant } from "./types";
 
 type ArtistRow = Database["public"]["Tables"]["artists"]["Row"];
 type ArtworkRow = Database["public"]["Tables"]["artworks"]["Row"];
@@ -8,6 +8,7 @@ type InquiryRow = Database["public"]["Tables"]["commission_inquiries"]["Row"];
 type JournalRow = Database["public"]["Tables"]["journal_posts"]["Row"];
 type MerchProductRow = Database["public"]["Tables"]["merch_products"]["Row"];
 type MerchVariantRow = Database["public"]["Tables"]["merch_variants"]["Row"];
+type MerchOrderByPhoneRow = Database["public"]["Functions"]["get_merch_orders_by_phone"]["Returns"][number];
 type ArtworkWithArtistRow = ArtworkRow & { artists: { name: string } | null };
 type MerchProductWithRelationsRow = MerchProductRow & {
   artworks: { slug: string; title: string } | null;
@@ -123,6 +124,28 @@ function toMerchVariant(row: MerchVariantRow): MerchVariant {
     label: row.label,
     stockQuantity: row.stock_quantity,
     priceDelta: row.price_delta,
+  };
+}
+
+function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    productId: row.product_id,
+    productSlug: row.product_slug ?? "",
+    productTitle: row.product_title ?? "(삭제된 상품)",
+    productCategory: row.product_category ?? "",
+    hue: row.cover_hue ?? 90,
+    variant: row.cover_variant ?? 0,
+    variantLabel: row.variant_label,
+    editionNumber: row.edition_number,
+    quantity: row.quantity,
+    unitPrice: row.unit_price,
+    amount: row.amount,
+    shippingAddress: row.shipping_address,
+    phone: row.phone,
+    paymentMethod: row.payment_method,
+    createdAt: row.created_at,
   };
 }
 
@@ -428,4 +451,10 @@ export async function purchaseMerch(
   if (error) throw error;
   const row = data[0];
   return { orderNumber: row.order_number, amount: row.amount };
+}
+
+export async function getMerchOrdersByPhone(phone: string): Promise<MerchOrder[]> {
+  const { data, error } = await supabase.rpc("get_merch_orders_by_phone", { p_phone: phone });
+  if (error) throw error;
+  return data.map(toMerchOrder);
 }

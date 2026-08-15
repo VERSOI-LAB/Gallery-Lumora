@@ -35,8 +35,13 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
     <div className="divide-y divide-line border-y border-line">
       {artworks.map((artwork) => (
         <div key={artwork.id} className="flex items-center gap-4 py-4">
-          <div className="h-16 w-[52px] flex-none overflow-hidden border border-line">
-            <PlaceholderArt hue={artwork.hue} variant={artwork.variant} className="h-full w-full" />
+          <div className="h-16 w-[52px] flex-none overflow-hidden">
+            <PlaceholderArt
+              hue={artwork.hue}
+              variant={artwork.variant}
+              seed={artwork.slug}
+              className="h-full w-full"
+            />
           </div>
 
           <div className="min-w-0 flex-1">

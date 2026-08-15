@@ -79,6 +79,26 @@ export interface MerchVariant {
   priceDelta: number;
 }
 
+export interface MerchOrder {
+  id: string;
+  orderNumber: string;
+  productId: string;
+  productSlug: string;
+  productTitle: string;
+  productCategory: string;
+  hue: number;
+  variant: number;
+  variantLabel: string | null;
+  editionNumber: number | null;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  shippingAddress: string;
+  phone: string;
+  paymentMethod: string;
+  createdAt: string;
+}
+
 export interface CommissionInquiry {
   id: string;
   artistId: string;

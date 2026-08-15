@@ -494,6 +494,30 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_merch_orders_by_phone: {
+        Args: {
+          p_phone: string
+        }
+        Returns: {
+          amount: number
+          cover_hue: number
+          cover_variant: number
+          created_at: string
+          edition_number: number | null
+          id: string
+          order_number: string
+          payment_method: string
+          phone: string
+          product_category: string
+          product_id: string
+          product_slug: string
+          product_title: string
+          quantity: number
+          shipping_address: string
+          unit_price: number
+          variant_label: string | null
+        }[]
+      }
       purchase_artwork: {
         Args: {
           p_artwork_id: string

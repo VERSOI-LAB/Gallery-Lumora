@@ -39,8 +39,13 @@ export default async function MerchProductPage({
       </p>
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.1fr_1fr]">
-        <div className="border border-line">
-          <PlaceholderArt hue={product.hue} variant={product.variant} className="aspect-square w-full" />
+        <div>
+          <PlaceholderArt
+            hue={product.hue}
+            variant={product.variant}
+            seed={product.slug}
+            className="aspect-square w-full"
+          />
         </div>
 
         <div>

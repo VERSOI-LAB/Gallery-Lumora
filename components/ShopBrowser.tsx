@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import MerchProductCard from "@/components/MerchProductCard";
+import { tabClasses } from "@/lib/ui";
 import { MERCH_CATEGORIES } from "@/lib/merchTaxonomy";
 import type { MerchProduct } from "@/lib/types";
 
@@ -15,25 +16,12 @@ export default function ShopBrowser({ products }: { products: MerchProduct[] }) 
 
   return (
     <div>
-      <div className="mb-8 flex flex-wrap gap-2">
-        <button
-          type="button"
-          onClick={() => setCategory(null)}
-          className={`border px-3 py-1.5 text-xs ${
-            category === null ? "border-patina text-patina font-semibold" : "border-line text-ink-soft"
-          }`}
-        >
+      <div className="mb-8 flex flex-wrap gap-6 border-b border-line">
+        <button type="button" onClick={() => setCategory(null)} className={tabClasses(category === null, "sm")}>
           전체
         </button>
         {MERCH_CATEGORIES.map((c) => (
-          <button
-            key={c.code}
-            type="button"
-            onClick={() => setCategory(c.code)}
-            className={`border px-3 py-1.5 text-xs ${
-              category === c.code ? "border-patina text-patina font-semibold" : "border-line text-ink-soft"
-            }`}
-          >
+          <button key={c.code} type="button" onClick={() => setCategory(c.code)} className={tabClasses(category === c.code, "sm")}>
             {c.nameKo}
           </button>
         ))}
