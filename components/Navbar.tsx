@@ -7,12 +7,12 @@ import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
 
 const LINKS = [
+  { href: "/about", label: "About" },
   { href: "/works", label: "Exhibition" },
   { href: "/artists", label: "Artists" },
-  { href: "/commission", label: "Commission" },
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
-  { href: "/about", label: "About" },
+  { href: "/commission", label: "Contact" },
 ];
 
 export default function Navbar() {
@@ -61,9 +61,14 @@ export default function Navbar() {
               </button>
             </div>
           ) : (
-            <Link href="/login" className="text-sm text-board-ink-soft hover:text-board-ink">
-              로그인
-            </Link>
+            <div className="flex items-center gap-3 text-sm text-board-ink-soft">
+              <Link href="/login" className="hover:text-board-ink">
+                로그인
+              </Link>
+              <Link href="/signup" className="hover:text-board-ink">
+                회원가입
+              </Link>
+            </div>
           )}
         </div>
 
@@ -99,13 +104,22 @@ export default function Navbar() {
               로그아웃 ({displayName})
             </button>
           ) : (
-            <Link
-              href="/login"
-              onClick={() => setOpen(false)}
-              className="px-1 py-2.5 text-sm text-board-ink-soft"
-            >
-              로그인
-            </Link>
+            <>
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="px-1 py-2.5 text-sm text-board-ink-soft"
+              >
+                로그인
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setOpen(false)}
+                className="px-1 py-2.5 text-sm text-board-ink-soft"
+              >
+                회원가입
+              </Link>
+            </>
           )}
         </div>
       )}

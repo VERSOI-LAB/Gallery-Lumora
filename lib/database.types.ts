@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      artist_applications: {
+        Row: {
+          artist_name: string
+          bio: string
+          commission_media: string[]
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          name_en: string
+          phone: string
+          portfolio_url: string
+          sample_artwork_note: string
+          sample_artwork_title: string
+          status: string
+          style_tags: string[]
+          tagline: string
+          user_id: string
+        }
+        Insert: {
+          artist_name?: string
+          bio?: string
+          commission_media?: string[]
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          name_en?: string
+          phone?: string
+          portfolio_url?: string
+          sample_artwork_note?: string
+          sample_artwork_title?: string
+          status?: string
+          style_tags?: string[]
+          tagline?: string
+          user_id: string
+        }
+        Update: {
+          artist_name?: string
+          bio?: string
+          commission_media?: string[]
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          name_en?: string
+          phone?: string
+          portfolio_url?: string
+          sample_artwork_note?: string
+          sample_artwork_title?: string
+          status?: string
+          style_tags?: string[]
+          tagline?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       artists: {
         Row: {
           bio: string
@@ -66,6 +126,7 @@ export type Database = {
         Row: {
           artist_id: string
           created_at: string
+          description: string
           hue: number
           id: string
           medium_type_code: string
@@ -81,6 +142,7 @@ export type Database = {
         Insert: {
           artist_id: string
           created_at?: string
+          description?: string
           hue?: number
           id?: string
           medium_type_code: string
@@ -96,6 +158,7 @@ export type Database = {
         Update: {
           artist_id?: string
           created_at?: string
+          description?: string
           hue?: number
           id?: string
           medium_type_code?: string
@@ -176,6 +239,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      general_inquiries: {
+        Row: {
+          category: string
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          phone: string
+          status: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string
+          status?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          phone?: string
+          status?: string
+        }
+        Relationships: []
       }
       journal_posts: {
         Row: {
@@ -489,21 +585,60 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          artist_id: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+          role: string
+          username: string
+        }
+        Insert: {
+          artist_id?: string | null
+          created_at?: string
+          email?: string
+          id: string
+          name?: string
+          phone?: string
+          role?: string
+          username?: string
+        }
+        Update: {
+          artist_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+          role?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_artist_id_fkey"
+            columns: ["artist_id"]
+            isOneToOne: false
+            referencedRelation: "artists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       get_merch_orders_by_phone: {
-        Args: {
-          p_phone: string
-        }
+        Args: { p_phone: string }
         Returns: {
           amount: number
           cover_hue: number
           cover_variant: number
           created_at: string
-          edition_number: number | null
+          edition_number: number
           id: string
           order_number: string
           payment_method: string
@@ -515,9 +650,10 @@ export type Database = {
           quantity: number
           shipping_address: string
           unit_price: number
-          variant_label: string | null
+          variant_label: string
         }[]
       }
+      is_username_available: { Args: { p_username: string }; Returns: boolean }
       purchase_artwork: {
         Args: {
           p_artwork_id: string

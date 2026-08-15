@@ -44,15 +44,7 @@ export default function AboutPage() {
       <div className="bg-[#0d1117]">
         {/* 1. Header & Slogan */}
         <FadeInOnScroll className="mx-auto max-w-2xl px-5 pt-20 pb-14 text-center md:px-8 md:pt-28 md:pb-20">
-          <p className="mb-4 text-xs font-semibold tracking-[0.2em] text-[#d1a355] uppercase">About Lumora</p>
-          <h1 className="font-editorial text-2xl leading-snug text-[#e8e6e0] md:text-4xl md:leading-tight">
-            시대를 넘어서는 빛,
-            <br />
-            당신의 공간에서 완성되는 예술의 역사
-          </h1>
-          <p className="font-editorial mt-5 text-xs tracking-wide text-[#8a8471] italic md:text-sm">
-            Connecting Eras, Illuminating Artists: The Future of Art History
-          </p>
+          <h1 className="font-editorial text-base tracking-wide text-[#e8e6e0]">About</h1>
         </FadeInOnScroll>
 
         {/* 2. Main Manifesto */}
@@ -64,20 +56,25 @@ export default function AboutPage() {
             <p>예술은 단순히 벽을 장식하는 유행이 아닙니다.</p>
             <p>
               과거 르네상스 시절, <Gold>메디치 가문</Gold>의 위대한 의뢰가 거장들의 천재성을 세상에
-              끌어내고 인류의 유산을 만들어냈듯, 예술은 시대를 뛰어넘어 인간의 영혼과 공간을 변화시키는
-              가장 강력한 힘입니다.
+              끌어내고
+              <br />
+              인류의 유산을 만들어냈듯, 예술은 시대를 뛰어넘어 인간의 영혼과 공간을 변화시키는 가장
+              강력한 힘입니다.
             </p>
             <p>
               갤러리 루모라(Lumora)는 미술의 역사 속에 숨쉬는 <Gold>변치 않는 가치</Gold>를 믿습니다.
-              우리는 시대를 조용히 탐구하며 자신만의 독창적인 세계를 구축해 나가는 작가들의 고유한
-              가치와 가능성을 발굴합니다.
+              우리는
+              <br />
+              시대를 조용히 탐구하며 자신만의 독창적인 세계를 구축해 나가는 작가들의 고유한 가치와
+              가능성을 발굴합니다.
             </p>
             <p>
               한 점의 작품이 만들어지기까지의 고뇌, 그리고 그 안에 담긴 <Gold>무한한 미래의 가능성</Gold>.
             </p>
             <p>
-              루모라는 작가의 진정한 가치를 재평가하고, 과거의 지혜와 현재의 감성, 그리고 미래의 유산을
-              잇는 든든한 다리가 되고자 합니다.
+              루모라는 작가의 진정한 가치를 재평가하고, 과거의 지혜와 현재의 감성,
+              <br />
+              그리고 미래의 유산을 잇는 든든한 다리가 되고자 합니다.
             </p>
           </div>
         </FadeInOnScroll>

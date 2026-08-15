@@ -5,16 +5,46 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
+import { isUsernameAvailable } from "@/lib/queries";
+
+type Role = "individual" | "company" | "artist";
+
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: "individual", label: "개인 회원" },
+  { value: "company", label: "기업 회원" },
+  { value: "artist", label: "작가" },
+];
 
 export default function SignupForm() {
   const router = useRouter();
+  const [role, setRole] = useState<Role>("individual");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "available" | "taken">("idle");
   const [error, setError] = useState<string | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+
+  async function handleUsernameBlur() {
+    if (!username.trim()) {
+      setUsernameStatus("idle");
+      return;
+    }
+    setCheckingUsername(true);
+    try {
+      const available = await isUsernameAvailable(username.trim());
+      setUsernameStatus(available ? "available" : "taken");
+    } catch {
+      setUsernameStatus("idle");
+    } finally {
+      setCheckingUsername(false);
+    }
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -30,10 +60,19 @@ export default function SignupForm() {
     }
 
     setSubmitting(true);
+
+    const available = await isUsernameAvailable(username.trim()).catch(() => true);
+    if (!available) {
+      setSubmitting(false);
+      setUsernameStatus("taken");
+      setError("이미 사용 중인 아이디입니다.");
+      return;
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { role, name, phone, username: username.trim() } },
     });
     setSubmitting(false);
 
@@ -75,12 +114,46 @@ export default function SignupForm() {
       <p className="mb-8 text-sm text-ink-faint">Gallery Lumora의 새 계정을 만드세요.</p>
 
       <form onSubmit={handleSubmit} className="space-y-5">
-        <Field label="이름">
+        <Field label="회원 구분">
+          <div className="flex gap-2">
+            {ROLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setRole(opt.value)}
+                className={`h-10 flex-1 border text-sm transition-colors ${
+                  role === opt.value
+                    ? "border-patina bg-patina text-paper"
+                    : "border-line-strong bg-paper-raised text-ink-soft hover:text-ink"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          {role === "artist" && (
+            <p className="mt-2 text-xs text-ink-faint">
+              작가로 가입하면 Contact 페이지에서 작가/작품 등록을 신청할 수 있습니다.
+            </p>
+          )}
+        </Field>
+
+        <Field label={role === "company" ? "기업명 / 담당자명" : "이름"}>
           <input
             required
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <Field label="연락처">
+          <input
+            required
+            type="tel"
+            placeholder="010-0000-0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
             className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
           />
         </Field>
@@ -92,6 +165,26 @@ export default function SignupForm() {
             onChange={(e) => setEmail(e.target.value)}
             className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
           />
+        </Field>
+        <Field label="아이디">
+          <input
+            required
+            type="text"
+            value={username}
+            onChange={(e) => {
+              setUsername(e.target.value);
+              setUsernameStatus("idle");
+            }}
+            onBlur={handleUsernameBlur}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+          {checkingUsername && <p className="mt-1 text-xs text-ink-faint">확인 중...</p>}
+          {!checkingUsername && usernameStatus === "available" && (
+            <p className="mt-1 text-xs text-patina">사용 가능한 아이디입니다.</p>
+          )}
+          {!checkingUsername && usernameStatus === "taken" && (
+            <p className="mt-1 text-xs text-red-600">이미 사용 중인 아이디입니다.</p>
+          )}
         </Field>
         <Field label="비밀번호">
           <input

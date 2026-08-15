@@ -19,6 +19,7 @@ export interface Artwork {
   id: string;
   slug: string;
   title: string;
+  description: string;
   artistId: string;
   artistName: string;
   mediumTypeCode: string;
@@ -97,6 +98,16 @@ export interface MerchOrder {
   phone: string;
   paymentMethod: string;
   createdAt: string;
+}
+
+export interface Profile {
+  id: string;
+  role: "individual" | "company" | "artist";
+  name: string;
+  phone: string;
+  email: string;
+  username: string;
+  artistId: string | null;
 }
 
 export interface CommissionInquiry {

@@ -20,6 +20,7 @@ export default function NewArtworkForm({
 }) {
   const [fileCount, setFileCount] = useState(0);
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
   const [mediumTypeCode, setMediumTypeCode] = useState("");
   const [size, setSize] = useState("");
   const [year, setYear] = useState(new Date().getFullYear());
@@ -33,9 +34,10 @@ export default function NewArtworkForm({
     setSubmitting(true);
     setError(null);
     try {
-      await createArtwork({ artistId, title, mediumTypeCode, size, year, price, hue: artistHue });
+      await createArtwork({ artistId, title, description, mediumTypeCode, size, year, price, hue: artistHue });
       setPosted(true);
       setTitle("");
+      setDescription("");
       setMediumTypeCode("");
       setSize("");
       setPrice(0);
@@ -92,6 +94,15 @@ export default function NewArtworkForm({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="작품 설명">
+            <input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="작품을 한 줄로 소개해주세요"
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>

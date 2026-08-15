@@ -1,7 +1,17 @@
 import { supabase } from "./supabase";
 import type { Database } from "./database.types";
-import type { Artist, Artwork, CommissionInquiry, JournalPost, MerchOrder, MerchProduct, MerchVariant } from "./types";
+import type {
+  Artist,
+  Artwork,
+  CommissionInquiry,
+  JournalPost,
+  MerchOrder,
+  MerchProduct,
+  MerchVariant,
+  Profile,
+} from "./types";
 
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ArtistRow = Database["public"]["Tables"]["artists"]["Row"];
 type ArtworkRow = Database["public"]["Tables"]["artworks"]["Row"];
 type InquiryRow = Database["public"]["Tables"]["commission_inquiries"]["Row"];
@@ -42,6 +52,7 @@ function toArtwork(row: ArtworkWithArtistRow): Artwork {
     id: row.id,
     slug: row.slug,
     title: row.title,
+    description: row.description,
     artistId: row.artist_id,
     artistName: row.artists?.name ?? "",
     mediumTypeCode: row.medium_type_code,
@@ -124,6 +135,18 @@ function toMerchVariant(row: MerchVariantRow): MerchVariant {
     label: row.label,
     stockQuantity: row.stock_quantity,
     priceDelta: row.price_delta,
+  };
+}
+
+function toProfile(row: ProfileRow): Profile {
+  return {
+    id: row.id,
+    role: row.role as Profile["role"],
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    username: row.username,
+    artistId: row.artist_id,
   };
 }
 
@@ -318,6 +341,7 @@ function slugify(title: string): string {
 export interface NewArtworkInput {
   artistId: string;
   title: string;
+  description: string;
   mediumTypeCode: string;
   size: string;
   year: number;
@@ -329,6 +353,7 @@ export async function createArtwork(input: NewArtworkInput): Promise<void> {
   const { error } = await supabase.from("artworks").insert({
     slug: slugify(input.title),
     title: input.title,
+    description: input.description,
     artist_id: input.artistId,
     medium_type_code: input.mediumTypeCode,
     size: input.size,
@@ -457,4 +482,80 @@ export async function getMerchOrdersByPhone(phone: string): Promise<MerchOrder[]
   const { data, error } = await supabase.rpc("get_merch_orders_by_phone", { p_phone: phone });
   if (error) throw error;
   return data.map(toMerchOrder);
+}
+
+export async function getMyProfile(): Promise<Profile | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+  if (error) throw error;
+  return data ? toProfile(data) : null;
+}
+
+export async function isUsernameAvailable(username: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("is_username_available", { p_username: username });
+  if (error) throw error;
+  return data;
+}
+
+export interface GeneralInquiryInput {
+  name: string;
+  email: string;
+  phone: string;
+  category: "general" | "consulting" | "other";
+  message: string;
+}
+
+export async function submitGeneralInquiry(input: GeneralInquiryInput): Promise<void> {
+  const { error } = await supabase.from("general_inquiries").insert({
+    name: input.name,
+    email: input.email,
+    phone: input.phone,
+    category: input.category,
+    message: input.message,
+  });
+  if (error) throw error;
+}
+
+export interface ArtistApplicationInput {
+  artistName: string;
+  nameEn: string;
+  tagline: string;
+  bio: string;
+  styleTags: string[];
+  commissionMedia: string[];
+  portfolioUrl: string;
+  sampleArtworkTitle: string;
+  sampleArtworkNote: string;
+  name: string;
+  phone: string;
+  email: string;
+  message: string;
+}
+
+export async function submitArtistApplication(input: ArtistApplicationInput): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+
+  const { error } = await supabase.from("artist_applications").insert({
+    user_id: user.id,
+    artist_name: input.artistName,
+    name_en: input.nameEn,
+    tagline: input.tagline,
+    bio: input.bio,
+    style_tags: input.styleTags,
+    commission_media: input.commissionMedia,
+    portfolio_url: input.portfolioUrl,
+    sample_artwork_title: input.sampleArtworkTitle,
+    sample_artwork_note: input.sampleArtworkNote,
+    name: input.name,
+    phone: input.phone,
+    email: input.email,
+    message: input.message,
+  });
+  if (error) throw error;
 }

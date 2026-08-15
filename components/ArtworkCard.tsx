@@ -1,12 +1,11 @@
 import Link from "next/link";
 import PlaceholderArt from "./PlaceholderArt";
-import { formatKRW } from "@/lib/format";
 import type { Artwork } from "@/lib/types";
 
 export default function ArtworkCard({ artwork }: { artwork: Artwork }) {
   return (
     <Link href={`/works/${artwork.slug}`} className="group block">
-      <div className="relative aspect-[4/5] overflow-hidden">
+      <div className="relative aspect-[3/2] overflow-hidden">
         <PlaceholderArt
           hue={artwork.hue}
           variant={artwork.variant}
@@ -20,11 +19,12 @@ export default function ArtworkCard({ artwork }: { artwork: Artwork }) {
         )}
       </div>
       <div className="pt-3">
-        <div className="text-sm font-medium text-ink">{artwork.title}</div>
-        <div className="text-xs text-ink-soft">{artwork.artistName}</div>
-        <div className="mt-0.5 text-xs font-semibold text-ink">
-          {formatKRW(artwork.price)}
-        </div>
+        <div className="text-sm font-semibold text-ink">{artwork.artistName}</div>
+        <div className="text-sm text-ink">{artwork.title}</div>
+        {artwork.description && (
+          <div className="mt-0.5 text-xs text-ink-soft">{artwork.description}</div>
+        )}
+        <div className="mt-0.5 text-xs text-ink-faint">{artwork.year}</div>
       </div>
     </Link>
   );
