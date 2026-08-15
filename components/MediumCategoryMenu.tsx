@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { MEDIUM_CATEGORIES, getMediumTypeLabel } from "@/lib/mediumTaxonomy";
+import { tabClasses } from "@/lib/ui";
 
 export default function MediumCategoryMenu({
   selected,
@@ -13,12 +14,8 @@ export default function MediumCategoryMenu({
   const [openCategory, setOpenCategory] = useState<string | null>(null);
 
   return (
-    <div className="border border-board-line bg-board" onMouseLeave={() => setOpenCategory(null)}>
-      <div className="border-b border-board-line px-4 py-3 text-xs tracking-wide text-board-ink-faint uppercase">
-        매체
-      </div>
-
-      <div>
+    <div onMouseLeave={() => setOpenCategory(null)}>
+      <div className="flex flex-wrap gap-x-6 gap-y-1 border-b border-line">
         {MEDIUM_CATEGORIES.map((category) => {
           const isOpen = openCategory === category.code;
           const activeCount = category.types.filter((t) => selected.includes(t.code)).length;
@@ -32,21 +29,14 @@ export default function MediumCategoryMenu({
               <button
                 type="button"
                 onClick={() => setOpenCategory(isOpen ? null : category.code)}
-                className={`flex w-full items-center justify-between px-4 py-2.5 text-left text-[13px] transition-colors ${
-                  isOpen
-                    ? "bg-board-accent-soft text-board-ink"
-                    : "text-board-ink-soft hover:bg-board-raised hover:text-board-ink"
-                }`}
+                className={tabClasses(isOpen || activeCount > 0, "sm")}
               >
-                <span>
-                  {category.number}. {category.nameKo}
-                  {activeCount > 0 && <span className="ml-1.5 text-board-accent">({activeCount})</span>}
-                </span>
-                <span className="text-board-ink-faint">›</span>
+                {category.number}. {category.nameKo}
+                {activeCount > 0 && <span className="ml-1 text-patina">({activeCount})</span>}
               </button>
 
               {isOpen && (
-                <div className="border-board-line bg-board-raised md:absolute md:top-0 md:left-full md:z-20 md:w-56 md:border">
+                <div className="absolute top-full left-0 z-20 w-56 border border-board-line bg-board-raised">
                   {category.types.map((type) => {
                     const checked = selected.includes(type.code);
                     return (
@@ -73,13 +63,13 @@ export default function MediumCategoryMenu({
       </div>
 
       {selected.length > 0 && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-board-line p-3">
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 pt-3">
           {selected.map((code) => (
             <button
               key={code}
               type="button"
               onClick={() => onToggle(code)}
-              className="flex items-center gap-1 text-[11px] text-board-accent hover:underline"
+              className="flex items-center gap-1 text-[11px] text-patina hover:underline"
             >
               {getMediumTypeLabel(code)}
               <span aria-hidden>✕</span>
