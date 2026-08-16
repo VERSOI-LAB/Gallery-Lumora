@@ -39,6 +39,12 @@ export default function AdminNav() {
             );
           })}
         </nav>
+        <a
+          href="/admin/logout"
+          className="mt-4 block border-l-2 border-transparent px-3 py-2 text-sm text-ink-faint hover:text-ink"
+        >
+          로그아웃
+        </a>
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-line bg-paper px-1 md:hidden">
