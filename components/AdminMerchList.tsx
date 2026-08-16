@@ -5,7 +5,7 @@ import Link from "next/link";
 import PlaceholderArt from "./PlaceholderArt";
 import { formatKRW } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
-import { updateMerchProductActive } from "@/lib/queries";
+import { adminUpdateMerchProductActive } from "@/lib/adminActions";
 import type { MerchProduct } from "@/lib/types";
 
 export default function AdminMerchList({ products: initial }: { products: MerchProduct[] }) {
@@ -17,7 +17,7 @@ export default function AdminMerchList({ products: initial }: { products: MerchP
     setPendingId(product.id);
     setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, active: next } : p)));
     try {
-      await updateMerchProductActive(product.id, next);
+      await adminUpdateMerchProductActive(product.id, next);
     } catch {
       setProducts((prev) => prev.map((p) => (p.id === product.id ? { ...p, active: !next } : p)));
     } finally {

@@ -1,8 +1,9 @@
 import AdminInquiriesList from "@/components/AdminInquiriesList";
 import { getGeneralInquiries } from "@/lib/queries";
+import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminInquiriesPage() {
-  const inquiries = await getGeneralInquiries();
+  const inquiries = await getGeneralInquiries(supabaseService);
 
   return (
     <div>

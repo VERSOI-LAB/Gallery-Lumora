@@ -5,6 +5,7 @@ import {
   getArtistApplications,
   getGeneralInquiries,
 } from "@/lib/queries";
+import { supabaseService } from "@/lib/supabase/service";
 
 const STAT_CARDS: {
   key: keyof Awaited<ReturnType<typeof getAdminDashboardStats>>;
@@ -22,9 +23,9 @@ const STAT_CARDS: {
 
 export default async function AdminDashboardPage() {
   const [stats, applications, inquiries] = await Promise.all([
-    getAdminDashboardStats(),
-    getArtistApplications(),
-    getGeneralInquiries(),
+    getAdminDashboardStats(supabaseService),
+    getArtistApplications(supabaseService),
+    getGeneralInquiries(supabaseService),
   ]);
 
   const recentApplications = applications.slice(0, 3);

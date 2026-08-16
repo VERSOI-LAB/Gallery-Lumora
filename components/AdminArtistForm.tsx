@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
-import { createArtist, updateArtist, type ArtistInput } from "@/lib/queries";
+import { adminCreateArtist, adminUpdateArtist } from "@/lib/adminActions";
+import type { ArtistInput } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import type { Artist } from "@/lib/types";
 
@@ -63,9 +64,9 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
     };
     try {
       if (artist) {
-        await updateArtist(artist.id, input);
+        await adminUpdateArtist(artist.id, input);
       } else {
-        await createArtist(input);
+        await adminCreateArtist(input);
       }
       router.push("/admin/artists");
       router.refresh();

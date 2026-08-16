@@ -4,7 +4,8 @@ import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
-import { createJournalPost, updateJournalPost, uploadMedia, type JournalPostInput } from "@/lib/queries";
+import { adminCreateJournalPost, adminUpdateJournalPost } from "@/lib/adminActions";
+import { uploadMedia, type JournalPostInput } from "@/lib/queries";
 import { JOURNAL_CATEGORIES } from "@/lib/journalTaxonomy";
 import type { JournalPost } from "@/lib/types";
 
@@ -61,9 +62,9 @@ export default function AdminJournalForm({ post }: { post?: JournalPost }) {
         coverImageUrl,
       };
       if (post) {
-        await updateJournalPost(post.id, input);
+        await adminUpdateJournalPost(post.id, input);
       } else {
-        await createJournalPost(input);
+        await adminCreateJournalPost(input);
       }
       router.push("/admin/journal");
       router.refresh();

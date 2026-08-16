@@ -5,7 +5,7 @@ import Link from "next/link";
 import PlaceholderArt from "./PlaceholderArt";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
-import { deleteArtwork } from "@/lib/queries";
+import { adminDeleteArtwork } from "@/lib/adminActions";
 import type { Artwork } from "@/lib/types";
 
 export default function AdminArtworkList({ artworks: initial }: { artworks: Artwork[] }) {
@@ -18,7 +18,7 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
     setPendingId(id);
     setErrorId(null);
     try {
-      await deleteArtwork(id);
+      await adminDeleteArtwork(id);
       setArtworks((prev) => prev.filter((a) => a.id !== id));
     } catch {
       setErrorId(id);

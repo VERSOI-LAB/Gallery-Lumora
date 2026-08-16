@@ -2,9 +2,10 @@ import Link from "next/link";
 import AdminMerchList from "@/components/AdminMerchList";
 import { buttonClasses } from "@/lib/ui";
 import { getAllMerchProductsAdmin } from "@/lib/queries";
+import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminMerchPage() {
-  const products = await getAllMerchProductsAdmin();
+  const products = await getAllMerchProductsAdmin(supabaseService);
 
   return (
     <div>

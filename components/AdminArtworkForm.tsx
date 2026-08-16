@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
-import { updateArtwork, type ArtworkUpdateInput } from "@/lib/queries";
+import { adminUpdateArtwork } from "@/lib/adminActions";
+import type { ArtworkUpdateInput } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import type { Artwork } from "@/lib/types";
 
@@ -37,7 +38,7 @@ export default function AdminArtworkForm({ artwork }: { artwork: Artwork }) {
       variant,
     };
     try {
-      await updateArtwork(artwork.id, input);
+      await adminUpdateArtwork(artwork.id, input);
       router.push("/admin/artworks");
       router.refresh();
     } catch {

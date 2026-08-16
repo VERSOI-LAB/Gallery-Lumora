@@ -2,10 +2,11 @@ import { notFound } from "next/navigation";
 import AdminMerchForm from "@/components/AdminMerchForm";
 import AdminMerchVariantsManager from "@/components/AdminMerchVariantsManager";
 import { getMerchProductByIdAdmin, getMerchVariants } from "@/lib/queries";
+import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminEditMerchPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getMerchProductByIdAdmin(id);
+  const product = await getMerchProductByIdAdmin(id, supabaseService);
   if (!product) notFound();
   const variants = product.hasVariants ? await getMerchVariants(product.id) : [];
 

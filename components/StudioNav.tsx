@@ -8,13 +8,13 @@ const ITEMS = [
   { href: "/studio/inquiries", label: "커미션 요청함" },
 ];
 
-export default function StudioNav() {
+export default function StudioNav({ artistName }: { artistName: string }) {
   const pathname = usePathname();
 
   return (
     <>
       <aside className="hidden w-48 flex-none border-r border-line py-8 pr-6 md:block">
-        <p className="mb-4 text-xs tracking-wide text-ink-faint uppercase">한소이 스튜디오</p>
+        <p className="mb-4 text-xs tracking-wide text-ink-faint uppercase">{artistName} 스튜디오</p>
         <nav className="space-y-1">
           {ITEMS.map((item) => {
             const active = pathname.startsWith(item.href);

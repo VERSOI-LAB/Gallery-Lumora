@@ -1,11 +1,9 @@
-import { notFound } from "next/navigation";
 import StudioInquiriesBrowser from "@/components/StudioInquiriesBrowser";
-import { getArtist, getStudioInquiries } from "@/lib/queries";
-import { CURRENT_ARTIST_SLUG } from "@/lib/constants";
+import { getStudioInquiries } from "@/lib/queries";
+import { getCurrentArtist } from "@/lib/studioAuth";
 
 export default async function StudioInquiriesPage() {
-  const artist = await getArtist(CURRENT_ARTIST_SLUG);
-  if (!artist) notFound();
+  const artist = await getCurrentArtist();
   const inquiries = await getStudioInquiries(artist.id);
 
   return (

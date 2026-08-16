@@ -3,11 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
-import {
-  createMerchProduct,
-  updateMerchProduct,
-  type MerchProductInput,
-} from "@/lib/queries";
+import { adminCreateMerchProduct, adminUpdateMerchProduct } from "@/lib/adminActions";
+import type { MerchProductInput } from "@/lib/queries";
 import { MERCH_CATEGORIES } from "@/lib/merchTaxonomy";
 import type { Artwork, MerchProduct } from "@/lib/types";
 
@@ -69,10 +66,10 @@ export default function AdminMerchForm({
     };
     try {
       if (product) {
-        await updateMerchProduct(product.id, input);
+        await adminUpdateMerchProduct(product.id, input);
         router.refresh();
       } else {
-        const id = await createMerchProduct(input);
+        const id = await adminCreateMerchProduct(input);
         router.push(`/admin/merch/${id}/edit`);
         router.refresh();
         return;

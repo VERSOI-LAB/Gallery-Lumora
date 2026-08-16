@@ -5,7 +5,7 @@ import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
 import { getJournalCategoryLabel } from "@/lib/journalTaxonomy";
-import { deleteJournalPost } from "@/lib/queries";
+import { adminDeleteJournalPost } from "@/lib/adminActions";
 import type { JournalPost } from "@/lib/types";
 
 export default function AdminJournalList({ posts: initial }: { posts: JournalPost[] }) {
@@ -16,7 +16,7 @@ export default function AdminJournalList({ posts: initial }: { posts: JournalPos
     if (!confirm("이 글을 삭제하시겠습니까?")) return;
     setPendingId(id);
     try {
-      await deleteJournalPost(id);
+      await adminDeleteJournalPost(id);
       setPosts((prev) => prev.filter((p) => p.id !== id));
     } finally {
       setPendingId(null);

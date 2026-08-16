@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import ArtworkManageList from "@/components/ArtworkManageList";
 import { buttonClasses } from "@/lib/ui";
-import { getArtist, getArtworksByArtistId } from "@/lib/queries";
-import { CURRENT_ARTIST_SLUG } from "@/lib/constants";
+import { getArtworksByArtistId } from "@/lib/queries";
+import { getCurrentArtist } from "@/lib/studioAuth";
 
 export default async function StudioWorksPage() {
-  const artist = await getArtist(CURRENT_ARTIST_SLUG);
-  if (!artist) notFound();
+  const artist = await getCurrentArtist();
   const artworks = await getArtworksByArtistId(artist.id);
 
   return (

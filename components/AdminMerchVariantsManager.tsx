@@ -3,7 +3,11 @@
 import { useState, type FormEvent } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
-import { createMerchVariant, deleteMerchVariant, updateMerchVariant } from "@/lib/queries";
+import {
+  adminCreateMerchVariant,
+  adminDeleteMerchVariant,
+  adminUpdateMerchVariant,
+} from "@/lib/adminActions";
 import type { MerchVariant } from "@/lib/types";
 
 export default function AdminMerchVariantsManager({
@@ -25,7 +29,7 @@ export default function AdminMerchVariantsManager({
     if (!label.trim()) return;
     setSubmitting(true);
     try {
-      const id = await createMerchVariant(productId, { label, stockQuantity, priceDelta });
+      const id = await adminCreateMerchVariant(productId, { label, stockQuantity, priceDelta });
       setVariants((prev) => [...prev, { id, productId, label, stockQuantity, priceDelta }]);
       setLabel("");
       setStockQuantity(0);
@@ -39,7 +43,7 @@ export default function AdminMerchVariantsManager({
     setPendingId(variant.id);
     setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, stockQuantity: nextStock } : v)));
     try {
-      await updateMerchVariant(variant.id, {
+      await adminUpdateMerchVariant(variant.id, {
         label: variant.label,
         stockQuantity: nextStock,
         priceDelta: variant.priceDelta,
@@ -53,7 +57,7 @@ export default function AdminMerchVariantsManager({
     if (!confirm("이 옵션을 삭제하시겠습니까?")) return;
     setPendingId(id);
     try {
-      await deleteMerchVariant(id);
+      await adminDeleteMerchVariant(id);
       setVariants((prev) => prev.filter((v) => v.id !== id));
     } finally {
       setPendingId(null);

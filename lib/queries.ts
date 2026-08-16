@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type {
   Artist,
@@ -282,8 +283,11 @@ export async function getArtist(slug: string): Promise<Artist | null> {
   return data ? toArtist(data) : null;
 }
 
-export async function getArtistById(id: string): Promise<Artist | null> {
-  const { data, error } = await supabase.from("artists").select("*").eq("id", id).maybeSingle();
+export async function getArtistById(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<Artist | null> {
+  const { data, error } = await client.from("artists").select("*").eq("id", id).maybeSingle();
   if (error) throw error;
   return data ? toArtist(data) : null;
 }
@@ -308,8 +312,11 @@ export interface ArtistInput {
   commissionPriceRange: string;
 }
 
-export async function createArtist(input: ArtistInput): Promise<string> {
-  const { data, error } = await supabase
+export async function createArtist(
+  input: ArtistInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<string> {
+  const { data, error } = await client
     .from("artists")
     .insert({
       slug: input.slug,
@@ -330,8 +337,12 @@ export async function createArtist(input: ArtistInput): Promise<string> {
   return data.id;
 }
 
-export async function updateArtist(id: string, input: ArtistInput): Promise<void> {
-  const { error } = await supabase
+export async function updateArtist(
+  id: string,
+  input: ArtistInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("artists")
     .update({
       slug: input.slug,
@@ -535,8 +546,12 @@ export interface ArtworkUpdateInput {
   variant: number;
 }
 
-export async function updateArtwork(id: string, input: ArtworkUpdateInput): Promise<void> {
-  const { error } = await supabase
+export async function updateArtwork(
+  id: string,
+  input: ArtworkUpdateInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("artworks")
     .update({
       title: input.title,
@@ -553,8 +568,8 @@ export async function updateArtwork(id: string, input: ArtworkUpdateInput): Prom
   if (error) throw error;
 }
 
-export async function deleteArtwork(id: string): Promise<void> {
-  const { error } = await supabase.from("artworks").delete().eq("id", id);
+export async function deleteArtwork(id: string, client: SupabaseClient<Database> = supabase): Promise<void> {
+  const { error } = await client.from("artworks").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -626,8 +641,10 @@ export async function getMerchProductSlugs(): Promise<string[]> {
   return data.map((r) => r.slug);
 }
 
-export async function getAllMerchProductsAdmin(): Promise<MerchProduct[]> {
-  const { data, error } = await supabase
+export async function getAllMerchProductsAdmin(
+  client: SupabaseClient<Database> = supabase
+): Promise<MerchProduct[]> {
+  const { data, error } = await client
     .from("merch_products")
     .select(MERCH_PRODUCT_SELECT)
     .order("created_at", { ascending: false })
@@ -636,8 +653,11 @@ export async function getAllMerchProductsAdmin(): Promise<MerchProduct[]> {
   return data.map(toMerchProduct);
 }
 
-export async function getMerchProductByIdAdmin(id: string): Promise<MerchProduct | null> {
-  const { data, error } = await supabase
+export async function getMerchProductByIdAdmin(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<MerchProduct | null> {
+  const { data, error } = await client
     .from("merch_products")
     .select(MERCH_PRODUCT_SELECT)
     .eq("id", id)
@@ -665,8 +685,11 @@ export interface MerchProductInput {
   coverVariant: number;
 }
 
-export async function createMerchProduct(input: MerchProductInput): Promise<string> {
-  const { data, error } = await supabase
+export async function createMerchProduct(
+  input: MerchProductInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<string> {
+  const { data, error } = await client
     .from("merch_products")
     .insert({
       slug: input.slug,
@@ -694,15 +717,19 @@ export async function createMerchProduct(input: MerchProductInput): Promise<stri
       product_id: data.id,
       edition_number: i + 1,
     }));
-    const { error: editionsError } = await supabase.from("merch_editions").insert(editions);
+    const { error: editionsError } = await client.from("merch_editions").insert(editions);
     if (editionsError) throw editionsError;
   }
 
   return data.id;
 }
 
-export async function updateMerchProduct(id: string, input: MerchProductInput): Promise<void> {
-  const { error } = await supabase
+export async function updateMerchProduct(
+  id: string,
+  input: MerchProductInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("merch_products")
     .update({
       slug: input.slug,
@@ -727,8 +754,12 @@ export interface MerchVariantInput {
   priceDelta: number;
 }
 
-export async function createMerchVariant(productId: string, input: MerchVariantInput): Promise<string> {
-  const { data, error } = await supabase
+export async function createMerchVariant(
+  productId: string,
+  input: MerchVariantInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<string> {
+  const { data, error } = await client
     .from("merch_variants")
     .insert({
       product_id: productId,
@@ -742,8 +773,12 @@ export async function createMerchVariant(productId: string, input: MerchVariantI
   return data.id;
 }
 
-export async function updateMerchVariant(id: string, input: MerchVariantInput): Promise<void> {
-  const { error } = await supabase
+export async function updateMerchVariant(
+  id: string,
+  input: MerchVariantInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("merch_variants")
     .update({
       label: input.label,
@@ -754,13 +789,17 @@ export async function updateMerchVariant(id: string, input: MerchVariantInput): 
   if (error) throw error;
 }
 
-export async function deleteMerchVariant(id: string): Promise<void> {
-  const { error } = await supabase.from("merch_variants").delete().eq("id", id);
+export async function deleteMerchVariant(id: string, client: SupabaseClient<Database> = supabase): Promise<void> {
+  const { error } = await client.from("merch_variants").delete().eq("id", id);
   if (error) throw error;
 }
 
-export async function updateMerchProductActive(id: string, active: boolean): Promise<void> {
-  const { error } = await supabase.from("merch_products").update({ active }).eq("id", id);
+export async function updateMerchProductActive(
+  id: string,
+  active: boolean,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("merch_products").update({ active }).eq("id", id);
   if (error) throw error;
 }
 
@@ -895,8 +934,10 @@ export async function submitArtistApplication(input: ArtistApplicationInput): Pr
   if (error) throw error;
 }
 
-export async function getArtistApplications(): Promise<ArtistApplication[]> {
-  const { data, error } = await supabase
+export async function getArtistApplications(
+  client: SupabaseClient<Database> = supabase
+): Promise<ArtistApplication[]> {
+  const { data, error } = await client
     .from("artist_applications")
     .select("*")
     .order("created_at", { ascending: false });
@@ -906,17 +947,20 @@ export async function getArtistApplications(): Promise<ArtistApplication[]> {
 
 export async function reviewArtistApplication(
   id: string,
-  decision: "accepted" | "declined"
+  decision: "accepted" | "declined",
+  client: SupabaseClient<Database> = supabase
 ): Promise<void> {
-  const { error } = await supabase.rpc("review_artist_application", {
+  const { error } = await client.rpc("review_artist_application", {
     p_application_id: id,
     p_decision: decision,
   });
   if (error) throw error;
 }
 
-export async function getGeneralInquiries(): Promise<GeneralInquiry[]> {
-  const { data, error } = await supabase
+export async function getGeneralInquiries(
+  client: SupabaseClient<Database> = supabase
+): Promise<GeneralInquiry[]> {
+  const { data, error } = await client
     .from("general_inquiries")
     .select("*")
     .order("created_at", { ascending: false });
@@ -926,9 +970,10 @@ export async function getGeneralInquiries(): Promise<GeneralInquiry[]> {
 
 export async function updateGeneralInquiryStatus(
   id: string,
-  status: "reviewing" | "done"
+  status: "reviewing" | "done",
+  client: SupabaseClient<Database> = supabase
 ): Promise<void> {
-  const { error } = await supabase.from("general_inquiries").update({ status }).eq("id", id);
+  const { error } = await client.from("general_inquiries").update({ status }).eq("id", id);
   if (error) throw error;
 }
 
@@ -936,8 +981,10 @@ const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, artists ( name ) )";
 const MERCH_ORDER_WITH_PRODUCT_SELECT =
   "*, merch_products ( slug, title, category, cover_hue, cover_variant ), merch_variants ( label )";
 
-export async function getAllArtworkOrders(): Promise<ArtworkOrder[]> {
-  const { data, error } = await supabase
+export async function getAllArtworkOrders(
+  client: SupabaseClient<Database> = supabase
+): Promise<ArtworkOrder[]> {
+  const { data, error } = await client
     .from("orders")
     .select(ORDER_WITH_ARTWORK_SELECT)
     .order("created_at", { ascending: false })
@@ -946,8 +993,10 @@ export async function getAllArtworkOrders(): Promise<ArtworkOrder[]> {
   return data.map(toArtworkOrder);
 }
 
-export async function getAllMerchOrders(): Promise<MerchOrder[]> {
-  const { data, error } = await supabase
+export async function getAllMerchOrders(
+  client: SupabaseClient<Database> = supabase
+): Promise<MerchOrder[]> {
+  const { data, error } = await client
     .from("merch_orders")
     .select(MERCH_ORDER_WITH_PRODUCT_SELECT)
     .order("created_at", { ascending: false })
@@ -956,8 +1005,11 @@ export async function getAllMerchOrders(): Promise<MerchOrder[]> {
   return data.map(toAdminMerchOrder);
 }
 
-export async function getArtworkOrdersByPhone(phone: string): Promise<ArtworkOrder[]> {
-  const { data, error } = await supabase
+export async function getArtworkOrdersByPhone(
+  phone: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<ArtworkOrder[]> {
+  const { data, error } = await client
     .from("orders")
     .select(ORDER_WITH_ARTWORK_SELECT)
     .eq("phone", phone)
@@ -967,13 +1019,21 @@ export async function getArtworkOrdersByPhone(phone: string): Promise<ArtworkOrd
   return data.map(toArtworkOrder);
 }
 
-export async function updateArtworkOrderStatus(id: string, status: OrderStatus): Promise<void> {
-  const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+export async function updateArtworkOrderStatus(
+  id: string,
+  status: OrderStatus,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("orders").update({ status }).eq("id", id);
   if (error) throw error;
 }
 
-export async function updateMerchOrderStatus(id: string, status: OrderStatus): Promise<void> {
-  const { error } = await supabase.from("merch_orders").update({ status }).eq("id", id);
+export async function updateMerchOrderStatus(
+  id: string,
+  status: OrderStatus,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("merch_orders").update({ status }).eq("id", id);
   if (error) throw error;
 }
 
@@ -990,8 +1050,11 @@ export interface JournalPostInput {
   coverImageUrl: string | null;
 }
 
-export async function createJournalPost(input: JournalPostInput): Promise<void> {
-  const { error } = await supabase.from("journal_posts").insert({
+export async function createJournalPost(
+  input: JournalPostInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("journal_posts").insert({
     slug: input.slug,
     category: input.category,
     title: input.title,
@@ -1006,8 +1069,12 @@ export async function createJournalPost(input: JournalPostInput): Promise<void> 
   if (error) throw error;
 }
 
-export async function updateJournalPost(id: string, input: JournalPostInput): Promise<void> {
-  const { error } = await supabase
+export async function updateJournalPost(
+  id: string,
+  input: JournalPostInput,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("journal_posts")
     .update({
       slug: input.slug,
@@ -1025,8 +1092,11 @@ export async function updateJournalPost(id: string, input: JournalPostInput): Pr
   if (error) throw error;
 }
 
-export async function deleteJournalPost(id: string): Promise<void> {
-  const { error } = await supabase.from("journal_posts").delete().eq("id", id);
+export async function deleteJournalPost(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("journal_posts").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -1050,8 +1120,12 @@ export async function getSiteAsset(key: SiteAssetKey): Promise<string | null> {
   return data?.url ?? null;
 }
 
-export async function updateSiteAsset(key: SiteAssetKey, url: string): Promise<void> {
-  const { error } = await supabase
+export async function updateSiteAsset(
+  key: SiteAssetKey,
+  url: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
     .from("site_assets")
     .update({ url, updated_at: new Date().toISOString() })
     .eq("key", key);
@@ -1074,19 +1148,21 @@ export interface AdminDashboardStats {
   totalOrders: number;
 }
 
-export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+export async function getAdminDashboardStats(
+  client: SupabaseClient<Database> = supabase
+): Promise<AdminDashboardStats> {
   const [artists, artworks, merchProducts, newApplications, newInquiries, artworkOrders, merchOrders] =
     await Promise.all([
-      supabase.from("artists").select("*", { count: "exact", head: true }),
-      supabase.from("artworks").select("*", { count: "exact", head: true }),
-      supabase.from("merch_products").select("*", { count: "exact", head: true }),
-      supabase
+      client.from("artists").select("*", { count: "exact", head: true }),
+      client.from("artworks").select("*", { count: "exact", head: true }),
+      client.from("merch_products").select("*", { count: "exact", head: true }),
+      client
         .from("artist_applications")
         .select("*", { count: "exact", head: true })
         .in("status", ["new", "reviewing"]),
-      supabase.from("general_inquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
-      supabase.from("orders").select("*", { count: "exact", head: true }),
-      supabase.from("merch_orders").select("*", { count: "exact", head: true }),
+      client.from("general_inquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
+      client.from("orders").select("*", { count: "exact", head: true }),
+      client.from("merch_orders").select("*", { count: "exact", head: true }),
     ]);
   for (const result of [artists, artworks, merchProducts, newApplications, newInquiries, artworkOrders, merchOrders]) {
     if (result.error) throw result.error;

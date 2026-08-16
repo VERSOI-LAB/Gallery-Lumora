@@ -1,8 +1,9 @@
 import AdminApplicationsBrowser from "@/components/AdminApplicationsBrowser";
 import { getArtistApplications } from "@/lib/queries";
+import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminApplicationsPage() {
-  const applications = await getArtistApplications();
+  const applications = await getArtistApplications(supabaseService);
 
   return (
     <div>

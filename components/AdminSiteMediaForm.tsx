@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { updateSiteAsset, uploadMedia } from "@/lib/queries";
+import { adminUpdateSiteAsset } from "@/lib/adminActions";
+import { uploadMedia } from "@/lib/queries";
 import type { SiteAssetKey } from "@/lib/types";
 
 const ASSETS: {
@@ -41,7 +42,7 @@ export default function AdminSiteMediaForm({
     try {
       const ext = file.name.split(".").pop() || (file.type.startsWith("video") ? "mp4" : "jpg");
       const url = await uploadMedia(`hero/${key}.${ext}`, file);
-      await updateSiteAsset(key, url);
+      await adminUpdateSiteAsset(key, url);
       setAssets((prev) => ({ ...prev, [key]: url }));
     } catch {
       setErrorKey(key);

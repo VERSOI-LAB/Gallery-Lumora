@@ -3,7 +3,8 @@
 import { useState, type FormEvent } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
-import { getArtworkOrdersByPhone, getMerchOrdersByPhone } from "@/lib/queries";
+import { getMerchOrdersByPhone } from "@/lib/queries";
+import { adminGetArtworkOrdersByPhone } from "@/lib/adminActions";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { ArtworkOrder, MerchOrder } from "@/lib/types";
 
@@ -21,7 +22,7 @@ export default function AdminCustomerLookup() {
     setError(null);
     try {
       const [aOrders, mOrders] = await Promise.all([
-        getArtworkOrdersByPhone(phone.trim()),
+        adminGetArtworkOrdersByPhone(phone.trim()),
         getMerchOrdersByPhone(phone.trim()),
       ]);
       setArtworkOrders(aOrders);

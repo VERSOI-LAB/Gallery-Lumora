@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
-import { updateGeneralInquiryStatus } from "@/lib/queries";
+import { adminUpdateGeneralInquiryStatus } from "@/lib/adminActions";
 import type { GeneralInquiry } from "@/lib/types";
 
 const CATEGORY_LABEL: Record<GeneralInquiry["category"], string> = {
@@ -33,7 +33,7 @@ export default function AdminInquiriesList({ inquiries: initial }: { inquiries: 
   async function setStatus(id: string, status: "reviewing" | "done") {
     setPendingId(id);
     try {
-      await updateGeneralInquiryStatus(id, status);
+      await adminUpdateGeneralInquiryStatus(id, status);
       setInquiries((prev) => prev.map((i) => (i.id === id ? { ...i, status } : i)));
     } finally {
       setPendingId(null);

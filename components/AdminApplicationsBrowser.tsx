@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
-import { reviewArtistApplication } from "@/lib/queries";
+import { adminReviewArtistApplication } from "@/lib/adminActions";
 import type { ArtistApplication } from "@/lib/types";
 
 const STATUS_LABEL: Record<ArtistApplication["status"], string> = {
@@ -36,7 +36,7 @@ export default function AdminApplicationsBrowser({
     setPending(id);
     setError(null);
     try {
-      await reviewArtistApplication(id, decision);
+      await adminReviewArtistApplication(id, decision);
       setApplications((prev) => prev.map((a) => (a.id === id ? { ...a, status: decision } : a)));
     } catch {
       setError("처리에 실패했습니다. 잠시 후 다시 시도해주세요.");

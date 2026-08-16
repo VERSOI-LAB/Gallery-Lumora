@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { buttonClasses, tabClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
-import { updateArtworkOrderStatus, updateMerchOrderStatus } from "@/lib/queries";
+import { adminUpdateArtworkOrderStatus, adminUpdateMerchOrderStatus } from "@/lib/adminActions";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import { downloadCsv } from "@/lib/csv";
 import type { ArtworkOrder, MerchOrder, OrderStatus } from "@/lib/types";
@@ -52,7 +52,7 @@ export default function AdminOrdersBrowser({
     const prev = artworkOrders;
     setArtworkOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o)));
     try {
-      await updateArtworkOrderStatus(id, status);
+      await adminUpdateArtworkOrderStatus(id, status);
     } catch {
       setArtworkOrders(prev);
     } finally {
@@ -65,7 +65,7 @@ export default function AdminOrdersBrowser({
     const prev = merchOrders;
     setMerchOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o)));
     try {
-      await updateMerchOrderStatus(id, status);
+      await adminUpdateMerchOrderStatus(id, status);
     } catch {
       setMerchOrders(prev);
     } finally {
