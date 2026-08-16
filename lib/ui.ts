@@ -30,3 +30,20 @@ export function tabClasses(active: boolean, size: Size = "md") {
     active ? "border-patina text-ink" : "border-transparent text-ink-faint hover:text-ink"
   }`;
 }
+
+/** Shared text input / textarea treatment for form fields across the site. */
+export const fieldInputClasses =
+  "h-11 w-full border border-line-strong bg-paper px-3.5 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-patina focus:ring-2 focus:ring-patina/15";
+
+export const fieldTextareaClasses =
+  "w-full border border-line-strong bg-paper px-3.5 py-3 text-sm text-ink outline-none transition-colors placeholder:text-ink-faint focus:border-patina focus:ring-2 focus:ring-patina/15";
+
+/** Toggle-chip treatment for single/multi-select option buttons (category
+ * pickers, style/medium tag selectors). */
+export function chipClasses(active: boolean) {
+  return `border px-3.5 py-2 text-xs font-medium transition-colors ${
+    active
+      ? "border-patina bg-patina text-paper"
+      : "border-line-strong bg-paper text-ink-soft hover:border-ink-faint hover:text-ink"
+  }`;
+}
