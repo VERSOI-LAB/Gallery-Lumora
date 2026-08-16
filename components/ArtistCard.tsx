@@ -5,10 +5,28 @@ import type { Artist } from "@/lib/types";
 export default function ArtistCard({
   artist,
   compact = false,
+  layout = "circle",
 }: {
   artist: Artist;
   compact?: boolean;
+  layout?: "circle" | "square";
 }) {
+  if (layout === "square") {
+    return (
+      <Link href={`/artists/${artist.slug}`} className="group block">
+        <div className="aspect-square overflow-hidden border border-line">
+          <PlaceholderArt
+            hue={artist.hue}
+            seed={artist.slug}
+            kind="portrait"
+            className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+          />
+        </div>
+        <div className="mt-3 text-sm font-medium text-ink">{artist.name}</div>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={`/artists/${artist.slug}`}

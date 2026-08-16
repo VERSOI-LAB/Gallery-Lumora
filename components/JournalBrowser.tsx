@@ -11,17 +11,35 @@ import type { JournalPost } from "@/lib/types";
 
 export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
   const [category, setCategory] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
 
   const featured = posts[0];
-  const rest = posts.slice(1);
+  const showFeatured = category === null && keyword.trim() === "";
 
   const filtered = useMemo(() => {
-    if (!category) return rest;
-    return posts.filter((p) => p.category === category);
-  }, [posts, rest, category]);
+    const term = keyword.trim().toLowerCase();
+    let list = category === null ? posts : posts.filter((p) => p.category === category);
+    if (term) {
+      list = list.filter(
+        (p) => p.title.toLowerCase().includes(term) || p.excerpt.toLowerCase().includes(term)
+      );
+    }
+    if (showFeatured) {
+      list = list.filter((p) => p.slug !== featured?.slug);
+    }
+    return list;
+  }, [posts, category, keyword, showFeatured, featured]);
 
   return (
     <div>
+      <input
+        type="text"
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        placeholder="제목, 내용으로 검색"
+        className="mb-6 h-10 w-full max-w-sm border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+      />
+
       <div className="mb-6 flex flex-wrap gap-6 border-b border-line">
         <button type="button" onClick={() => setCategory(null)} className={tabClasses(category === null, "sm")}>
           전체
@@ -33,7 +51,7 @@ export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
         ))}
       </div>
 
-      {category === null && featured && (
+      {showFeatured && featured && (
         <Link
           href={`/journal/${featured.slug}`}
           className="group mb-10 grid grid-cols-1 gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10"
@@ -66,7 +84,7 @@ export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
           ))}
         </div>
       ) : (
-        <p className="py-16 text-center text-sm text-ink-faint">아직 이 카테고리의 글이 없습니다.</p>
+        <p className="py-16 text-center text-sm text-ink-faint">검색 결과가 없습니다.</p>
       )}
     </div>
   );

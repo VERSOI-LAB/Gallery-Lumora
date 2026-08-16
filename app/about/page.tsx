@@ -44,7 +44,7 @@ export default function AboutPage() {
       <div className="bg-[#0d1117]">
         {/* 1. Header & Slogan */}
         <FadeInOnScroll className="mx-auto max-w-2xl px-5 pt-20 pb-14 text-center md:px-8 md:pt-28 md:pb-20">
-          <h1 className="font-editorial text-base tracking-wide text-[#e8e6e0]">About</h1>
+          <h1 className="font-editorial text-xl tracking-wide text-[#e8e6e0]">About</h1>
         </FadeInOnScroll>
 
         {/* 2. Main Manifesto */}

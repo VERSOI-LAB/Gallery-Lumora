@@ -18,13 +18,13 @@ export default function ArtworkCard({ artwork }: { artwork: Artwork }) {
           </span>
         )}
       </div>
-      <div className="pt-3">
-        <div className="text-sm font-semibold text-ink">{artwork.artistName}</div>
-        <div className="text-sm text-ink">{artwork.title}</div>
+      <div className="pt-4">
+        <div className="font-editorial text-lg text-ink">{artwork.artistName}</div>
+        <div className="font-editorial text-lg text-ink italic">{artwork.title}</div>
         {artwork.description && (
-          <div className="mt-0.5 text-xs text-ink-soft">{artwork.description}</div>
+          <div className="mt-1 text-sm text-ink-soft">{artwork.description}</div>
         )}
-        <div className="mt-0.5 text-xs text-ink-faint">{artwork.year}</div>
+        <div className="mt-1 text-sm text-ink-faint">{artwork.year}</div>
       </div>
     </Link>
   );
