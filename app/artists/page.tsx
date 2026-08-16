@@ -1,13 +1,23 @@
 import ArtistsBrowser from "@/components/ArtistsBrowser";
+import FadeInOnScroll from "@/components/FadeInOnScroll";
 import { getArtists } from "@/lib/queries";
 
 export default async function ArtistsPage() {
   const artists = await getArtists();
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <h1 className="font-editorial mb-8 text-xl tracking-wide text-ink-soft">Artists</h1>
-      <ArtistsBrowser artists={artists} />
+    <div>
+      <FadeInOnScroll className="mx-auto max-w-2xl px-5 pt-14 pb-10 text-center md:px-8 md:pt-20 md:pb-14">
+        <p className="mb-3 text-[11px] font-semibold tracking-[0.15em] text-patina uppercase">
+          Directory
+        </p>
+        <h1 className="font-editorial mb-4 text-2xl tracking-wide text-ink md:text-3xl">Artists</h1>
+        <p className="text-sm leading-7 text-ink-soft">자신만의 언어로 시대를 기록하는 작가들.</p>
+      </FadeInOnScroll>
+
+      <div className="mx-auto max-w-6xl px-5 pb-20 md:px-8">
+        <ArtistsBrowser artists={artists} />
+      </div>
     </div>
   );
 }

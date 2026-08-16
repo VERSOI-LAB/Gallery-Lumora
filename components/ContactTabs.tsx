@@ -16,8 +16,8 @@ export default function ContactTabs() {
   const [tab, setTab] = useState<TabKey>("inquiry");
 
   return (
-    <div className="mx-auto max-w-lg px-5 pb-24 md:px-8">
-      <div className="mb-10 flex justify-center gap-8 border-b border-line">
+    <div className="border border-line bg-paper-raised/60 p-6 shadow-[0_1px_3px_rgba(28,27,22,0.05)] md:p-10">
+      <div className="mb-8 flex gap-8 border-b border-line">
         {TABS.map((t) => (
           <button
             key={t.key}
