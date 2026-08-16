@@ -4,18 +4,18 @@ import FadeInOnScroll from "@/components/FadeInOnScroll";
 const ASSURANCES = [
   {
     number: "01",
-    title: "빠른 회신",
-    body: "접수된 문의는 Lumora 운영팀이 확인 후 1~3영업일 내 직접 답변드립니다.",
+    title: "정성 어린 회신",
+    body: "남겨주신 마음과 공간의 이야기를 세심히 정독한 뒤, 1~2영업일 내에 정성스러운 답변을 전합니다.",
   },
   {
     number: "02",
-    title: "맞춤 컨설팅",
-    body: "공간과 취향에 맞는 작가와 작품을 큐레이터가 함께 제안합니다.",
+    title: "섬세한 제안",
+    body: "갤러리 큐레이터가 기업 사옥의 웅장함부터 개인 공간의 온기까지 고려하여 가장 매끄럽게 스며들 작품과 작가를 제안합니다.",
   },
   {
     number: "03",
-    title: "투명한 절차",
-    body: "작가 등록부터 커미션 진행까지, 모든 과정을 명확하게 안내합니다.",
+    title: "작가와 컬렉터의 투명한 다리",
+    body: "작가의 창작 가치가 올바르게 인정받고, 컬렉터에게 안전하게 이어지도록 모든 1:1 의뢰 과정과 입점 절차를 신뢰 있게 안내합니다.",
   },
 ];
 
@@ -25,12 +25,15 @@ export default function CommissionLandingPage() {
       <div className="grid gap-12 md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] md:gap-16">
         <FadeInOnScroll className="md:sticky md:top-24 md:self-start">
           <p className="mb-3 text-[11px] font-semibold tracking-[0.15em] text-patina uppercase">
-            Get in touch
+            Connect with Lumora
           </p>
           <h1 className="font-editorial mb-6 text-2xl tracking-wide text-ink md:text-3xl">Contact</h1>
           <p className="mb-10 max-w-sm text-sm leading-7 text-ink-soft">
-            작품 문의부터 공간 컨설팅, 작가 등록까지 — 무엇이든 편하게 남겨주세요. Lumora 운영팀이
-            확인 후 가장 알맞은 방법으로 연락드립니다.
+            공간에 어울리는 예술을 찾는 컬렉터의 고민부터, 자신만의 시선을 공유하고자 하는
+            작가님의 이야기까지.
+            <br />
+            루모라는 예술이 전하는 깊은 울림에 귀를 기울입니다. 전하고 싶으신 마음이나 문의를
+            남겨주시면 정성을 다해 답변드리겠습니다.
           </p>
           <div className="space-y-7">
             {ASSURANCES.map((a) => (

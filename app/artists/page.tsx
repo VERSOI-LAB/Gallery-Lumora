@@ -12,9 +12,7 @@ export default async function ArtistsPage() {
           Directory
         </p>
         <h1 className="font-editorial mb-4 text-2xl tracking-wide text-ink md:text-3xl">Artists</h1>
-        <p className="text-sm leading-7 text-ink-soft">
-          시대를 탐구하며 자신만의 세계를 구축해가는 Lumora의 작가들을 만나보세요.
-        </p>
+        <p className="text-sm leading-7 text-ink-soft">자신만의 언어로 시대를 기록하는 작가들.</p>
       </FadeInOnScroll>
 
       <div className="mx-auto max-w-6xl px-5 pb-20 md:px-8">
