@@ -31,6 +31,12 @@ export default function StudioNav() {
             );
           })}
         </nav>
+        <a
+          href="/studio/logout"
+          className="mt-4 block border-l-2 border-transparent px-3 py-2 text-sm text-ink-faint hover:text-ink"
+        >
+          로그아웃
+        </a>
       </aside>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-paper md:hidden">
