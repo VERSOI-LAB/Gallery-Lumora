@@ -4,9 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ITEMS = [
+  { href: "/admin", label: "개요", exact: true },
   { href: "/admin/applications", label: "작가 지원" },
   { href: "/admin/inquiries", label: "문의 관리" },
   { href: "/admin/orders", label: "주문 현황" },
+  { href: "/admin/artists", label: "작가 관리" },
+  { href: "/admin/artworks", label: "작품 관리" },
+  { href: "/admin/merch", label: "굿즈 관리" },
   { href: "/admin/journal", label: "저널 관리" },
   { href: "/admin/media", label: "사이트 미디어" },
 ];
@@ -20,7 +24,7 @@ export default function AdminNav() {
         <p className="mb-4 text-xs tracking-wide text-ink-faint uppercase">Lumora 어드민</p>
         <nav className="space-y-1">
           {ITEMS.map((item) => {
-            const active = pathname.startsWith(item.href);
+            const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
             return (
               <Link
                 key={item.href}
@@ -36,14 +40,14 @@ export default function AdminNav() {
         </nav>
       </aside>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-line bg-paper md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 flex gap-1 overflow-x-auto border-t border-line bg-paper px-1 md:hidden">
         {ITEMS.map((item) => {
-          const active = pathname.startsWith(item.href);
+          const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex-1 py-3 text-center text-xs ${
+              className={`flex-none px-3 py-3 text-center text-xs whitespace-nowrap ${
                 active ? "-mt-px border-t-2 border-patina font-semibold text-patina" : "text-ink-faint"
               }`}
             >

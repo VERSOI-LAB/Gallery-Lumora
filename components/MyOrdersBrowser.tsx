@@ -7,6 +7,7 @@ import { buttonClasses } from "@/lib/ui";
 import { formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import { getMerchOrdersByPhone } from "@/lib/queries";
+import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { MerchOrder } from "@/lib/types";
 
 const LAST_PHONE_KEY = "lumora:mypage:phone";
@@ -98,7 +99,12 @@ export default function MyOrdersBrowser() {
                         <span className="shrink-0 text-xs text-ink-faint">{formatDate(order.createdAt)}</span>
                       </div>
 
-                      <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-soft">
+                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
+                        <span
+                          className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}
+                        >
+                          {ORDER_STATUS_LABEL[order.status]}
+                        </span>
                         {order.variantLabel && <span>옵션 {order.variantLabel}</span>}
                         {order.editionNumber != null && <span>에디션 #{order.editionNumber}</span>}
                         <span>수량 {order.quantity}개</span>

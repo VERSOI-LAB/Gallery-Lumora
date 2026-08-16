@@ -3,16 +3,72 @@
 import { useState } from "react";
 import { tabClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
-import type { ArtworkOrder, MerchOrder } from "@/lib/types";
+import { updateArtworkOrderStatus, updateMerchOrderStatus } from "@/lib/queries";
+import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
+import type { ArtworkOrder, MerchOrder, OrderStatus } from "@/lib/types";
+
+function StatusSelect({
+  status,
+  pending,
+  onChange,
+}: {
+  status: OrderStatus;
+  pending: boolean;
+  onChange: (status: OrderStatus) => void;
+}) {
+  return (
+    <select
+      value={status}
+      disabled={pending}
+      onChange={(e) => onChange(e.target.value as OrderStatus)}
+      className={`border px-2 py-1 text-[11px] outline-none disabled:opacity-50 ${ORDER_STATUS_BADGE_STYLE[status]}`}
+    >
+      {(Object.keys(ORDER_STATUS_LABEL) as OrderStatus[]).map((s) => (
+        <option key={s} value={s}>
+          {ORDER_STATUS_LABEL[s]}
+        </option>
+      ))}
+    </select>
+  );
+}
 
 export default function AdminOrdersBrowser({
-  artworkOrders,
-  merchOrders,
+  artworkOrders: initialArtworkOrders,
+  merchOrders: initialMerchOrders,
 }: {
   artworkOrders: ArtworkOrder[];
   merchOrders: MerchOrder[];
 }) {
   const [tab, setTab] = useState<"artwork" | "merch">("artwork");
+  const [artworkOrders, setArtworkOrders] = useState(initialArtworkOrders);
+  const [merchOrders, setMerchOrders] = useState(initialMerchOrders);
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
+  async function changeArtworkStatus(id: string, status: OrderStatus) {
+    setPendingId(id);
+    const prev = artworkOrders;
+    setArtworkOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o)));
+    try {
+      await updateArtworkOrderStatus(id, status);
+    } catch {
+      setArtworkOrders(prev);
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function changeMerchStatus(id: string, status: OrderStatus) {
+    setPendingId(id);
+    const prev = merchOrders;
+    setMerchOrders((list) => list.map((o) => (o.id === id ? { ...o, status } : o)));
+    try {
+      await updateMerchOrderStatus(id, status);
+    } catch {
+      setMerchOrders(prev);
+    } finally {
+      setPendingId(null);
+    }
+  }
 
   return (
     <div>
@@ -34,7 +90,14 @@ export default function AdminOrdersBrowser({
               <div key={order.id} className="py-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{order.artworkTitle}</span>
-                  <span className="text-sm">{formatKRW(order.amount)}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm">{formatKRW(order.amount)}</span>
+                    <StatusSelect
+                      status={order.status}
+                      pending={pendingId === order.id}
+                      onChange={(status) => changeArtworkStatus(order.id, status)}
+                    />
+                  </div>
                 </div>
                 <div className="mt-1 text-xs text-ink-faint">
                   {order.artistName} · 주문번호 {order.orderNumber} · {formatDate(order.createdAt)}
@@ -62,7 +125,14 @@ export default function AdminOrdersBrowser({
                   {order.variantLabel && ` · ${order.variantLabel}`}
                   {order.editionNumber != null && ` · #${order.editionNumber}`}
                 </span>
-                <span className="text-sm">{formatKRW(order.amount)}</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm">{formatKRW(order.amount)}</span>
+                  <StatusSelect
+                    status={order.status}
+                    pending={pendingId === order.id}
+                    onChange={(status) => changeMerchStatus(order.id, status)}
+                  />
+                </div>
               </div>
               <div className="mt-1 text-xs text-ink-faint">
                 수량 {order.quantity} · 주문번호 {order.orderNumber} · {formatDate(order.createdAt)}

@@ -16,8 +16,18 @@ const notoSerifKR = Noto_Serif_KR({
   variable: "--font-serif-kr",
 });
 
+const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Gallery Lumora — 완성작 구매 · 1:1 커미션",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Gallery Lumora — 완성작 구매 · 1:1 커미션",
+    template: "%s · Gallery Lumora",
+  },
   description:
     "작가의 화풍을 살펴보고 완성작을 소장하거나, 그 작가에게 나만의 작품을 1:1로 의뢰하세요.",
 };

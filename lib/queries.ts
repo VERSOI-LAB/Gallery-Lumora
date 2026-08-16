@@ -11,6 +11,7 @@ import type {
   MerchOrder,
   MerchProduct,
   MerchVariant,
+  OrderStatus,
   Profile,
   SiteAssetKey,
 } from "./types";
@@ -214,6 +215,7 @@ function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
     paymentMethod: row.payment_method,
     insured: row.insured,
     amount: row.amount,
+    status: row.status as ArtworkOrder["status"],
     createdAt: row.created_at,
   };
 }
@@ -238,6 +240,7 @@ function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
     name: row.name,
     email: row.email,
     paymentMethod: row.payment_method,
+    status: row.status as MerchOrder["status"],
     createdAt: row.created_at,
   };
 }
@@ -262,6 +265,7 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     name: "",
     email: "",
     paymentMethod: row.payment_method,
+    status: row.status as MerchOrder["status"],
     createdAt: row.created_at,
   };
 }
@@ -288,6 +292,62 @@ export async function getArtistSlugs(): Promise<string[]> {
   const { data, error } = await supabase.from("artists").select("slug");
   if (error) throw error;
   return data.map((r) => r.slug);
+}
+
+export interface ArtistInput {
+  slug: string;
+  name: string;
+  nameEn: string;
+  tagline: string;
+  bio: string;
+  hue: number;
+  styleTags: string[];
+  commissionAccepting: boolean;
+  commissionMedia: string[];
+  commissionLeadTime: string;
+  commissionPriceRange: string;
+}
+
+export async function createArtist(input: ArtistInput): Promise<string> {
+  const { data, error } = await supabase
+    .from("artists")
+    .insert({
+      slug: input.slug,
+      name: input.name,
+      name_en: input.nameEn,
+      tagline: input.tagline,
+      bio: input.bio,
+      hue: input.hue,
+      style_tags: input.styleTags,
+      commission_accepting: input.commissionAccepting,
+      commission_media: input.commissionMedia,
+      commission_lead_time: input.commissionLeadTime,
+      commission_price_range: input.commissionPriceRange,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function updateArtist(id: string, input: ArtistInput): Promise<void> {
+  const { error } = await supabase
+    .from("artists")
+    .update({
+      slug: input.slug,
+      name: input.name,
+      name_en: input.nameEn,
+      tagline: input.tagline,
+      bio: input.bio,
+      hue: input.hue,
+      style_tags: input.styleTags,
+      commission_accepting: input.commissionAccepting,
+      commission_media: input.commissionMedia,
+      commission_lead_time: input.commissionLeadTime,
+      commission_price_range: input.commissionPriceRange,
+    })
+    .eq("id", id);
+  if (error) throw error;
 }
 
 export async function getArtworks(): Promise<Artwork[]> {
@@ -463,6 +523,41 @@ export async function createArtwork(input: NewArtworkInput): Promise<void> {
   if (error) throw error;
 }
 
+export interface ArtworkUpdateInput {
+  title: string;
+  description: string;
+  mediumTypeCode: string;
+  size: string;
+  year: number;
+  price: number;
+  sold: boolean;
+  hue: number;
+  variant: number;
+}
+
+export async function updateArtwork(id: string, input: ArtworkUpdateInput): Promise<void> {
+  const { error } = await supabase
+    .from("artworks")
+    .update({
+      title: input.title,
+      description: input.description,
+      medium_type_code: input.mediumTypeCode,
+      size: input.size,
+      year: input.year,
+      price: input.price,
+      sold: input.sold,
+      hue: input.hue,
+      variant: input.variant,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteArtwork(id: string): Promise<void> {
+  const { error } = await supabase.from("artworks").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getJournalPosts(): Promise<JournalPost[]> {
   const { data, error } = await supabase
     .from("journal_posts")
@@ -529,6 +624,144 @@ export async function getMerchProductSlugs(): Promise<string[]> {
   const { data, error } = await supabase.from("merch_products").select("slug").eq("active", true);
   if (error) throw error;
   return data.map((r) => r.slug);
+}
+
+export async function getAllMerchProductsAdmin(): Promise<MerchProduct[]> {
+  const { data, error } = await supabase
+    .from("merch_products")
+    .select(MERCH_PRODUCT_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<MerchProductWithRelationsRow[]>();
+  if (error) throw error;
+  return data.map(toMerchProduct);
+}
+
+export async function getMerchProductByIdAdmin(id: string): Promise<MerchProduct | null> {
+  const { data, error } = await supabase
+    .from("merch_products")
+    .select(MERCH_PRODUCT_SELECT)
+    .eq("id", id)
+    .maybeSingle()
+    .returns<MerchProductWithRelationsRow>();
+  if (error) throw error;
+  return data ? toMerchProduct(data) : null;
+}
+
+export interface MerchProductInput {
+  slug: string;
+  artworkId: string;
+  artistId: string;
+  category: string;
+  title: string;
+  description: string;
+  price: number;
+  royaltyRate: number;
+  fulfillment: "edition" | "stock";
+  editionSize: number | null;
+  stockQuantity: number | null;
+  hasVariants: boolean;
+  active: boolean;
+  coverHue: number;
+  coverVariant: number;
+}
+
+export async function createMerchProduct(input: MerchProductInput): Promise<string> {
+  const { data, error } = await supabase
+    .from("merch_products")
+    .insert({
+      slug: input.slug,
+      artwork_id: input.artworkId,
+      artist_id: input.artistId,
+      category: input.category,
+      title: input.title,
+      description: input.description,
+      price: input.price,
+      royalty_rate: input.royaltyRate,
+      fulfillment: input.fulfillment,
+      edition_size: input.fulfillment === "edition" ? input.editionSize : null,
+      stock_quantity: input.fulfillment === "stock" && !input.hasVariants ? input.stockQuantity : null,
+      has_variants: input.hasVariants,
+      active: input.active,
+      cover_hue: input.coverHue,
+      cover_variant: input.coverVariant,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  if (input.fulfillment === "edition" && input.editionSize && input.editionSize > 0) {
+    const editions = Array.from({ length: input.editionSize }, (_, i) => ({
+      product_id: data.id,
+      edition_number: i + 1,
+    }));
+    const { error: editionsError } = await supabase.from("merch_editions").insert(editions);
+    if (editionsError) throw editionsError;
+  }
+
+  return data.id;
+}
+
+export async function updateMerchProduct(id: string, input: MerchProductInput): Promise<void> {
+  const { error } = await supabase
+    .from("merch_products")
+    .update({
+      slug: input.slug,
+      artwork_id: input.artworkId,
+      artist_id: input.artistId,
+      category: input.category,
+      title: input.title,
+      description: input.description,
+      price: input.price,
+      royalty_rate: input.royaltyRate,
+      has_variants: input.hasVariants,
+      active: input.active,
+      stock_quantity: input.fulfillment === "stock" && !input.hasVariants ? input.stockQuantity : null,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export interface MerchVariantInput {
+  label: string;
+  stockQuantity: number;
+  priceDelta: number;
+}
+
+export async function createMerchVariant(productId: string, input: MerchVariantInput): Promise<string> {
+  const { data, error } = await supabase
+    .from("merch_variants")
+    .insert({
+      product_id: productId,
+      label: input.label,
+      stock_quantity: input.stockQuantity,
+      price_delta: input.priceDelta,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function updateMerchVariant(id: string, input: MerchVariantInput): Promise<void> {
+  const { error } = await supabase
+    .from("merch_variants")
+    .update({
+      label: input.label,
+      stock_quantity: input.stockQuantity,
+      price_delta: input.priceDelta,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteMerchVariant(id: string): Promise<void> {
+  const { error } = await supabase.from("merch_variants").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateMerchProductActive(id: string, active: boolean): Promise<void> {
+  const { error } = await supabase.from("merch_products").update({ active }).eq("id", id);
+  if (error) throw error;
 }
 
 export async function getMerchVariants(productId: string): Promise<MerchVariant[]> {
@@ -723,6 +956,16 @@ export async function getAllMerchOrders(): Promise<MerchOrder[]> {
   return data.map(toAdminMerchOrder);
 }
 
+export async function updateArtworkOrderStatus(id: string, status: OrderStatus): Promise<void> {
+  const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateMerchOrderStatus(id: string, status: OrderStatus): Promise<void> {
+  const { error } = await supabase.from("merch_orders").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
 export interface JournalPostInput {
   slug: string;
   category: "art-history" | "interview" | "guide" | "news";
@@ -809,4 +1052,40 @@ export async function uploadMedia(path: string, file: File): Promise<string> {
   if (error) throw error;
   const { data } = supabase.storage.from("media").getPublicUrl(path);
   return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+export interface AdminDashboardStats {
+  artists: number;
+  artworks: number;
+  merchProducts: number;
+  newApplications: number;
+  newInquiries: number;
+  totalOrders: number;
+}
+
+export async function getAdminDashboardStats(): Promise<AdminDashboardStats> {
+  const [artists, artworks, merchProducts, newApplications, newInquiries, artworkOrders, merchOrders] =
+    await Promise.all([
+      supabase.from("artists").select("*", { count: "exact", head: true }),
+      supabase.from("artworks").select("*", { count: "exact", head: true }),
+      supabase.from("merch_products").select("*", { count: "exact", head: true }),
+      supabase
+        .from("artist_applications")
+        .select("*", { count: "exact", head: true })
+        .in("status", ["new", "reviewing"]),
+      supabase.from("general_inquiries").select("*", { count: "exact", head: true }).eq("status", "new"),
+      supabase.from("orders").select("*", { count: "exact", head: true }),
+      supabase.from("merch_orders").select("*", { count: "exact", head: true }),
+    ]);
+  for (const result of [artists, artworks, merchProducts, newApplications, newInquiries, artworkOrders, merchOrders]) {
+    if (result.error) throw result.error;
+  }
+  return {
+    artists: artists.count ?? 0,
+    artworks: artworks.count ?? 0,
+    merchProducts: merchProducts.count ?? 0,
+    newApplications: newApplications.count ?? 0,
+    newInquiries: newInquiries.count ?? 0,
+    totalOrders: (artworkOrders.count ?? 0) + (merchOrders.count ?? 0),
+  };
 }

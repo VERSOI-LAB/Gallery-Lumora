@@ -1,19 +1,38 @@
 import Link from "next/link";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtistCard from "@/components/ArtistCard";
-import { getArtists, getArtworks, getSiteAsset } from "@/lib/queries";
+import ArticleCard from "@/components/ArticleCard";
+import MerchProductCard from "@/components/MerchProductCard";
+import { getArtists, getArtworks, getJournalPosts, getMerchProducts, getSiteAsset } from "@/lib/queries";
 import { buttonClasses } from "@/lib/ui";
 
 export default async function HomePage() {
-  const [artists, artworks, heroVideo] = await Promise.all([
+  const [artists, artworks, journalPosts, merchProducts, heroVideo] = await Promise.all([
     getArtists(),
     getArtworks(),
+    getJournalPosts(),
+    getMerchProducts(),
     getSiteAsset("home_hero_video"),
   ]);
   const newWorks = artworks.slice(0, 4);
+  const latestPosts = journalPosts.slice(0, 3);
+  const featuredProducts = merchProducts.slice(0, 4);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ArtGallery",
+    name: "Gallery Lumora",
+    description:
+      "작가의 화풍을 살펴보고 완성작을 소장하거나, 그 작가에게 나만의 작품을 1:1로 의뢰하세요.",
+    url: "/",
+  };
 
   return (
     <div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <section className="border-b border-line">
         <video
           key={heroVideo ?? "default"}
@@ -53,11 +72,15 @@ export default async function HomePage() {
             전체 보기 →
           </Link>
         </div>
-        <div className="flex gap-6 overflow-x-auto pb-2">
-          {artists.map((artist) => (
-            <ArtistCard key={artist.slug} artist={artist} compact />
-          ))}
-        </div>
+        {artists.length > 0 ? (
+          <div className="flex gap-6 overflow-x-auto pb-2">
+            {artists.map((artist) => (
+              <ArtistCard key={artist.slug} artist={artist} compact />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-faint">곧 새로운 작가를 소개해드립니다.</p>
+        )}
       </section>
 
       <section className="border-t border-line">
@@ -68,13 +91,72 @@ export default async function HomePage() {
               전체 보기 →
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {newWorks.map((artwork) => (
-              <ArtworkCard key={artwork.slug} artwork={artwork} />
-            ))}
-          </div>
+          {newWorks.length > 0 ? (
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {newWorks.map((artwork) => (
+                <ArtworkCard key={artwork.slug} artwork={artwork} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-ink-faint">곧 새로운 작품을 선보입니다.</p>
+          )}
         </div>
       </section>
+
+      {featuredProducts.length > 0 && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+            <div className="mb-6 flex items-baseline justify-between">
+              <h2 className="font-editorial text-xl">Shop, 작품이 스민 오브제</h2>
+              <Link href="/shop" className="text-xs text-ink-soft hover:text-ink">
+                전체 보기 →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+              {featuredProducts.map((product) => (
+                <MerchProductCard key={product.slug} product={product} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="border-t border-line bg-ink text-paper">
+        <div className="mx-auto max-w-2xl px-5 py-16 text-center md:px-8 md:py-20">
+          <p className="mb-3 text-xs font-semibold tracking-[0.16em] text-gold-soft uppercase">
+            Commission
+          </p>
+          <h2 className="font-editorial mb-4 text-2xl leading-snug md:text-3xl">
+            아직 태어나지 않은 한 점을,
+            <br />
+            당신과 함께 기다립니다
+          </h2>
+          <p className="mb-8 text-sm text-paper/70 md:text-base">
+            좋아하는 작가에게 나만의 이야기를 담은 작품을 1:1로 의뢰해보세요.
+          </p>
+          <Link href="/commission" className={buttonClasses("primary")}>
+            커미션 의뢰하기
+          </Link>
+        </div>
+      </section>
+
+      {latestPosts.length > 0 && (
+        <section className="border-t border-line">
+          <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+            <div className="mb-6 flex items-baseline justify-between">
+              <h2 className="font-editorial text-xl">Journal, 예술을 읽는 시간</h2>
+              <Link href="/journal" className="text-xs text-ink-soft hover:text-ink">
+                전체 보기 →
+              </Link>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+              {latestPosts.map((post) => (
+                <ArticleCard key={post.slug} post={post} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

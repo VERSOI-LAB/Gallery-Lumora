@@ -389,6 +389,7 @@ export type Database = {
           quantity: number
           royalty_amount: number
           shipping_address: string
+          status: string
           unit_price: number
           variant_id: string | null
         }
@@ -406,6 +407,7 @@ export type Database = {
           quantity?: number
           royalty_amount: number
           shipping_address: string
+          status?: string
           unit_price: number
           variant_id?: string | null
         }
@@ -423,6 +425,7 @@ export type Database = {
           quantity?: number
           royalty_amount?: number
           shipping_address?: string
+          status?: string
           unit_price?: number
           variant_id?: string | null
         }
@@ -563,6 +566,7 @@ export type Database = {
           payment_method: string
           phone: string
           shipping_address: string
+          status: string
         }
         Insert: {
           amount: number
@@ -576,6 +580,7 @@ export type Database = {
           payment_method: string
           phone: string
           shipping_address: string
+          status?: string
         }
         Update: {
           amount?: number
@@ -589,6 +594,7 @@ export type Database = {
           payment_method?: string
           phone?: string
           shipping_address?: string
+          status?: string
         }
         Relationships: [
           {
@@ -682,6 +688,7 @@ export type Database = {
           product_title: string
           quantity: number
           shipping_address: string
+          status: string
           unit_price: number
           variant_label: string
         }[]

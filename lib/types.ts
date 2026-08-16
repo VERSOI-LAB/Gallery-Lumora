@@ -81,6 +81,8 @@ export interface MerchVariant {
   priceDelta: number;
 }
 
+export type OrderStatus = "paid" | "preparing" | "shipped" | "delivered" | "cancelled";
+
 export interface MerchOrder {
   id: string;
   orderNumber: string;
@@ -100,6 +102,7 @@ export interface MerchOrder {
   name: string;
   email: string;
   paymentMethod: string;
+  status: OrderStatus;
   createdAt: string;
 }
 
@@ -168,6 +171,7 @@ export interface ArtworkOrder {
   paymentMethod: string;
   insured: boolean;
   amount: number;
+  status: OrderStatus;
   createdAt: string;
 }
 
