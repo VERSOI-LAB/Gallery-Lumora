@@ -39,7 +39,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-board-line bg-board">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 md:px-8">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6 md:px-8">
         <Link href="/" className="font-editorial text-lg tracking-[0.08em] text-board-ink">
           GALLERY <span className="text-board-accent">LUMORA</span>
         </Link>

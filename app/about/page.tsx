@@ -26,10 +26,6 @@ const CORE_VALUES = [
   },
 ];
 
-function Gold({ children }: { children: React.ReactNode }) {
-  return <span className="text-[#d1a355]">{children}</span>;
-}
-
 export default async function AboutPage() {
   const heroVideo = await getSiteAsset("about_hero_video");
 
@@ -40,11 +36,12 @@ export default async function AboutPage() {
         className="block h-auto w-full border-b border-line"
       />
 
-      {/* Brand story — dark section */}
-      <div className="bg-[#0d1117]">
+      {/* Brand story — inverted section, same monochrome-native pattern as the
+          home page's commission band (bg-ink text-paper), not a separate theme. */}
+      <div className="bg-ink">
         {/* 1. Header & Slogan */}
         <FadeInOnScroll className="mx-auto max-w-2xl px-5 pt-20 pb-14 text-center md:px-8 md:pt-28 md:pb-20">
-          <h1 className="font-editorial text-xl tracking-wide text-[#e8e6e0]">About</h1>
+          <h1 className="font-editorial text-xl tracking-wide text-paper">About</h1>
         </FadeInOnScroll>
 
         {/* 2. Main Manifesto */}
@@ -52,24 +49,25 @@ export default async function AboutPage() {
           delay={150}
           className="mx-auto max-w-2xl px-5 pb-20 text-center md:px-8 md:pb-28"
         >
-          <div className="space-y-6 text-sm leading-8 text-[#c9c4b8] md:text-base md:leading-9">
+          <div className="space-y-6 text-sm leading-8 text-paper/70 md:text-base md:leading-9">
             <p>예술은 단순히 벽을 장식하는 유행이 아닙니다.</p>
             <p>
-              과거 르네상스 시절, <Gold>메디치 가문</Gold>의 위대한 의뢰가 거장들의 천재성을 세상에
-              끌어내고
+              과거 르네상스 시절, <strong className="text-paper font-semibold">메디치 가문</strong>의
+              위대한 의뢰가 거장들의 천재성을 세상에 끌어내고
               <br />
               인류의 유산을 만들어냈듯, 예술은 시대를 뛰어넘어 인간의 영혼과 공간을 변화시키는 가장
               강력한 힘입니다.
             </p>
             <p>
-              갤러리 루모라(Lumora)는 미술의 역사 속에 숨쉬는 <Gold>변치 않는 가치</Gold>를 믿습니다.
-              우리는
+              갤러리 루모라(Lumora)는 미술의 역사 속에 숨쉬는{" "}
+              <strong className="text-paper font-semibold">변치 않는 가치</strong>를 믿습니다. 우리는
               <br />
               시대를 조용히 탐구하며 자신만의 독창적인 세계를 구축해 나가는 작가들의 고유한 가치와
               가능성을 발굴합니다.
             </p>
             <p>
-              한 점의 작품이 만들어지기까지의 고뇌, 그리고 그 안에 담긴 <Gold>무한한 미래의 가능성</Gold>.
+              한 점의 작품이 만들어지기까지의 고뇌, 그리고 그 안에 담긴{" "}
+              <strong className="text-paper font-semibold">무한한 미래의 가능성</strong>.
             </p>
             <p>
               루모라는 작가의 진정한 가치를 재평가하고, 과거의 지혜와 현재의 감성,
@@ -84,18 +82,18 @@ export default async function AboutPage() {
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {CORE_VALUES.map((v, i) => (
               <FadeInOnScroll key={v.number} delay={i * 150} className="h-full">
-                <div className="group h-full border border-[#262c35] bg-[#161B22] p-8 transition-all duration-300 hover:border-[#d1a355]/60 hover:shadow-[0_0_28px_rgba(209,163,85,0.18)]">
-                  <div className="mb-6 text-2xl font-extralight tracking-wide text-[#d1a355]">
+                <div className="group h-full border border-paper/15 p-8 transition-colors duration-300 hover:border-paper/40">
+                  <div className="mb-6 text-2xl font-extralight tracking-wide text-paper">
                     {v.number}
                   </div>
-                  <div className="mb-1 text-[11px] font-semibold tracking-[0.15em] text-[#8a8471] uppercase">
+                  <div className="mb-1 text-[11px] font-semibold tracking-[0.15em] text-paper/50 uppercase">
                     {v.tagEn}
                   </div>
-                  <h3 className="font-editorial mb-4 text-lg text-[#e8e6e0]">{v.tagKo}</h3>
-                  <p className="font-editorial mb-4 text-sm leading-7 text-[#d1a355] italic">
+                  <h3 className="font-editorial mb-4 text-lg text-paper">{v.tagKo}</h3>
+                  <p className="font-editorial mb-4 text-sm leading-7 text-paper italic">
                     &ldquo;{v.quote}&rdquo;
                   </p>
-                  <p className="text-xs leading-6 text-[#9a9488]">{v.body}</p>
+                  <p className="text-xs leading-6 text-paper/60">{v.body}</p>
                 </div>
               </FadeInOnScroll>
             ))}
@@ -104,17 +102,17 @@ export default async function AboutPage() {
 
         {/* 4. Closing & Call to Action */}
         <FadeInOnScroll className="mx-auto max-w-2xl px-5 pb-24 text-center md:px-8 md:pb-32">
-          <p className="mb-6 text-sm leading-8 text-[#c9c4b8] md:text-base">
+          <p className="mb-6 text-sm leading-8 text-paper/70 md:text-base">
             빛을 발하지 못한 위대한 예술은 없습니다.
             <br />
             단지 그 빛을 알아보는 눈을 기다릴 뿐입니다.
           </p>
-          <p className="mb-8 text-sm leading-8 text-[#c9c4b8] md:text-base">
+          <p className="mb-8 text-sm leading-8 text-paper/70 md:text-base">
             작가에게는 창작의 숭고함이 인정받는 곳,
             <br />
             기업과 개인에게는 영혼을 울리는 예술을 소장하는 기쁨이 시작되는 곳.
           </p>
-          <p className="font-editorial text-lg text-[#e8e6e0] md:text-xl">
+          <p className="font-editorial text-lg text-paper md:text-xl">
             시대를 잇는 예술의 빛,
             <br />
             갤러리 루모라와 함께 당신만의 역사를 시작하세요.

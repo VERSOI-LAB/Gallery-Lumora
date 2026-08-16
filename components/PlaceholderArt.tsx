@@ -27,14 +27,12 @@ export default function PlaceholderArt({
   kind?: "scene" | "portrait";
   className?: string;
 }) {
-  const c1 = `hsl(${hue} 38% 90%)`;
-  const c2 = `hsl(${(hue + 40) % 360} 32% 74%)`;
-  const c3 = `hsl(${(hue + 210) % 360} 26% 52%)`;
+  void hue;
   const [p1, p2, p3] = LAYOUTS[variant % LAYOUTS.length];
 
   const backdropStyle = {
-    backgroundColor: "#efe9d8",
-    backgroundImage: `radial-gradient(circle at ${p1}, ${c3} 0%, transparent 55%), radial-gradient(circle at ${p2}, ${c2} 0%, transparent 60%), radial-gradient(circle at ${p3}, ${c1} 0%, transparent 65%)`,
+    backgroundColor: "#f2f2f2",
+    backgroundImage: `radial-gradient(circle at ${p1}, #bfbfbf 0%, transparent 55%), radial-gradient(circle at ${p2}, #d9d9d9 0%, transparent 60%), radial-gradient(circle at ${p3}, #ececec 0%, transparent 65%)`,
   };
 
   if (!seed) {

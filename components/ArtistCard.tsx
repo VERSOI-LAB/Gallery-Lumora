@@ -5,7 +5,7 @@ import type { Artist } from "@/lib/types";
 export default function ArtistCard({
   artist,
   compact = false,
-  layout = "circle",
+  layout = "square",
 }: {
   artist: Artist;
   compact?: boolean;
@@ -13,7 +13,10 @@ export default function ArtistCard({
 }) {
   if (layout === "square") {
     return (
-      <Link href={`/artists/${artist.slug}`} className="group block">
+      <Link
+        href={`/artists/${artist.slug}`}
+        className={`group block ${compact ? "w-40 flex-none" : ""}`}
+      >
         <div className="aspect-square overflow-hidden border border-line">
           <PlaceholderArt
             hue={artist.hue}

@@ -11,7 +11,7 @@ export default function AdminArtistList({ artists }: { artists: Artist[] }) {
     <div className="divide-y divide-line border-y border-line">
       {artists.map((artist) => (
         <div key={artist.id} className="flex items-center gap-4 py-4">
-          <div className="h-14 w-14 flex-none overflow-hidden rounded-full">
+          <div className="h-14 w-14 flex-none overflow-hidden border border-line">
             <PlaceholderArt hue={artist.hue} seed={artist.slug} kind="portrait" className="h-full w-full" />
           </div>
 

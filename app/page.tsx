@@ -36,7 +36,7 @@ export default async function HomePage() {
       />
       <section className="border-b border-line">
         <HeroVideo src={heroVideo || "/videos/home-hero.mp4"} className="block h-auto w-full" />
-        <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-14">
+        <div className="mx-auto max-w-6xl px-5 py-14 md:px-8 md:py-20">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-patina">
             Gallery Lumora
           </p>
@@ -58,7 +58,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+      <section className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
         <div className="mb-6 flex items-baseline justify-between">
           <h2 className="font-editorial text-xl">지금, 이 순간의 작가들</h2>
           <Link href="/artists" className="text-xs text-ink-soft hover:text-ink">
@@ -83,7 +83,7 @@ export default async function HomePage() {
       </section>
 
       <section className="border-t border-line">
-        <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+        <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
           <div className="mb-6 flex items-baseline justify-between">
             <h2 className="font-editorial text-xl">새로 태어난 작품들</h2>
             <Link href="/works" className="text-xs text-ink-soft hover:text-ink">
@@ -91,7 +91,7 @@ export default async function HomePage() {
             </Link>
           </div>
           {newWorks.length > 0 ? (
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               {newWorks.map((artwork) => (
                 <ArtworkCard key={artwork.slug} artwork={artwork} />
               ))}
@@ -104,14 +104,14 @@ export default async function HomePage() {
 
       {featuredProducts.length > 0 && (
         <section className="border-t border-line">
-          <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+          <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
             <div className="mb-6 flex items-baseline justify-between">
               <h2 className="font-editorial text-xl">Shop, 작품이 스민 오브제</h2>
               <Link href="/shop" className="text-xs text-ink-soft hover:text-ink">
                 전체 보기 →
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+            <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
               {featuredProducts.map((product) => (
                 <MerchProductCard key={product.slug} product={product} />
               ))}
@@ -141,14 +141,14 @@ export default async function HomePage() {
 
       {latestPosts.length > 0 && (
         <section className="border-t border-line">
-          <div className="mx-auto max-w-6xl px-5 py-12 md:px-8">
+          <div className="mx-auto max-w-6xl px-5 py-16 md:px-8 md:py-20">
             <div className="mb-6 flex items-baseline justify-between">
               <h2 className="font-editorial text-xl">Journal, 예술을 읽는 시간</h2>
               <Link href="/journal" className="text-xs text-ink-soft hover:text-ink">
                 전체 보기 →
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 md:grid-cols-3">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-12 md:grid-cols-3">
               {latestPosts.map((post) => (
                 <ArticleCard key={post.slug} post={post} />
               ))}

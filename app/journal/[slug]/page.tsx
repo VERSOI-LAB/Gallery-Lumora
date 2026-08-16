@@ -76,7 +76,7 @@ export default async function JournalDetailPage({
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
               {relatedArtist && (
                 <Link href={`/artists/${relatedArtist.slug}`} className="group block text-center">
-                  <div className="mx-auto mb-2 h-20 w-20 overflow-hidden rounded-full border border-line">
+                  <div className="mx-auto mb-2 h-20 w-20 overflow-hidden border border-line">
                     <PlaceholderArt
                       hue={relatedArtist.hue}
                       seed={relatedArtist.slug}
