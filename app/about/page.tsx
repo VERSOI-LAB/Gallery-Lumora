@@ -117,7 +117,7 @@ export default function AboutPage() {
           <p className="font-editorial text-lg text-[#e8e6e0] md:text-xl">
             시대를 잇는 예술의 빛,
             <br />
-            갤러리 루모라와 함께 당신만의 역사를 시작하세요.
+            당신의 공간에 피어나는 단 하나의 마스터피스.
           </p>
         </FadeInOnScroll>
       </div>
