@@ -3,6 +3,7 @@ import ArtworkCard from "@/components/ArtworkCard";
 import ArtistCard from "@/components/ArtistCard";
 import ArticleCard from "@/components/ArticleCard";
 import MerchProductCard from "@/components/MerchProductCard";
+import HeroVideo from "@/components/HeroVideo";
 import { getArtists, getArtworks, getJournalPosts, getMerchProducts, getSiteAsset } from "@/lib/queries";
 import { buttonClasses } from "@/lib/ui";
 
@@ -34,15 +35,7 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <section className="border-b border-line">
-        <video
-          key={heroVideo ?? "default"}
-          src={heroVideo || "/videos/home-hero.mp4"}
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="block h-auto w-full"
-        />
+        <HeroVideo src={heroVideo || "/videos/home-hero.mp4"} className="block h-auto w-full" />
         <div className="mx-auto max-w-6xl px-5 py-10 md:px-8 md:py-14">
           <p className="mb-4 text-xs font-semibold uppercase tracking-[0.16em] text-patina">
             Gallery Lumora
@@ -73,10 +66,16 @@ export default async function HomePage() {
           </Link>
         </div>
         {artists.length > 0 ? (
-          <div className="flex gap-6 overflow-x-auto pb-2">
-            {artists.map((artist) => (
-              <ArtistCard key={artist.slug} artist={artist} compact />
-            ))}
+          <div className="relative">
+            <div className="flex gap-6 overflow-x-auto pb-2">
+              {artists.map((artist) => (
+                <ArtistCard key={artist.slug} artist={artist} compact />
+              ))}
+            </div>
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-paper to-transparent"
+            />
           </div>
         ) : (
           <p className="text-sm text-ink-faint">곧 새로운 작가를 소개해드립니다.</p>

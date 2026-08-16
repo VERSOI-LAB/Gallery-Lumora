@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { tabClasses } from "@/lib/ui";
+import { useMemo, useState } from "react";
+import { buttonClasses, tabClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
 import { updateArtworkOrderStatus, updateMerchOrderStatus } from "@/lib/queries";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
+import { downloadCsv } from "@/lib/csv";
 import type { ArtworkOrder, MerchOrder, OrderStatus } from "@/lib/types";
 
 function StatusSelect({
@@ -43,6 +44,8 @@ export default function AdminOrdersBrowser({
   const [artworkOrders, setArtworkOrders] = useState(initialArtworkOrders);
   const [merchOrders, setMerchOrders] = useState(initialMerchOrders);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState<OrderStatus | "all">("all");
 
   async function changeArtworkStatus(id: string, status: OrderStatus) {
     setPendingId(id);
@@ -70,23 +73,128 @@ export default function AdminOrdersBrowser({
     }
   }
 
+  const term = keyword.trim().toLowerCase();
+
+  const filteredArtworkOrders = useMemo(() => {
+    return artworkOrders.filter((o) => {
+      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (!term) return true;
+      return (
+        o.artworkTitle.toLowerCase().includes(term) ||
+        o.artistName.toLowerCase().includes(term) ||
+        o.name.toLowerCase().includes(term) ||
+        o.phone.includes(term) ||
+        o.email.toLowerCase().includes(term) ||
+        o.orderNumber.toLowerCase().includes(term)
+      );
+    });
+  }, [artworkOrders, statusFilter, term]);
+
+  const filteredMerchOrders = useMemo(() => {
+    return merchOrders.filter((o) => {
+      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+      if (!term) return true;
+      return (
+        o.productTitle.toLowerCase().includes(term) ||
+        o.name.toLowerCase().includes(term) ||
+        o.phone.includes(term) ||
+        o.email.toLowerCase().includes(term) ||
+        o.orderNumber.toLowerCase().includes(term)
+      );
+    });
+  }, [merchOrders, statusFilter, term]);
+
+  function exportCsv() {
+    const today = new Date().toISOString().slice(0, 10);
+    if (tab === "artwork") {
+      downloadCsv(
+        `lumora-artwork-orders-${today}.csv`,
+        filteredArtworkOrders.map((o) => ({
+          주문번호: o.orderNumber,
+          작품명: o.artworkTitle,
+          작가: o.artistName,
+          금액: o.amount,
+          상태: ORDER_STATUS_LABEL[o.status],
+          이름: o.name,
+          연락처: o.phone,
+          이메일: o.email,
+          배송지: o.shippingAddress,
+          결제수단: o.paymentMethod,
+          주문일: formatDate(o.createdAt),
+        }))
+      );
+    } else {
+      downloadCsv(
+        `lumora-merch-orders-${today}.csv`,
+        filteredMerchOrders.map((o) => ({
+          주문번호: o.orderNumber,
+          상품명: o.productTitle,
+          옵션: o.variantLabel ?? "",
+          수량: o.quantity,
+          금액: o.amount,
+          상태: ORDER_STATUS_LABEL[o.status],
+          이름: o.name,
+          연락처: o.phone,
+          이메일: o.email,
+          배송지: o.shippingAddress,
+          결제수단: o.paymentMethod,
+          주문일: formatDate(o.createdAt),
+        }))
+      );
+    }
+  }
+
   return (
     <div>
-      <div className="mb-6 flex gap-6 border-b border-line">
-        <button type="button" onClick={() => setTab("artwork")} className={tabClasses(tab === "artwork")}>
-          작품 주문 ({artworkOrders.length})
-        </button>
-        <button type="button" onClick={() => setTab("merch")} className={tabClasses(tab === "merch")}>
-          굿즈 주문 ({merchOrders.length})
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-line">
+        <div className="flex gap-6">
+          <button type="button" onClick={() => setTab("artwork")} className={tabClasses(tab === "artwork")}>
+            작품 주문 ({artworkOrders.length})
+          </button>
+          <button type="button" onClick={() => setTab("merch")} className={tabClasses(tab === "merch")}>
+            굿즈 주문 ({merchOrders.length})
+          </button>
+        </div>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={(tab === "artwork" ? filteredArtworkOrders : filteredMerchOrders).length === 0}
+          className={`${buttonClasses("ghost", "sm")} mb-2 disabled:opacity-40`}
+        >
+          CSV 내보내기
         </button>
       </div>
 
+      <div className="mb-5 flex flex-wrap gap-3">
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="이름, 연락처, 이메일, 주문번호로 검색"
+          className="h-9 flex-1 min-w-[200px] border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value as OrderStatus | "all")}
+          className="h-9 border border-line-strong bg-paper-raised px-2 text-sm outline-patina"
+        >
+          <option value="all">모든 상태</option>
+          {(Object.keys(ORDER_STATUS_LABEL) as OrderStatus[]).map((s) => (
+            <option key={s} value={s}>
+              {ORDER_STATUS_LABEL[s]}
+            </option>
+          ))}
+        </select>
+      </div>
+
       {tab === "artwork" ? (
-        artworkOrders.length === 0 ? (
-          <p className="text-sm text-ink-faint">접수된 작품 주문이 없습니다.</p>
+        filteredArtworkOrders.length === 0 ? (
+          <p className="text-sm text-ink-faint">
+            {artworkOrders.length === 0 ? "접수된 작품 주문이 없습니다." : "검색 결과가 없습니다."}
+          </p>
         ) : (
           <div className="divide-y divide-line border-y border-line">
-            {artworkOrders.map((order) => (
+            {filteredArtworkOrders.map((order) => (
               <div key={order.id} className="py-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm font-semibold">{order.artworkTitle}</span>
@@ -113,11 +221,13 @@ export default function AdminOrdersBrowser({
             ))}
           </div>
         )
-      ) : merchOrders.length === 0 ? (
-        <p className="text-sm text-ink-faint">접수된 굿즈 주문이 없습니다.</p>
+      ) : filteredMerchOrders.length === 0 ? (
+        <p className="text-sm text-ink-faint">
+          {merchOrders.length === 0 ? "접수된 굿즈 주문이 없습니다." : "검색 결과가 없습니다."}
+        </p>
       ) : (
         <div className="divide-y divide-line border-y border-line">
-          {merchOrders.map((order) => (
+          {filteredMerchOrders.map((order) => (
             <div key={order.id} className="py-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-sm font-semibold">

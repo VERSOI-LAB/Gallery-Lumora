@@ -12,7 +12,7 @@ export default function ArticleCard({ post }: { post: JournalPost }) {
         {post.coverImageUrl ? (
           <Image
             src={post.coverImageUrl}
-            alt=""
+            alt={post.title}
             fill
             sizes="(max-width: 768px) 50vw, 400px"
             className="object-cover transition-transform duration-500 group-hover:scale-105"

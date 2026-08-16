@@ -18,7 +18,14 @@ export default function FeaturedProducts({
   const slides = products.map((product) => ({
     key: product.slug,
     image: mainImageUrl ? (
-      <Image src={mainImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+      <Image
+        src={mainImageUrl}
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 768px) 100vw, 60vw"
+        className="object-cover"
+      />
     ) : (
       <PlaceholderArt
         hue={product.hue}

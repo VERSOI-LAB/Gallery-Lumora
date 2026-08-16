@@ -956,6 +956,17 @@ export async function getAllMerchOrders(): Promise<MerchOrder[]> {
   return data.map(toAdminMerchOrder);
 }
 
+export async function getArtworkOrdersByPhone(phone: string): Promise<ArtworkOrder[]> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_WITH_ARTWORK_SELECT)
+    .eq("phone", phone)
+    .order("created_at", { ascending: false })
+    .returns<OrderWithArtworkRow[]>();
+  if (error) throw error;
+  return data.map(toArtworkOrder);
+}
+
 export async function updateArtworkOrderStatus(id: string, status: OrderStatus): Promise<void> {
   const { error } = await supabase.from("orders").update({ status }).eq("id", id);
   if (error) throw error;

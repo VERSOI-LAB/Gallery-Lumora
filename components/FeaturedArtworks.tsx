@@ -17,7 +17,14 @@ export default function FeaturedArtworks({
   const slides = artworks.map((artwork) => ({
     key: artwork.slug,
     image: mainImageUrl ? (
-      <Image src={mainImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+      <Image
+        src={mainImageUrl}
+        alt=""
+        fill
+        priority
+        sizes="(max-width: 768px) 100vw, 60vw"
+        className="object-cover"
+      />
     ) : (
       <PlaceholderArt
         hue={artwork.hue}

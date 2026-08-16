@@ -1,4 +1,5 @@
 import FadeInOnScroll from "@/components/FadeInOnScroll";
+import HeroVideo from "@/components/HeroVideo";
 import { getSiteAsset } from "@/lib/queries";
 
 const CORE_VALUES = [
@@ -34,13 +35,8 @@ export default async function AboutPage() {
 
   return (
     <div>
-      <video
-        key={heroVideo ?? "default"}
+      <HeroVideo
         src={heroVideo || "/videos/about-hero.mp4"}
-        autoPlay
-        loop
-        muted
-        playsInline
         className="block h-auto w-full border-b border-line"
       />
 
