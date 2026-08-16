@@ -17,6 +17,8 @@ export default function CheckoutForm({
 }) {
   const [shippingAddress, setShippingAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
   const [insured, setInsured] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -32,6 +34,8 @@ export default function CheckoutForm({
         artworkId: artwork.id,
         shippingAddress,
         phone,
+        name,
+        email,
         paymentMethod,
         insured,
       });
@@ -68,6 +72,24 @@ export default function CheckoutForm({
       <h1 className="mb-8 font-display text-2xl">결제</h1>
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_320px]">
         <form onSubmit={handleSubmit} className="space-y-5">
+          <Field label="이름">
+            <input
+              required
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="이메일">
+            <input
+              required
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
           <Field label="배송지">
             <textarea
               required

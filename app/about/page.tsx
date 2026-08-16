@@ -1,4 +1,5 @@
 import FadeInOnScroll from "@/components/FadeInOnScroll";
+import { getSiteAsset } from "@/lib/queries";
 
 const CORE_VALUES = [
   {
@@ -28,11 +29,14 @@ function Gold({ children }: { children: React.ReactNode }) {
   return <span className="text-[#d1a355]">{children}</span>;
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const heroVideo = await getSiteAsset("about_hero_video");
+
   return (
     <div>
       <video
-        src="/videos/about-hero.mp4"
+        key={heroVideo ?? "default"}
+        src={heroVideo || "/videos/about-hero.mp4"}
         autoPlay
         loop
         muted

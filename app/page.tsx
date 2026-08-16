@@ -1,18 +1,23 @@
 import Link from "next/link";
 import ArtworkCard from "@/components/ArtworkCard";
 import ArtistCard from "@/components/ArtistCard";
-import { getArtists, getArtworks } from "@/lib/queries";
+import { getArtists, getArtworks, getSiteAsset } from "@/lib/queries";
 import { buttonClasses } from "@/lib/ui";
 
 export default async function HomePage() {
-  const [artists, artworks] = await Promise.all([getArtists(), getArtworks()]);
+  const [artists, artworks, heroVideo] = await Promise.all([
+    getArtists(),
+    getArtworks(),
+    getSiteAsset("home_hero_video"),
+  ]);
   const newWorks = artworks.slice(0, 4);
 
   return (
     <div>
       <section className="border-b border-line">
         <video
-          src="/videos/home-hero.mp4"
+          key={heroVideo ?? "default"}
+          src={heroVideo || "/videos/home-hero.mp4"}
           autoPlay
           loop
           muted

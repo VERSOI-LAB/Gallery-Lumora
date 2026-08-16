@@ -2,19 +2,27 @@ import { supabase } from "./supabase";
 import type { Database } from "./database.types";
 import type {
   Artist,
+  ArtistApplication,
   Artwork,
+  ArtworkOrder,
   CommissionInquiry,
+  GeneralInquiry,
   JournalPost,
   MerchOrder,
   MerchProduct,
   MerchVariant,
   Profile,
+  SiteAssetKey,
 } from "./types";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ArtistRow = Database["public"]["Tables"]["artists"]["Row"];
 type ArtworkRow = Database["public"]["Tables"]["artworks"]["Row"];
 type InquiryRow = Database["public"]["Tables"]["commission_inquiries"]["Row"];
+type ArtistApplicationRow = Database["public"]["Tables"]["artist_applications"]["Row"];
+type GeneralInquiryRow = Database["public"]["Tables"]["general_inquiries"]["Row"];
+type OrderRow = Database["public"]["Tables"]["orders"]["Row"];
+type MerchOrderRow = Database["public"]["Tables"]["merch_orders"]["Row"];
 type JournalRow = Database["public"]["Tables"]["journal_posts"]["Row"];
 type MerchProductRow = Database["public"]["Tables"]["merch_products"]["Row"];
 type MerchVariantRow = Database["public"]["Tables"]["merch_variants"]["Row"];
@@ -23,6 +31,13 @@ type ArtworkWithArtistRow = ArtworkRow & { artists: { name: string } | null };
 type MerchProductWithRelationsRow = MerchProductRow & {
   artworks: { slug: string; title: string } | null;
   artists: { slug: string; name: string } | null;
+};
+type OrderWithArtworkRow = OrderRow & {
+  artworks: { title: string; artists: { name: string } | null } | null;
+};
+type MerchOrderWithProductRow = MerchOrderRow & {
+  merch_products: { slug: string; title: string; category: string; cover_hue: number; cover_variant: number } | null;
+  merch_variants: { label: string } | null;
 };
 
 const ARTWORK_WITH_ARTIST_SELECT = "*, artists ( name )";
@@ -94,6 +109,7 @@ function toJournalPost(row: JournalRow): JournalPost {
       .filter(Boolean),
     coverHue: row.cover_hue,
     coverVariant: row.cover_variant,
+    coverImageUrl: row.cover_image_url,
     author: row.author,
     readMinutes: row.read_minutes,
     relatedArtistId: row.related_artist_id,
@@ -150,6 +166,82 @@ function toProfile(row: ProfileRow): Profile {
   };
 }
 
+function toArtistApplication(row: ArtistApplicationRow): ArtistApplication {
+  return {
+    id: row.id,
+    artistName: row.artist_name,
+    nameEn: row.name_en,
+    tagline: row.tagline,
+    bio: row.bio,
+    styleTags: row.style_tags,
+    commissionMedia: row.commission_media,
+    portfolioUrl: row.portfolio_url,
+    sampleArtworkTitle: row.sample_artwork_title,
+    sampleArtworkNote: row.sample_artwork_note,
+    name: row.name,
+    phone: row.phone,
+    email: row.email,
+    message: row.message,
+    status: row.status as ArtistApplication["status"],
+    createdAt: row.created_at,
+  };
+}
+
+function toGeneralInquiry(row: GeneralInquiryRow): GeneralInquiry {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    category: row.category as GeneralInquiry["category"],
+    message: row.message,
+    status: row.status as GeneralInquiry["status"],
+    createdAt: row.created_at,
+  };
+}
+
+function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    artworkId: row.artwork_id,
+    artworkTitle: row.artworks?.title ?? "(삭제된 작품)",
+    artistName: row.artworks?.artists?.name ?? "",
+    shippingAddress: row.shipping_address,
+    phone: row.phone,
+    name: row.name,
+    email: row.email,
+    paymentMethod: row.payment_method,
+    insured: row.insured,
+    amount: row.amount,
+    createdAt: row.created_at,
+  };
+}
+
+function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    productId: row.product_id,
+    productSlug: row.merch_products?.slug ?? "",
+    productTitle: row.merch_products?.title ?? "(삭제된 상품)",
+    productCategory: row.merch_products?.category ?? "",
+    hue: row.merch_products?.cover_hue ?? 90,
+    variant: row.merch_products?.cover_variant ?? 0,
+    variantLabel: row.merch_variants?.label ?? null,
+    editionNumber: row.edition_number,
+    quantity: row.quantity,
+    unitPrice: row.unit_price,
+    amount: row.amount,
+    shippingAddress: row.shipping_address,
+    phone: row.phone,
+    name: row.name,
+    email: row.email,
+    paymentMethod: row.payment_method,
+    createdAt: row.created_at,
+  };
+}
+
 function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
   return {
     id: row.id,
@@ -167,6 +259,8 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     amount: row.amount,
     shippingAddress: row.shipping_address,
     phone: row.phone,
+    name: "",
+    email: "",
     paymentMethod: row.payment_method,
     createdAt: row.created_at,
   };
@@ -309,6 +403,8 @@ export interface PurchaseInput {
   artworkId: string;
   shippingAddress: string;
   phone: string;
+  name: string;
+  email: string;
   paymentMethod: string;
   insured: boolean;
 }
@@ -320,6 +416,8 @@ export async function purchaseArtwork(
     p_artwork_id: input.artworkId,
     p_shipping_address: input.shippingAddress,
     p_phone: input.phone,
+    p_name: input.name,
+    p_email: input.email,
     p_payment_method: input.paymentMethod,
     p_insured: input.insured,
   });
@@ -459,6 +557,8 @@ export interface MerchPurchaseInput {
   quantity: number;
   shippingAddress: string;
   phone: string;
+  name: string;
+  email: string;
   paymentMethod: string;
 }
 
@@ -471,6 +571,8 @@ export async function purchaseMerch(
     p_quantity: input.quantity,
     p_shipping_address: input.shippingAddress,
     p_phone: input.phone,
+    p_name: input.name,
+    p_email: input.email,
     p_payment_method: input.paymentMethod,
   });
   if (error) throw error;
@@ -558,4 +660,153 @@ export async function submitArtistApplication(input: ArtistApplicationInput): Pr
     message: input.message,
   });
   if (error) throw error;
+}
+
+export async function getArtistApplications(): Promise<ArtistApplication[]> {
+  const { data, error } = await supabase
+    .from("artist_applications")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map(toArtistApplication);
+}
+
+export async function reviewArtistApplication(
+  id: string,
+  decision: "accepted" | "declined"
+): Promise<void> {
+  const { error } = await supabase.rpc("review_artist_application", {
+    p_application_id: id,
+    p_decision: decision,
+  });
+  if (error) throw error;
+}
+
+export async function getGeneralInquiries(): Promise<GeneralInquiry[]> {
+  const { data, error } = await supabase
+    .from("general_inquiries")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data.map(toGeneralInquiry);
+}
+
+export async function updateGeneralInquiryStatus(
+  id: string,
+  status: "reviewing" | "done"
+): Promise<void> {
+  const { error } = await supabase.from("general_inquiries").update({ status }).eq("id", id);
+  if (error) throw error;
+}
+
+const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, artists ( name ) )";
+const MERCH_ORDER_WITH_PRODUCT_SELECT =
+  "*, merch_products ( slug, title, category, cover_hue, cover_variant ), merch_variants ( label )";
+
+export async function getAllArtworkOrders(): Promise<ArtworkOrder[]> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_WITH_ARTWORK_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<OrderWithArtworkRow[]>();
+  if (error) throw error;
+  return data.map(toArtworkOrder);
+}
+
+export async function getAllMerchOrders(): Promise<MerchOrder[]> {
+  const { data, error } = await supabase
+    .from("merch_orders")
+    .select(MERCH_ORDER_WITH_PRODUCT_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<MerchOrderWithProductRow[]>();
+  if (error) throw error;
+  return data.map(toAdminMerchOrder);
+}
+
+export interface JournalPostInput {
+  slug: string;
+  category: "art-history" | "interview" | "guide" | "news";
+  title: string;
+  excerpt: string;
+  body: string;
+  author: string;
+  readMinutes: number;
+  coverHue: number;
+  coverVariant: number;
+  coverImageUrl: string | null;
+}
+
+export async function createJournalPost(input: JournalPostInput): Promise<void> {
+  const { error } = await supabase.from("journal_posts").insert({
+    slug: input.slug,
+    category: input.category,
+    title: input.title,
+    excerpt: input.excerpt,
+    body: input.body,
+    author: input.author,
+    read_minutes: input.readMinutes,
+    cover_hue: input.coverHue,
+    cover_variant: input.coverVariant,
+    cover_image_url: input.coverImageUrl,
+  });
+  if (error) throw error;
+}
+
+export async function updateJournalPost(id: string, input: JournalPostInput): Promise<void> {
+  const { error } = await supabase
+    .from("journal_posts")
+    .update({
+      slug: input.slug,
+      category: input.category,
+      title: input.title,
+      excerpt: input.excerpt,
+      body: input.body,
+      author: input.author,
+      read_minutes: input.readMinutes,
+      cover_hue: input.coverHue,
+      cover_variant: input.coverVariant,
+      cover_image_url: input.coverImageUrl,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteJournalPost(id: string): Promise<void> {
+  const { error } = await supabase.from("journal_posts").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getJournalPostById(id: string): Promise<JournalPost | null> {
+  const { data, error } = await supabase.from("journal_posts").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data ? toJournalPost(data) : null;
+}
+
+export async function getSiteAssets(): Promise<Record<SiteAssetKey, string | null>> {
+  const { data, error } = await supabase.from("site_assets").select("key, url");
+  if (error) throw error;
+  const result: Record<string, string | null> = {};
+  for (const row of data) result[row.key] = row.url;
+  return result as Record<SiteAssetKey, string | null>;
+}
+
+export async function getSiteAsset(key: SiteAssetKey): Promise<string | null> {
+  const { data, error } = await supabase.from("site_assets").select("url").eq("key", key).maybeSingle();
+  if (error) throw error;
+  return data?.url ?? null;
+}
+
+export async function updateSiteAsset(key: SiteAssetKey, url: string): Promise<void> {
+  const { error } = await supabase
+    .from("site_assets")
+    .update({ url, updated_at: new Date().toISOString() })
+    .eq("key", key);
+  if (error) throw error;
+}
+
+export async function uploadMedia(path: string, file: File): Promise<string> {
+  const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+  if (error) throw error;
+  const { data } = supabase.storage.from("media").getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
 }

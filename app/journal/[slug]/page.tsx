@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import ArticleCard from "@/components/ArticleCard";
 import PlaceholderArt from "@/components/PlaceholderArt";
@@ -39,12 +40,18 @@ export default async function JournalDetailPage({
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
-      <PlaceholderArt
-        hue={post.coverHue}
-        variant={post.coverVariant}
-        seed={post.slug}
-        className="mb-8 aspect-[3/1] w-full"
-      />
+      {post.coverImageUrl ? (
+        <div className="relative mb-8 aspect-[3/1] w-full overflow-hidden">
+          <Image src={post.coverImageUrl} alt="" fill sizes="100vw" className="object-cover" />
+        </div>
+      ) : (
+        <PlaceholderArt
+          hue={post.coverHue}
+          variant={post.coverVariant}
+          seed={post.slug}
+          className="mb-8 aspect-[3/1] w-full"
+        />
+      )}
 
       <div className="mx-auto max-w-2xl">
         <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">

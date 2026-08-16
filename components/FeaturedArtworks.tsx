@@ -1,15 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import FeaturedCarousel from "./FeaturedCarousel";
 import PlaceholderArt from "./PlaceholderArt";
 import { buttonClasses } from "@/lib/ui";
 import type { Artwork } from "@/lib/types";
 
-export default function FeaturedArtworks({ artworks }: { artworks: Artwork[] }) {
+export default function FeaturedArtworks({
+  artworks,
+  mainImageUrl,
+}: {
+  artworks: Artwork[];
+  mainImageUrl?: string | null;
+}) {
   const slides = artworks.map((artwork) => ({
     key: artwork.slug,
-    image: (
+    image: mainImageUrl ? (
+      <Image src={mainImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+    ) : (
       <PlaceholderArt
         hue={artwork.hue}
         variant={artwork.variant}

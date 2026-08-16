@@ -1,16 +1,25 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import FeaturedCarousel from "./FeaturedCarousel";
 import PlaceholderArt from "./PlaceholderArt";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import type { MerchProduct } from "@/lib/types";
 
-export default function FeaturedProducts({ products }: { products: MerchProduct[] }) {
+export default function FeaturedProducts({
+  products,
+  mainImageUrl,
+}: {
+  products: MerchProduct[];
+  mainImageUrl?: string | null;
+}) {
   const slides = products.map((product) => ({
     key: product.slug,
-    image: (
+    image: mainImageUrl ? (
+      <Image src={mainImageUrl} alt="" fill sizes="(max-width: 768px) 100vw, 60vw" className="object-cover" />
+    ) : (
       <PlaceholderArt
         hue={product.hue}
         variant={product.variant}

@@ -20,6 +20,8 @@ export default function MerchPurchaseForm({
   const [quantity, setQuantity] = useState(1);
   const [shippingAddress, setShippingAddress] = useState("");
   const [phone, setPhone] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,8 @@ export default function MerchPurchaseForm({
         quantity,
         shippingAddress,
         phone,
+        name,
+        email,
         paymentMethod,
       });
       setReceipt(result);
@@ -142,6 +146,24 @@ export default function MerchPurchaseForm({
         <p className="text-xs text-ink-faint">한정 {product.editionSize}점 중 {editionsRemaining}점 남음</p>
       )}
 
+      <Field label="이름">
+        <input
+          required
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+      </Field>
+      <Field label="이메일">
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+      </Field>
       <Field label="배송지">
         <textarea
           required

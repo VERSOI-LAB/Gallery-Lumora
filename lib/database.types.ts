@@ -279,6 +279,7 @@ export type Database = {
           body: string
           category: string
           cover_hue: number
+          cover_image_url: string | null
           cover_variant: number
           created_at: string
           excerpt: string
@@ -296,6 +297,7 @@ export type Database = {
           body: string
           category: string
           cover_hue?: number
+          cover_image_url?: string | null
           cover_variant?: number
           created_at?: string
           excerpt: string
@@ -313,6 +315,7 @@ export type Database = {
           body?: string
           category?: string
           cover_hue?: number
+          cover_image_url?: string | null
           cover_variant?: number
           created_at?: string
           excerpt?: string
@@ -376,7 +379,9 @@ export type Database = {
           amount: number
           created_at: string
           edition_number: number | null
+          email: string
           id: string
+          name: string
           order_number: string
           payment_method: string
           phone: string
@@ -391,7 +396,9 @@ export type Database = {
           amount: number
           created_at?: string
           edition_number?: number | null
+          email?: string
           id?: string
+          name?: string
           order_number: string
           payment_method: string
           phone: string
@@ -406,7 +413,9 @@ export type Database = {
           amount?: number
           created_at?: string
           edition_number?: number | null
+          email?: string
           id?: string
+          name?: string
           order_number?: string
           payment_method?: string
           phone?: string
@@ -546,8 +555,10 @@ export type Database = {
           amount: number
           artwork_id: string
           created_at: string
+          email: string
           id: string
           insured: boolean
+          name: string
           order_number: string
           payment_method: string
           phone: string
@@ -557,8 +568,10 @@ export type Database = {
           amount: number
           artwork_id: string
           created_at?: string
+          email?: string
           id?: string
           insured?: boolean
+          name?: string
           order_number: string
           payment_method: string
           phone: string
@@ -568,8 +581,10 @@ export type Database = {
           amount?: number
           artwork_id?: string
           created_at?: string
+          email?: string
           id?: string
           insured?: boolean
+          name?: string
           order_number?: string
           payment_method?: string
           phone?: string
@@ -626,6 +641,24 @@ export type Database = {
           },
         ]
       }
+      site_assets: {
+        Row: {
+          key: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -654,10 +687,18 @@ export type Database = {
         }[]
       }
       is_username_available: { Args: { p_username: string }; Returns: boolean }
+      review_artist_application: {
+        Args: { p_application_id: string; p_decision: string }
+        Returns: {
+          artist_id: string
+        }[]
+      }
       purchase_artwork: {
         Args: {
           p_artwork_id: string
+          p_email?: string
           p_insured: boolean
+          p_name?: string
           p_payment_method: string
           p_phone: string
           p_shipping_address: string
@@ -669,6 +710,8 @@ export type Database = {
       }
       purchase_merch: {
         Args: {
+          p_email?: string
+          p_name?: string
           p_payment_method: string
           p_phone: string
           p_product_id: string

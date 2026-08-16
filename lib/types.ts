@@ -41,6 +41,7 @@ export interface JournalPost {
   body: string[];
   coverHue: number;
   coverVariant: number;
+  coverImageUrl: string | null;
   author: string;
   readMinutes: number;
   relatedArtistId: string | null;
@@ -96,6 +97,8 @@ export interface MerchOrder {
   amount: number;
   shippingAddress: string;
   phone: string;
+  name: string;
+  email: string;
   paymentMethod: string;
   createdAt: string;
 }
@@ -121,3 +124,55 @@ export interface CommissionInquiry {
   timeline: string;
   status: "new" | "reviewing" | "coordinating" | "accepted" | "declined";
 }
+
+export interface ArtistApplication {
+  id: string;
+  artistName: string;
+  nameEn: string;
+  tagline: string;
+  bio: string;
+  styleTags: string[];
+  commissionMedia: string[];
+  portfolioUrl: string;
+  sampleArtworkTitle: string;
+  sampleArtworkNote: string;
+  name: string;
+  phone: string;
+  email: string;
+  message: string;
+  status: "new" | "reviewing" | "accepted" | "declined";
+  createdAt: string;
+}
+
+export interface GeneralInquiry {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  category: "general" | "consulting" | "other";
+  message: string;
+  status: "new" | "reviewing" | "done";
+  createdAt: string;
+}
+
+export interface ArtworkOrder {
+  id: string;
+  orderNumber: string;
+  artworkId: string;
+  artworkTitle: string;
+  artistName: string;
+  shippingAddress: string;
+  phone: string;
+  name: string;
+  email: string;
+  paymentMethod: string;
+  insured: boolean;
+  amount: number;
+  createdAt: string;
+}
+
+export type SiteAssetKey =
+  | "home_hero_video"
+  | "about_hero_video"
+  | "exhibition_main_image"
+  | "shop_main_image";

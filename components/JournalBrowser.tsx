@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import ArticleCard from "@/components/ArticleCard";
 import PlaceholderArt from "@/components/PlaceholderArt";
 import { tabClasses } from "@/lib/ui";
@@ -56,13 +57,23 @@ export default function JournalBrowser({ posts }: { posts: JournalPost[] }) {
           href={`/journal/${featured.slug}`}
           className="group mb-10 grid grid-cols-1 gap-6 md:grid-cols-[1.1fr_1fr] md:gap-10"
         >
-          <div className="aspect-[4/3] overflow-hidden md:aspect-auto">
-            <PlaceholderArt
-              hue={featured.coverHue}
-              variant={featured.coverVariant}
-              seed={featured.slug}
-              className="h-full w-full min-h-[200px] transition-transform duration-500 group-hover:scale-105"
-            />
+          <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto">
+            {featured.coverImageUrl ? (
+              <Image
+                src={featured.coverImageUrl}
+                alt=""
+                fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <PlaceholderArt
+                hue={featured.coverHue}
+                variant={featured.coverVariant}
+                seed={featured.slug}
+                className="h-full w-full min-h-[200px] transition-transform duration-500 group-hover:scale-105"
+              />
+            )}
           </div>
           <div className="flex flex-col justify-center p-6 md:p-8">
             <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
