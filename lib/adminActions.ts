@@ -7,7 +7,7 @@ import { sendNewArtworkEmail } from "./email";
 import {
   updateArtwork,
   deleteArtwork,
-  setExhibitionFeaturedArtwork,
+  toggleExhibitionFeaturedArtwork,
   createMerchProduct,
   updateMerchProduct,
   updateMerchProductActive,
@@ -75,10 +75,10 @@ export async function adminDeleteArtwork(id: string): Promise<void> {
   revalidatePath("/admin/artworks");
 }
 
-export async function adminSetExhibitionFeaturedArtwork(id: string | null): Promise<void> {
+export async function adminToggleExhibitionFeaturedArtwork(id: string, featured: boolean): Promise<void> {
   await assertAdminSession();
-  await setExhibitionFeaturedArtwork(id, supabaseService);
-  await log("set_exhibition_featured", "artwork", id);
+  await toggleExhibitionFeaturedArtwork(id, featured, supabaseService);
+  await log("set_exhibition_featured", "artwork", id, { featured });
   revalidatePath("/admin/artworks");
   revalidatePath("/works");
 }

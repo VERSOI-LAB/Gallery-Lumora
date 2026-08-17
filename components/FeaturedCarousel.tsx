@@ -15,12 +15,11 @@ export default function FeaturedCarousel({ slides }: { slides: FeaturedSlide[] }
     if (slides.length < 2) return;
     const timer = setInterval(() => {
       setIndex((i) => (i + 1) % slides.length);
-    }, 6000);
+    }, 3000);
     return () => clearInterval(timer);
   }, [slides.length]);
 
   if (slides.length === 0) return null;
-  const slide = slides[index];
 
   function prev() {
     setIndex((i) => (i - 1 + slides.length) % slides.length);
@@ -31,11 +30,20 @@ export default function FeaturedCarousel({ slides }: { slides: FeaturedSlide[] }
 
   return (
     <div className="mb-12">
-      <div className="grid grid-cols-1 md:grid-cols-[1.3fr_1fr]">
-        <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:h-[440px]">
-          {slide.image}
+      <div className="overflow-hidden">
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{ transform: `translateX(-${index * 100}%)` }}
+        >
+          {slides.map((slide) => (
+            <div key={slide.key} className="grid w-full flex-none grid-cols-1 md:grid-cols-[1.3fr_1fr]">
+              <div className="relative aspect-[4/3] overflow-hidden md:aspect-auto md:h-[440px]">
+                {slide.image}
+              </div>
+              <div className="flex flex-col justify-center gap-3 p-8 md:p-12">{slide.caption}</div>
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col justify-center gap-3 p-8 md:p-12">{slide.caption}</div>
       </div>
 
       {slides.length > 1 && (

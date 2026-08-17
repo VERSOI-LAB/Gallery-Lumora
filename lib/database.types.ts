@@ -163,10 +163,10 @@ export type Database = {
           artist_id: string
           created_at: string
           description: string
+          exhibition_featured_at: string | null
           hue: number
           id: string
           image_urls: string[]
-          is_exhibition_featured: boolean
           medium_type_code: string
           merch_enabled: boolean
           price: number
@@ -182,10 +182,10 @@ export type Database = {
           artist_id: string
           created_at?: string
           description?: string
+          exhibition_featured_at?: string | null
           hue?: number
           id?: string
           image_urls?: string[]
-          is_exhibition_featured?: boolean
           medium_type_code: string
           merch_enabled?: boolean
           price: number
@@ -201,10 +201,10 @@ export type Database = {
           artist_id?: string
           created_at?: string
           description?: string
+          exhibition_featured_at?: string | null
           hue?: number
           id?: string
           image_urls?: string[]
-          is_exhibition_featured?: boolean
           medium_type_code?: string
           merch_enabled?: boolean
           price?: number
@@ -1046,10 +1046,6 @@ export type Database = {
           artist_id: string
         }[]
       }
-      set_exhibition_featured_artwork: {
-        Args: { p_artwork_id: string }
-        Returns: undefined
-      }
       submit_review: {
         Args: {
           p_artwork_id: string
@@ -1058,6 +1054,10 @@ export type Database = {
           p_rating: number
         }
         Returns: string
+      }
+      toggle_exhibition_featured_artwork: {
+        Args: { p_artwork_id: string; p_featured: boolean }
+        Returns: undefined
       }
       update_order_shipping: {
         Args: {

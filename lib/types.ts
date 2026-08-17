@@ -34,7 +34,7 @@ export interface Artwork {
   variant: number;
   imageUrls: string[];
   viewCount: number;
-  isExhibitionFeatured: boolean;
+  exhibitionFeaturedAt: string | null;
 }
 
 export interface JournalPost {

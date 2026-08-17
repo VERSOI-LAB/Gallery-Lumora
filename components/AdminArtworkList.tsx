@@ -7,7 +7,8 @@ import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { downloadCsv } from "@/lib/csv";
-import { adminDeleteArtwork, adminSetExhibitionFeaturedArtwork } from "@/lib/adminActions";
+import { adminDeleteArtwork, adminToggleExhibitionFeaturedArtwork } from "@/lib/adminActions";
+import { EXHIBITION_FEATURED_LIMIT } from "@/lib/queries";
 import type { Artwork } from "@/lib/types";
 
 export default function AdminArtworkList({ artworks: initial }: { artworks: Artwork[] }) {
@@ -15,6 +16,7 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
   const [featurePendingId, setFeaturePendingId] = useState<string | null>(null);
+  const [featureErrorId, setFeatureErrorId] = useState<string | null>(null);
   const [keyword, setKeyword] = useState("");
 
   const term = keyword.trim().toLowerCase();
@@ -25,14 +27,20 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
     );
   }, [artworks, term]);
 
+  const featuredCount = artworks.filter((a) => a.exhibitionFeaturedAt !== null).length;
+
   async function toggleExhibitionFeatured(id: string, currentlyFeatured: boolean) {
     setFeaturePendingId(id);
+    setFeatureErrorId(null);
     try {
-      const nextId = currentlyFeatured ? null : id;
-      await adminSetExhibitionFeaturedArtwork(nextId);
-      setArtworks((prev) => prev.map((a) => ({ ...a, isExhibitionFeatured: a.id === nextId })));
+      await adminToggleExhibitionFeaturedArtwork(id, !currentlyFeatured);
+      setArtworks((prev) =>
+        prev.map((a) =>
+          a.id === id ? { ...a, exhibitionFeaturedAt: currentlyFeatured ? null : new Date().toISOString() } : a
+        )
+      );
     } catch {
-      setErrorId(id);
+      setFeatureErrorId(id);
     } finally {
       setFeaturePendingId(null);
     }
@@ -88,6 +96,9 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
         >
           CSV 내보내기
         </button>
+        <span className="text-xs text-ink-faint">
+          전시 메인 {featuredCount}/{EXHIBITION_FEATURED_LIMIT}
+        </span>
       </div>
       {filtered.length === 0 ? (
         <p className="text-sm text-ink-faint">검색 결과가 없습니다.</p>
@@ -114,7 +125,7 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
                     SOLD
                   </span>
                 )}
-                {artwork.isExhibitionFeatured && (
+                {artwork.exhibitionFeaturedAt !== null && (
                   <span className="flex-none border border-patina px-1.5 py-0.5 text-[10px] font-semibold text-patina">
                     전시 메인
                   </span>
@@ -129,11 +140,14 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
             <div className="flex flex-none items-center gap-4">
               <button
                 type="button"
-                disabled={featurePendingId === artwork.id}
-                onClick={() => toggleExhibitionFeatured(artwork.id, artwork.isExhibitionFeatured)}
+                disabled={
+                  featurePendingId === artwork.id ||
+                  (artwork.exhibitionFeaturedAt === null && featuredCount >= EXHIBITION_FEATURED_LIMIT)
+                }
+                onClick={() => toggleExhibitionFeatured(artwork.id, artwork.exhibitionFeaturedAt !== null)}
                 className="text-xs text-ink-soft hover:text-ink hover:underline disabled:opacity-40"
               >
-                {artwork.isExhibitionFeatured ? "전시 메인 해제" : "전시 메인으로 설정"}
+                {artwork.exhibitionFeaturedAt !== null ? "전시 메인 해제" : "전시 메인으로 설정"}
               </button>
               <Link
                 href={`/admin/artworks/${artwork.id}/edit`}
@@ -154,6 +168,11 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
           {errorId === artwork.id && (
             <p className="pb-3 text-xs text-red-600">
               삭제하지 못했습니다. 이 작품에 연결된 주문 또는 굿즈 상품이 있는지 확인해주세요.
+            </p>
+          )}
+          {featureErrorId === artwork.id && (
+            <p className="pb-3 text-xs text-red-600">
+              전시 메인은 최대 {EXHIBITION_FEATURED_LIMIT}개까지 설정할 수 있습니다.
             </p>
           )}
         </div>
