@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/components/CartContext";
+import { getMyProfile } from "@/lib/queries";
 import type { Session } from "@supabase/supabase-js";
 
 const LINKS = [
@@ -19,6 +20,7 @@ const LINKS = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
+  const [isArtist, setIsArtist] = useState(false);
   const router = useRouter();
   const { count: cartCount } = useCart();
 
@@ -29,6 +31,21 @@ export default function Navbar() {
     } = supabase.auth.onAuthStateChange((_event, newSession) => setSession(newSession));
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!session) return;
+    let active = true;
+    getMyProfile()
+      .then((profile) => {
+        if (active) setIsArtist(profile?.role === "artist");
+      })
+      .catch(() => {
+        if (active) setIsArtist(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [session]);
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -76,7 +93,13 @@ export default function Navbar() {
           </Link>
           {session ? (
             <div className="flex items-center gap-3 text-sm text-board-ink-soft">
-              <span className="max-w-[10rem] truncate">{displayName} 님</span>
+              {isArtist ? (
+                <Link href="/studio/works" className="max-w-[10rem] truncate hover:text-board-ink">
+                  {displayName} 님
+                </Link>
+              ) : (
+                <span className="max-w-[10rem] truncate">{displayName} 님</span>
+              )}
               <button type="button" onClick={handleLogout} className="hover:text-board-ink">
                 로그아웃
               </button>
@@ -124,13 +147,24 @@ export default function Navbar() {
             </Link>
           ))}
           {session ? (
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="px-1 py-2.5 text-left text-sm text-board-ink-soft"
-            >
-              로그아웃 ({displayName})
-            </button>
+            <>
+              {isArtist && (
+                <Link
+                  href="/studio/works"
+                  onClick={() => setOpen(false)}
+                  className="font-editorial px-1 py-2.5 text-sm tracking-wide text-board-ink-soft"
+                >
+                  {displayName} 님의 스튜디오
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="px-1 py-2.5 text-left text-sm text-board-ink-soft"
+              >
+                로그아웃 ({displayName})
+              </button>
+            </>
           ) : (
             <>
               <Link

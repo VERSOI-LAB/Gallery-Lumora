@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ArtworkThumbnail from "./ArtworkThumbnail";
+import MerchThumbnail from "./MerchThumbnail";
 import { formatDate, formatKRW } from "@/lib/format";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import { adminUpdateCustomerMarketingOptIn } from "@/lib/adminActions";
@@ -87,10 +89,15 @@ export default function AdminCustomerDetail({ detail }: { detail: CustomerDetail
                 href={`/admin/orders/artwork/${o.id}`}
                 className="flex items-center justify-between gap-3 py-3 text-sm hover:bg-paper-raised"
               >
-                <span>
-                  {o.artworkTitle} · {formatDate(o.createdAt)}
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="relative h-10 w-10 shrink-0 overflow-hidden">
+                    <ArtworkThumbnail imageUrls={o.imageUrls} hue={o.hue} variant={o.variant} seed={o.id} className="h-full w-full" />
+                  </span>
+                  <span className="truncate">
+                    {o.artworkTitle} · {formatDate(o.createdAt)}
+                  </span>
                 </span>
-                <span className="flex items-center gap-3">
+                <span className="flex shrink-0 items-center gap-3">
                   <span>{formatKRW(o.amount)}</span>
                   <span className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[o.status]}`}>
                     {ORDER_STATUS_LABEL[o.status]}
@@ -104,10 +111,15 @@ export default function AdminCustomerDetail({ detail }: { detail: CustomerDetail
                 href={`/admin/orders/merch/${o.id}`}
                 className="flex items-center justify-between gap-3 py-3 text-sm hover:bg-paper-raised"
               >
-                <span>
-                  {o.productTitle} · {formatDate(o.createdAt)}
+                <span className="flex min-w-0 items-center gap-3">
+                  <span className="relative h-10 w-10 shrink-0 overflow-hidden">
+                    <MerchThumbnail imageUrls={o.imageUrls} hue={o.hue} variant={o.variant} seed={o.id} className="h-full w-full" />
+                  </span>
+                  <span className="truncate">
+                    {o.productTitle} · {formatDate(o.createdAt)}
+                  </span>
                 </span>
-                <span className="flex items-center gap-3">
+                <span className="flex shrink-0 items-center gap-3">
                   <span>{formatKRW(o.amount)}</span>
                   <span className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[o.status]}`}>
                     {ORDER_STATUS_LABEL[o.status]}

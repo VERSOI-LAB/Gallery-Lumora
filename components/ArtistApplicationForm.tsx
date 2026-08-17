@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
-import { getMyProfile, submitArtistApplication } from "@/lib/queries";
+import { getMyProfile, submitArtistApplication, uploadMedia } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import type { Profile } from "@/lib/types";
 
@@ -77,6 +77,8 @@ export default function ArtistApplicationForm() {
   return <ArtistApplicationFields profile={profile!} />;
 }
 
+const MIN_ARTWORK_IMAGES = 3;
+
 function ArtistApplicationFields({ profile }: { profile: Profile }) {
   const [artistName, setArtistName] = useState("");
   const [nameEn, setNameEn] = useState("");
@@ -86,11 +88,13 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
   const [portfolioUrl, setPortfolioUrl] = useState("");
   const [sampleArtworkTitle, setSampleArtworkTitle] = useState("");
   const [sampleArtworkNote, setSampleArtworkNote] = useState("");
+  const [artworkFiles, setArtworkFiles] = useState<File[]>([]);
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [email, setEmail] = useState(profile.email);
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -100,9 +104,23 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (artworkFiles.length < MIN_ARTWORK_IMAGES) {
+      setError(`작품 이미지를 최소 ${MIN_ARTWORK_IMAGES}장 업로드해주세요.`);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
+      const artworkImageUrls: string[] = [];
+      for (let i = 0; i < artworkFiles.length; i++) {
+        setUploadStatus(`이미지 업로드 중... (${i + 1}/${artworkFiles.length})`);
+        const file = artworkFiles[i];
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `application-artworks/${profile.id}/${crypto.randomUUID()}.${ext}`;
+        const url = await uploadMedia(path, file);
+        artworkImageUrls.push(url);
+      }
+      setUploadStatus("");
       await submitArtistApplication({
         artistName,
         nameEn,
@@ -113,6 +131,7 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
         portfolioUrl,
         sampleArtworkTitle,
         sampleArtworkNote,
+        artworkImageUrls,
         name,
         phone,
         email,
@@ -122,6 +141,7 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
     } catch {
       setError("신청 접수에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
+      setUploadStatus("");
       setSubmitting(false);
     }
   }
@@ -204,7 +224,9 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
         />
       </Field>
 
-      <p className="pt-2 text-[11px] tracking-wide text-ink-faint uppercase">2. 대표 작품 (선택)</p>
+      <p className="pt-2 text-[11px] tracking-wide text-ink-faint uppercase">
+        2. 대표 작품 (필수, 이미지 최소 {MIN_ARTWORK_IMAGES}장)
+      </p>
       <Field label="작품명">
         <input
           type="text"
@@ -219,6 +241,25 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
           onChange={(e) => setSampleArtworkNote(e.target.value)}
           className="h-24 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm outline-patina"
         />
+      </Field>
+      <Field label={`작품 이미지 (최소 ${MIN_ARTWORK_IMAGES}장)`}>
+        <label className="flex h-24 cursor-pointer flex-col items-center justify-center border border-dashed border-line-strong text-center text-sm text-ink-faint">
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => setArtworkFiles(Array.from(e.target.files ?? []))}
+          />
+          {artworkFiles.length > 0
+            ? `이미지 ${artworkFiles.length}장 선택됨`
+            : "작품 이미지를 여러 장 드래그하거나 클릭하여 업로드"}
+        </label>
+        {artworkFiles.length > 0 && artworkFiles.length < MIN_ARTWORK_IMAGES && (
+          <p className="mt-2 text-xs text-red-600">
+            이미지를 최소 {MIN_ARTWORK_IMAGES}장 업로드해야 신청할 수 있습니다. (현재 {artworkFiles.length}장)
+          </p>
+        )}
       </Field>
 
       <p className="pt-2 text-[11px] tracking-wide text-ink-faint uppercase">3. 연락처</p>
@@ -257,8 +298,12 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
         />
       </Field>
 
-      <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
-        {submitting ? "제출 중..." : "작가/작품 등록 신청하기"}
+      <button
+        type="submit"
+        disabled={submitting || artworkFiles.length < MIN_ARTWORK_IMAGES}
+        className={`w-full ${buttonClasses("primary")} disabled:opacity-40`}
+      >
+        {uploadStatus || (submitting ? "제출 중..." : "작가/작품 등록 신청하기")}
       </button>
       {error && <p className="text-xs text-red-600">{error}</p>}
 

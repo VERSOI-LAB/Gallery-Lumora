@@ -95,6 +95,25 @@ export default function AdminApplicationsBrowser({
             </div>
           )}
 
+          {selected.artworkImageUrls.length > 0 && (
+            <div className="mt-5">
+              <p className="mb-2 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+                작품 이미지 ({selected.artworkImageUrls.length}장)
+              </p>
+              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                {selected.artworkImageUrls.map((url) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={url}
+                    src={url}
+                    alt=""
+                    className="aspect-square w-full border border-line object-cover"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <dl className="mt-5 space-y-2 text-sm">
             <Row label="신청자">
               {selected.name} · {selected.phone} · {selected.email}

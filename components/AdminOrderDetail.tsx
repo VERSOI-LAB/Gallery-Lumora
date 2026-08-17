@@ -1,4 +1,6 @@
 import Link from "next/link";
+import ArtworkThumbnail from "./ArtworkThumbnail";
+import MerchThumbnail from "./MerchThumbnail";
 import { formatDate, formatKRW } from "@/lib/format";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { ArtworkOrder, MerchOrder } from "@/lib/types";
@@ -53,7 +55,28 @@ export default function AdminOrderDetail({
         ← 주문 현황으로
       </Link>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl">{title}</h1>
+        <div className="flex items-center gap-4">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden">
+            {kind === "artwork" ? (
+              <ArtworkThumbnail
+                imageUrls={(order as ArtworkOrder).imageUrls}
+                hue={(order as ArtworkOrder).hue}
+                variant={(order as ArtworkOrder).variant}
+                seed={order.id}
+                className="h-full w-full"
+              />
+            ) : (
+              <MerchThumbnail
+                imageUrls={(order as MerchOrder).imageUrls}
+                hue={(order as MerchOrder).hue}
+                variant={(order as MerchOrder).variant}
+                seed={order.id}
+                className="h-full w-full"
+              />
+            )}
+          </div>
+          <h1 className="font-display text-2xl">{title}</h1>
+        </div>
         <span className={`border px-2 py-1 text-xs ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
           {ORDER_STATUS_LABEL[order.status]}
         </span>

@@ -44,6 +44,7 @@ export type Database = {
       artist_applications: {
         Row: {
           artist_name: string
+          artwork_image_urls: string[]
           bio: string
           commission_media: string[]
           created_at: string
@@ -63,6 +64,7 @@ export type Database = {
         }
         Insert: {
           artist_name?: string
+          artwork_image_urls?: string[]
           bio?: string
           commission_media?: string[]
           created_at?: string
@@ -82,6 +84,7 @@ export type Database = {
         }
         Update: {
           artist_name?: string
+          artwork_image_urls?: string[]
           bio?: string
           commission_media?: string[]
           created_at?: string

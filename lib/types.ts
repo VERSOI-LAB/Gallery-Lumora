@@ -153,6 +153,7 @@ export interface ArtistApplication {
   portfolioUrl: string;
   sampleArtworkTitle: string;
   sampleArtworkNote: string;
+  artworkImageUrls: string[];
   name: string;
   phone: string;
   email: string;
@@ -178,6 +179,9 @@ export interface ArtworkOrder extends ShippingInfo {
   artworkId: string;
   artworkTitle: string;
   artistName: string;
+  imageUrls: string[];
+  hue: number;
+  variant: number;
   shippingAddress: string;
   phone: string;
   name: string;

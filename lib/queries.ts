@@ -40,7 +40,7 @@ export type MerchProductWithRelationsRow = MerchProductRow & {
   artists: { slug: string; name: string } | null;
 };
 type OrderWithArtworkRow = OrderRow & {
-  artworks: { title: string; artists: { name: string } | null } | null;
+  artworks: { title: string; image_urls: string[]; hue: number; variant: number; artists: { name: string } | null } | null;
 };
 type MerchOrderWithProductRow = MerchOrderRow & {
   merch_products: {
@@ -195,6 +195,7 @@ function toArtistApplication(row: ArtistApplicationRow): ArtistApplication {
     portfolioUrl: row.portfolio_url,
     sampleArtworkTitle: row.sample_artwork_title,
     sampleArtworkNote: row.sample_artwork_note,
+    artworkImageUrls: row.artwork_image_urls,
     name: row.name,
     phone: row.phone,
     email: row.email,
@@ -242,6 +243,9 @@ function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
     artworkId: row.artwork_id,
     artworkTitle: row.artworks?.title ?? "(삭제된 작품)",
     artistName: row.artworks?.artists?.name ?? "",
+    imageUrls: row.artworks?.image_urls ?? [],
+    hue: row.artworks?.hue ?? 90,
+    variant: row.artworks?.variant ?? 0,
     shippingAddress: row.shipping_address,
     phone: row.phone,
     name: row.name,
@@ -1047,6 +1051,7 @@ export interface ArtistApplicationInput {
   portfolioUrl: string;
   sampleArtworkTitle: string;
   sampleArtworkNote: string;
+  artworkImageUrls: string[];
   name: string;
   phone: string;
   email: string;
@@ -1070,6 +1075,7 @@ export async function submitArtistApplication(input: ArtistApplicationInput): Pr
     portfolio_url: input.portfolioUrl,
     sample_artwork_title: input.sampleArtworkTitle,
     sample_artwork_note: input.sampleArtworkNote,
+    artwork_image_urls: input.artworkImageUrls,
     name: input.name,
     phone: input.phone,
     email: input.email,
@@ -1121,7 +1127,7 @@ export async function updateGeneralInquiryStatus(
   if (error) throw error;
 }
 
-const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, artists ( name ) )";
+const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, image_urls, hue, variant, artists ( name ) )";
 const MERCH_ORDER_WITH_PRODUCT_SELECT =
   "*, merch_products ( slug, title, category, cover_hue, cover_variant, image_urls ), merch_variants ( label )";
 
