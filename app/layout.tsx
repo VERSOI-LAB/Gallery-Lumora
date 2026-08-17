@@ -20,7 +20,7 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Gallery Lumora — 완성작 구매 · 1:1 커미션",
+    default: "Gallery Lumora - 당신의 스토리가 작품이 되어 삶에 물드는 한 점의 예술",
     template: "%s · Gallery Lumora",
   },
   description:
