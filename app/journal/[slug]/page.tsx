@@ -14,6 +14,7 @@ import {
 import { formatDate, formatKRW } from "@/lib/format";
 import { getJournalCategoryLabel } from "@/lib/journalTaxonomy";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function JournalDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getJournalPost(slug);
+  const post = await getJournalPost(decodeSlugParam(slug));
   if (!post) notFound();
 
   const [relatedArtist, relatedArtwork, morePosts] = await Promise.all([

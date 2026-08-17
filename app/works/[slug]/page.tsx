@@ -8,6 +8,7 @@ import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
 import { formatKRW } from "@/lib/format";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function WorkDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const artwork = await getArtwork(slug);
+  const artwork = await getArtwork(decodeSlugParam(slug));
   if (!artwork) notFound();
   const artist = await getArtistById(artwork.artistId);
   if (!artist) notFound();

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import CheckoutForm from "@/components/CheckoutForm";
 import { getArtistById, getArtwork } from "@/lib/queries";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function CheckoutPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const artwork = await getArtwork(slug);
+  const artwork = await getArtwork(decodeSlugParam(slug));
   if (!artwork) notFound();
   const artist = await getArtistById(artwork.artistId);
   if (!artist) notFound();

@@ -7,6 +7,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import WishlistButton from "@/components/WishlistButton";
 import { getMerchEditionsRemaining, getMerchProduct, getMerchVariants } from "@/lib/queries";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ export default async function MerchProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = await getMerchProduct(slug);
+  const product = await getMerchProduct(decodeSlugParam(slug));
   if (!product) notFound();
 
   const [variants, editionsRemaining] = await Promise.all([

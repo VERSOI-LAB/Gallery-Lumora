@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import CommissionForm from "@/components/CommissionForm";
 import { getArtist } from "@/lib/queries";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,7 @@ export default async function ArtistCommissionPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const artist = await getArtist(slug);
+  const artist = await getArtist(decodeSlugParam(slug));
   if (!artist) notFound();
 
   return <CommissionForm artist={artist} />;

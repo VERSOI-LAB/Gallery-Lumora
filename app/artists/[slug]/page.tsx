@@ -3,6 +3,7 @@ import ArtistProfileBanner from "@/components/ArtistProfileBanner";
 import ArtistAvatar from "@/components/ArtistAvatar";
 import ArtistProfileTabs from "@/components/ArtistProfileTabs";
 import { getArtist, getArtworksByArtistId } from "@/lib/queries";
+import { decodeSlugParam } from "@/lib/params";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export default async function ArtistPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const artist = await getArtist(slug);
+  const artist = await getArtist(decodeSlugParam(slug));
   if (!artist) notFound();
   const works = await getArtworksByArtistId(artist.id);
 
