@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import { buttonClasses } from "@/lib/ui";
-import { getMyProfile, updateMyPassword, updateMyProfile } from "@/lib/queries";
+import { getMyProfile, updateMyEmail, updateMyPassword, updateMyProfile } from "@/lib/queries";
 import type { Profile } from "@/lib/types";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -38,13 +38,6 @@ function ProfileFields({ profile }: { profile: Profile }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      <Field label="이메일">
-        <input
-          disabled
-          value={profile.email}
-          className="h-10 w-full border border-line bg-paper px-3 text-sm text-ink-faint"
-        />
-      </Field>
       <Field label="이름">
         <input
           required
@@ -67,6 +60,59 @@ function ProfileFields({ profile }: { profile: Profile }) {
         {submitting ? "저장 중..." : "저장"}
       </button>
       {saved && <p className="text-xs text-patina">저장되었습니다.</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
+    </form>
+  );
+}
+
+function EmailFields({ profile }: { profile: Profile }) {
+  const [email, setEmail] = useState(profile.email);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSubmitting(true);
+    setError(null);
+    setSent(false);
+    try {
+      await updateMyEmail(email);
+      setSent(true);
+    } catch {
+      setError("변경하지 못했습니다. 이미 사용 중인 이메일일 수 있습니다.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <Field label="이메일">
+        <input
+          required
+          type="email"
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setSent(false);
+          }}
+          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+      </Field>
+
+      <button
+        type="submit"
+        disabled={submitting || email === profile.email}
+        className={buttonClasses("ghost", "sm")}
+      >
+        {submitting ? "처리 중..." : "이메일 변경"}
+      </button>
+      {sent && (
+        <p className="text-xs text-patina">
+          새 이메일 주소로 확인 메일을 보냈습니다. 메일함에서 링크를 눌러야 변경이 완료됩니다.
+        </p>
+      )}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </form>
   );
@@ -135,6 +181,10 @@ export default function ProfileEditForm() {
       <section>
         <h2 className="mb-4 text-xs font-semibold tracking-wide text-ink-faint uppercase">기본 정보</h2>
         <ProfileFields profile={profile} />
+      </section>
+      <section className="border-t border-line pt-8">
+        <h2 className="mb-4 text-xs font-semibold tracking-wide text-ink-faint uppercase">이메일</h2>
+        <EmailFields profile={profile} />
       </section>
       <section className="border-t border-line pt-8">
         <h2 className="mb-4 text-xs font-semibold tracking-wide text-ink-faint uppercase">비밀번호</h2>

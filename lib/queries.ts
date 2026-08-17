@@ -1239,6 +1239,15 @@ export async function updateMyPassword(password: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Supabase sends a confirmation email to the new address (and, if "secure
+ * email change" is on, to the old one too) — the address doesn't actually
+ * change, and `profiles.email` doesn't sync, until the link is confirmed
+ * (see the `on_auth_user_email_updated` trigger). */
+export async function updateMyEmail(email: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ email });
+  if (error) throw error;
+}
+
 export async function isUsernameAvailable(username: string): Promise<boolean> {
   const { data, error } = await supabase.rpc("is_username_available", { p_username: username });
   if (error) throw error;
