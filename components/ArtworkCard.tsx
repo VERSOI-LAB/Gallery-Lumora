@@ -13,6 +13,7 @@ export default function ArtworkCard({ artwork }: { artwork: Artwork }) {
           variant={artwork.variant}
           seed={artwork.slug}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
+          fit="contain"
         />
         <WishlistButton kind="artwork" itemId={artwork.id} className="absolute top-2 right-2" />
         {artwork.sold && (

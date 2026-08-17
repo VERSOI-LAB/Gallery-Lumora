@@ -42,6 +42,7 @@ export default async function WorkDetailPage({
             seed={artwork.slug}
             className="aspect-[4/5] w-full"
             sizes="(max-width: 1024px) 100vw, 60vw"
+            fit="contain"
           />
           {artwork.imageUrls.length > 1 && (
             <div className="mt-3 grid grid-cols-4 gap-3">

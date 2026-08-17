@@ -10,6 +10,7 @@ export default function ArtworkThumbnail({
   seed,
   className = "",
   sizes = "(max-width: 768px) 50vw, 400px",
+  fit = "cover",
 }: {
   imageUrls: string[];
   hue: number;
@@ -17,11 +18,19 @@ export default function ArtworkThumbnail({
   seed: string;
   className?: string;
   sizes?: string;
+  fit?: "cover" | "contain";
 }) {
   if (imageUrls.length > 0) {
     return (
-      <div className={`relative ${className}`}>
-        <Image src={imageUrls[0]} alt="" fill sizes={sizes} className="object-cover" unoptimized />
+      <div className={`relative ${fit === "contain" ? "bg-paper-raised" : ""} ${className}`}>
+        <Image
+          src={imageUrls[0]}
+          alt=""
+          fill
+          sizes={sizes}
+          className={fit === "contain" ? "object-contain" : "object-cover"}
+          unoptimized
+        />
       </div>
     );
   }
