@@ -75,6 +75,11 @@ export interface MerchProduct {
   hue: number;
   variant: number;
   imageUrls: string[];
+  /** Template products (엽서/포스터/캔버스 액자/노트/에코백/머그컵/텀블러/스카프 등)
+   * have no fixed artwork — the customer searches for and picks one at
+   * purchase time. artworkId/artistId and their derived fields are empty
+   * strings for these until an artwork is chosen client-side. */
+  isTemplate: boolean;
 }
 
 export interface MerchVariant {
@@ -105,6 +110,9 @@ export interface MerchOrder extends ShippingInfo {
   hue: number;
   variant: number;
   imageUrls: string[];
+  /** Set only for template-product orders: which artwork the customer picked. */
+  selectedArtworkTitle: string | null;
+  selectedArtistName: string | null;
   variantLabel: string | null;
   editionNumber: number | null;
   quantity: number;

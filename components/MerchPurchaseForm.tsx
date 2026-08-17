@@ -12,10 +12,20 @@ export default function MerchPurchaseForm({
   product,
   variants,
   editionsRemaining,
+  selectedArtworkId = null,
+  requiresArtworkSelection = false,
+  exportDesignImage,
 }: {
   product: MerchProduct;
   variants: MerchVariant[];
   editionsRemaining: number | null;
+  /** Template products only — the artwork the customer picked via
+   * MerchArtworkPicker, forwarded to purchase_merch. */
+  selectedArtworkId?: string | null;
+  requiresArtworkSelection?: boolean;
+  /** Rasterizes the MerchCanvasEditor design and uploads it, returning the
+   * stored URL — called right before purchase for template products. */
+  exportDesignImage?: () => Promise<string | null>;
 }) {
   const [variantId, setVariantId] = useState<string>(variants[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
@@ -34,9 +44,10 @@ export default function MerchPurchaseForm({
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
   // Cart checkout re-runs purchaseMerch per line item (see /shop/cart), which
   // doesn't model editions' one-at-a-time draw well across multiple cart
-  // sessions — so only plain made-to-order items support "add to cart";
-  // editions/variants stay direct-purchase-only.
-  const cartEligible = product.fulfillment === "made_to_order" && !product.hasVariants;
+  // sessions, and cart items don't carry a per-item artwork selection — so
+  // only plain made-to-order, non-template items support "add to cart";
+  // editions/variants/template products stay direct-purchase-only.
+  const cartEligible = product.fulfillment === "made_to_order" && !product.hasVariants && !requiresArtworkSelection;
 
   const MADE_TO_ORDER_MAX_QUANTITY = 10;
 
@@ -55,9 +66,12 @@ export default function MerchPurchaseForm({
     setSubmitting(true);
     setError(null);
     try {
+      const designImageUrl = requiresArtworkSelection && exportDesignImage ? await exportDesignImage() : null;
       const result = await purchaseMerch({
         productId: product.id,
         variantId: product.hasVariants ? variantId : null,
+        artworkId: selectedArtworkId,
+        designImageUrl,
         quantity,
         shippingAddress,
         phone,
@@ -217,10 +231,16 @@ export default function MerchPurchaseForm({
         )}
         <button
           type="submit"
-          disabled={submitting || (product.hasVariants && !variantId)}
-          className={`flex-1 ${buttonClasses("primary")}`}
+          disabled={
+            submitting || (product.hasVariants && !variantId) || (requiresArtworkSelection && !selectedArtworkId)
+          }
+          className={`flex-1 ${buttonClasses("primary")} disabled:opacity-40`}
         >
-          {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
+          {submitting
+            ? "결제 처리 중..."
+            : requiresArtworkSelection && !selectedArtworkId
+              ? "먼저 작품을 선택해주세요"
+              : `${formatKRW(total)} 결제하기`}
         </button>
       </div>
       {error && <p className="text-xs text-red-600">{error}</p>}

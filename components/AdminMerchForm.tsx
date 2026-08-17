@@ -27,6 +27,7 @@ export default function AdminMerchForm({
   artworks?: Artwork[];
 }) {
   const router = useRouter();
+  const [isTemplate, setIsTemplate] = useState(product?.isTemplate ?? false);
   const [artworkId, setArtworkId] = useState(product?.artworkId ?? artworks?.[0]?.id ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [category, setCategory] = useState(product?.category ?? MERCH_CATEGORIES[0].code);
@@ -52,7 +53,7 @@ export default function AdminMerchForm({
     setUploading(true);
     setError(null);
     try {
-      const artistId = product?.artistId ?? selectedArtwork?.artistId ?? "";
+      const artistId = isTemplate ? "templates" : (product?.artistId || selectedArtwork?.artistId || "shared");
       const uploaded: string[] = [];
       for (const file of Array.from(files)) {
         const ext = file.name.split(".").pop() || "jpg";
@@ -77,15 +78,16 @@ export default function AdminMerchForm({
     setError(null);
     const input: MerchProductInput = {
       slug: slug || slugify(title),
-      artworkId,
-      artistId: product?.artistId ?? selectedArtwork?.artistId ?? "",
+      artworkId: isTemplate ? null : artworkId,
+      artistId: isTemplate ? null : (product?.artistId || selectedArtwork?.artistId || ""),
+      isTemplate,
       category,
       title,
       description,
       price,
       royaltyRate,
-      fulfillment,
-      editionSize: fulfillment === "edition" ? editionSize : null,
+      fulfillment: isTemplate ? "made_to_order" : fulfillment,
+      editionSize: !isTemplate && fulfillment === "edition" ? editionSize : null,
       hasVariants,
       active,
       coverHue: product?.hue ?? selectedArtwork?.hue ?? Math.floor(Math.random() * 360),
@@ -111,7 +113,28 @@ export default function AdminMerchForm({
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-      {!product && artworks && (
+      {!product && (
+        <label className="flex cursor-pointer items-start gap-2 border border-line-strong bg-paper-raised p-3 text-sm text-ink-soft">
+          <input
+            type="checkbox"
+            checked={isTemplate}
+            onChange={(e) => {
+              setIsTemplate(e.target.checked);
+              if (e.target.checked) setFulfillment("made_to_order");
+            }}
+            className="mt-0.5 accent-patina"
+          />
+          <span>
+            고객이 작품을 직접 선택하는 템플릿 상품으로 만들기
+            <br />
+            <span className="text-xs text-ink-faint">
+              특정 작품에 고정하지 않고, 고객이 상품 페이지에서 작품을 검색해 골라 구매합니다(엽서·포스터·캔버스
+              액자·노트·에코백·머그컵·텀블러·스카프 등에 적합). 1:1 주문제작만 가능합니다.
+            </span>
+          </span>
+        </label>
+      )}
+      {!product && !isTemplate && artworks && (
         <Field label="연결할 작품">
           <select
             required
@@ -129,7 +152,9 @@ export default function AdminMerchForm({
       )}
       {product && (
         <p className="text-xs text-ink-faint">
-          연결된 작품: {product.artworkTitle} ({product.artistName})
+          {product.isTemplate
+            ? "고객이 작품을 직접 선택하는 템플릿 상품입니다."
+            : `연결된 작품: ${product.artworkTitle} (${product.artistName})`}
         </p>
       )}
 
@@ -249,6 +274,8 @@ export default function AdminMerchForm({
             {fulfillment === "edition" ? `한정 에디션 (총 ${editionSize}점)` : "1:1 주문제작"}{" "}
             <span className="text-xs text-ink-faint">— 등록 후에는 변경할 수 없습니다.</span>
           </p>
+        ) : isTemplate ? (
+          <p className="mb-4 text-sm text-ink-soft">1:1 주문제작 — 템플릿 상품은 한정 에디션을 지원하지 않습니다.</p>
         ) : (
           <div className="mb-4 flex gap-4">
             <label className="flex items-center gap-2 text-sm text-ink-soft">
@@ -271,13 +298,13 @@ export default function AdminMerchForm({
             </label>
           </div>
         )}
-        {fulfillment === "made_to_order" && (
+        {(isTemplate || fulfillment === "made_to_order") && (
           <p className="mb-4 text-xs text-ink-faint">
             재고 없이 주문이 들어올 때마다 제작합니다. 재고 수량을 관리하지 않습니다.
           </p>
         )}
 
-        {!product && fulfillment === "edition" && (
+        {!product && !isTemplate && fulfillment === "edition" && (
           <Field label="한정 수량">
             <input
               required

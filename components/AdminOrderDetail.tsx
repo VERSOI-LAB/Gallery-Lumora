@@ -75,7 +75,14 @@ export default function AdminOrderDetail({
               />
             )}
           </div>
-          <h1 className="font-display text-2xl">{title}</h1>
+          <div>
+            <h1 className="font-display text-2xl">{title}</h1>
+            {kind === "merch" && (order as MerchOrder).selectedArtworkTitle && (
+              <p className="mt-1 text-xs text-ink-soft">
+                선택 작품: {(order as MerchOrder).selectedArtworkTitle} ({(order as MerchOrder).selectedArtistName})
+              </p>
+            )}
+          </div>
         </div>
         <span className={`border px-2 py-1 text-xs ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
           {ORDER_STATUS_LABEL[order.status]}

@@ -42,7 +42,7 @@ export default function FeaturedProducts({
           {product.title}
         </h2>
         <p className="font-editorial mt-1 text-base text-ink-soft italic">
-          {product.artistName}의 «{product.artworkTitle}»
+          {product.isTemplate ? "작품을 선택해 디자인하는 상품" : `${product.artistName}의 «${product.artworkTitle}»`}
         </p>
         <div className="mt-4 border-t border-line pt-4 text-xs text-ink-faint">
           {formatKRW(product.price)}

@@ -52,6 +52,9 @@ type MerchOrderWithProductRow = MerchOrderRow & {
     image_urls: string[];
   } | null;
   merch_variants: { label: string } | null;
+  // Only populated for template-product orders (see merch_orders.artwork_id) —
+  // the artwork the customer picked at purchase time.
+  artworks: { title: string; image_urls: string[]; hue: number; variant: number; artists: { name: string } | null } | null;
 };
 
 export const ARTWORK_WITH_ARTIST_SELECT = "*, artists ( name )";
@@ -141,10 +144,10 @@ export function toMerchProduct(row: MerchProductWithRelationsRow): MerchProduct 
   return {
     id: row.id,
     slug: row.slug,
-    artworkId: row.artwork_id,
+    artworkId: row.artwork_id ?? "",
     artworkSlug: row.artworks?.slug ?? "",
     artworkTitle: row.artworks?.title ?? "",
-    artistId: row.artist_id,
+    artistId: row.artist_id ?? "",
     artistSlug: row.artists?.slug ?? "",
     artistName: row.artists?.name ?? "",
     category: row.category,
@@ -159,6 +162,7 @@ export function toMerchProduct(row: MerchProductWithRelationsRow): MerchProduct 
     hue: row.cover_hue,
     variant: row.cover_variant,
     imageUrls: row.image_urls,
+    isTemplate: row.is_template,
   };
 }
 
@@ -261,6 +265,9 @@ function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
 }
 
 function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
+  // Template-product orders (see merch_products.is_template) carry no fixed
+  // product photo, so the customer-picked artwork's own image stands in —
+  // same idea as orders.artwork_id for artwork purchases.
   return {
     id: row.id,
     orderNumber: row.order_number,
@@ -268,9 +275,17 @@ function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
     productSlug: row.merch_products?.slug ?? "",
     productTitle: row.merch_products?.title ?? "(삭제된 상품)",
     productCategory: row.merch_products?.category ?? "",
-    hue: row.merch_products?.cover_hue ?? 90,
-    variant: row.merch_products?.cover_variant ?? 0,
-    imageUrls: row.merch_products?.image_urls ?? [],
+    hue: row.artworks?.hue ?? row.merch_products?.cover_hue ?? 90,
+    variant: row.artworks?.variant ?? row.merch_products?.cover_variant ?? 0,
+    // Priority: the customer's finished canvas design (design_image_url) >
+    // the picked artwork's own photo > the product's own photo.
+    imageUrls: row.design_image_url
+      ? [row.design_image_url]
+      : row.artworks?.image_urls?.length
+        ? row.artworks.image_urls
+        : (row.merch_products?.image_urls ?? []),
+    selectedArtworkTitle: row.artworks?.title ?? null,
+    selectedArtistName: row.artworks?.artists?.name ?? null,
     variantLabel: row.merch_variants?.label ?? null,
     editionNumber: row.edition_number,
     quantity: row.quantity,
@@ -299,6 +314,11 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     hue: row.cover_hue ?? 90,
     variant: row.cover_variant ?? 0,
     imageUrls: [],
+    // get_merch_orders_by_phone doesn't join artworks, so a template-product
+    // guest order shows the generic placeholder here instead of the picked
+    // artwork's photo/name — a known gap in the guest order-lookup path.
+    selectedArtworkTitle: null,
+    selectedArtistName: null,
     variantLabel: row.variant_label,
     editionNumber: row.edition_number,
     quantity: row.quantity,
@@ -484,6 +504,23 @@ export async function updateArtworkMerchEnabled(id: string, merchEnabled: boolea
 export async function incrementArtworkView(artworkId: string): Promise<void> {
   const { error } = await supabase.rpc("increment_artwork_view", { p_artwork_id: artworkId });
   if (error) throw error;
+}
+
+/** Used by the template-merch "pick an artwork" search box (see
+ * MerchArtworkPicker) — same ilike-on-title pattern as searchSite(). */
+export async function searchArtworksByTitle(query: string): Promise<Artwork[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const pattern = `%${q.replace(/,/g, " ")}%`;
+  const { data, error } = await supabase
+    .from("artworks")
+    .select(ARTWORK_WITH_ARTIST_SELECT)
+    .ilike("title", pattern)
+    .order("created_at", { ascending: false })
+    .limit(8)
+    .returns<ArtworkWithArtistRow[]>();
+  if (error) throw error;
+  return data.map(toArtwork);
 }
 
 export async function getStudioInquiries(
@@ -759,8 +796,9 @@ export async function getMerchProductByIdAdmin(
 
 export interface MerchProductInput {
   slug: string;
-  artworkId: string;
-  artistId: string;
+  artworkId: string | null;
+  artistId: string | null;
+  isTemplate: boolean;
   category: string;
   title: string;
   description: string;
@@ -783,8 +821,9 @@ export async function createMerchProduct(
     .from("merch_products")
     .insert({
       slug: input.slug,
-      artwork_id: input.artworkId,
-      artist_id: input.artistId,
+      artwork_id: input.isTemplate ? null : input.artworkId,
+      artist_id: input.isTemplate ? null : input.artistId,
+      is_template: input.isTemplate,
       category: input.category,
       title: input.title,
       description: input.description,
@@ -823,8 +862,8 @@ export async function updateMerchProduct(
     .from("merch_products")
     .update({
       slug: input.slug,
-      artwork_id: input.artworkId,
-      artist_id: input.artistId,
+      artwork_id: input.isTemplate ? null : input.artworkId,
+      artist_id: input.isTemplate ? null : input.artistId,
       category: input.category,
       title: input.title,
       description: input.description,
@@ -913,6 +952,12 @@ export async function getMerchEditionsRemaining(productId: string): Promise<numb
 export interface MerchPurchaseInput {
   productId: string;
   variantId: string | null;
+  /** Required when purchasing a template product (MerchProduct.isTemplate) —
+   * the artwork the customer searched for and selected to print on it. */
+  artworkId?: string | null;
+  /** The rendered canvas design (see MerchCanvasEditor), uploaded to storage
+   * before calling this — template products only. */
+  designImageUrl?: string | null;
   quantity: number;
   shippingAddress: string;
   phone: string;
@@ -931,6 +976,8 @@ export async function purchaseMerch(
     // generated type is non-nullable even though the function body accepts
     // (and expects) null for non-variant products.
     p_variant_id: input.variantId as string,
+    p_artwork_id: input.artworkId ?? undefined,
+    p_design_image_url: input.designImageUrl ?? undefined,
     p_quantity: input.quantity,
     p_shipping_address: input.shippingAddress,
     p_phone: input.phone,
@@ -1129,7 +1176,7 @@ export async function updateGeneralInquiryStatus(
 
 const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, image_urls, hue, variant, artists ( name ) )";
 const MERCH_ORDER_WITH_PRODUCT_SELECT =
-  "*, merch_products ( slug, title, category, cover_hue, cover_variant, image_urls ), merch_variants ( label )";
+  "*, merch_products ( slug, title, category, cover_hue, cover_variant, image_urls ), merch_variants ( label ), artworks ( title, image_urls, hue, variant, artists ( name ) )";
 
 export async function getAllArtworkOrders(
   client: SupabaseClient<Database> = supabase
@@ -1287,6 +1334,9 @@ export interface SettlementOrder {
 type SettlementOrderRow = OrderRow & { artworks: { title: string; artists: { name: string } | null } | null };
 type SettlementMerchOrderRow = MerchOrderRow & {
   merch_products: { title: string; artists: { name: string } | null } | null;
+  // Only set for template-product orders — the artist is resolved from the
+  // customer-picked artwork instead of the (null) product.artist_id.
+  artworks: { artists: { name: string } | null } | null;
 };
 
 export async function getAdminSettlementOrders(
@@ -1300,7 +1350,7 @@ export async function getAdminSettlementOrders(
       .returns<SettlementOrderRow[]>(),
     client
       .from("merch_orders")
-      .select("*, merch_products ( title, artists ( name ) )")
+      .select("*, merch_products ( title, artists ( name ) ), artworks ( artists ( name ) )")
       .order("created_at", { ascending: false })
       .returns<SettlementMerchOrderRow[]>(),
   ]);
@@ -1322,7 +1372,7 @@ export async function getAdminSettlementOrders(
   const merchOrders: SettlementOrder[] = merchRes.data.map((row) => ({
     id: row.id,
     kind: "merch",
-    artistName: row.merch_products?.artists?.name ?? "",
+    artistName: row.merch_products?.artists?.name ?? row.artworks?.artists?.name ?? "",
     itemTitle: row.merch_products?.title ?? "(삭제된 상품)",
     orderNumber: row.order_number,
     amount: row.amount,
@@ -1422,10 +1472,18 @@ export async function getAdminAnalytics(
       .returns<{ amount: number; created_at: string; status: string; artworks: { title: string; artists: { name: string } | null } | null }[]>(),
     client
       .from("merch_orders")
-      .select("amount, created_at, status, merch_products ( title, artists ( name ) )")
+      .select("amount, created_at, status, merch_products ( title, artists ( name ) ), artworks ( artists ( name ) )")
       .gte("created_at", sinceIso)
       .neq("status", "cancelled")
-      .returns<{ amount: number; created_at: string; status: string; merch_products: { title: string; artists: { name: string } | null } | null }[]>(),
+      .returns<
+        {
+          amount: number;
+          created_at: string;
+          status: string;
+          merch_products: { title: string; artists: { name: string } | null } | null;
+          artworks: { artists: { name: string } | null } | null;
+        }[]
+      >(),
   ]);
   if (artworkRes.error) throw artworkRes.error;
   if (merchRes.error) throw merchRes.error;
@@ -1445,7 +1503,7 @@ export async function getAdminAnalytics(
   for (const row of merchRes.data) {
     const day = row.created_at.slice(0, 10);
     byDay.set(day, (byDay.get(day) ?? 0) + row.amount);
-    const artistName = row.merch_products?.artists?.name;
+    const artistName = row.merch_products?.artists?.name ?? row.artworks?.artists?.name;
     if (artistName) byArtist.set(artistName, (byArtist.get(artistName) ?? 0) + row.amount);
   }
 

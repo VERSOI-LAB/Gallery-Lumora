@@ -53,7 +53,8 @@ export default function AdminMerchList({ products: initial }: { products: MerchP
               )}
             </div>
             <div className="text-xs text-ink-soft">
-              {getMerchCategoryLabel(product.category)} · {product.artistName} · {formatKRW(product.price)}
+              {getMerchCategoryLabel(product.category)} ·{" "}
+              {product.isTemplate ? "템플릿(작품 선택형)" : product.artistName} · {formatKRW(product.price)}
             </div>
           </div>
 

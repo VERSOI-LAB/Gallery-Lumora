@@ -488,9 +488,11 @@ export type Database = {
       merch_orders: {
         Row: {
           amount: number
+          artwork_id: string | null
           courier_name: string | null
           courier_phone: string | null
           created_at: string
+          design_image_url: string | null
           edition_number: number | null
           email: string
           id: string
@@ -514,9 +516,11 @@ export type Database = {
         }
         Insert: {
           amount: number
+          artwork_id?: string | null
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          design_image_url?: string | null
           edition_number?: number | null
           email?: string
           id?: string
@@ -540,9 +544,11 @@ export type Database = {
         }
         Update: {
           amount?: number
+          artwork_id?: string | null
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          design_image_url?: string | null
           edition_number?: number | null
           email?: string
           id?: string
@@ -566,6 +572,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "merch_orders_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "merch_orders_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
@@ -584,8 +597,8 @@ export type Database = {
       merch_products: {
         Row: {
           active: boolean
-          artist_id: string
-          artwork_id: string
+          artist_id: string | null
+          artwork_id: string | null
           category: string
           cover_hue: number
           cover_variant: number
@@ -596,6 +609,7 @@ export type Database = {
           has_variants: boolean
           id: string
           image_urls: string[]
+          is_template: boolean
           price: number
           royalty_rate: number
           slug: string
@@ -603,8 +617,8 @@ export type Database = {
         }
         Insert: {
           active?: boolean
-          artist_id: string
-          artwork_id: string
+          artist_id?: string | null
+          artwork_id?: string | null
           category: string
           cover_hue?: number
           cover_variant?: number
@@ -615,6 +629,7 @@ export type Database = {
           has_variants?: boolean
           id?: string
           image_urls?: string[]
+          is_template?: boolean
           price: number
           royalty_rate?: number
           slug: string
@@ -622,8 +637,8 @@ export type Database = {
         }
         Update: {
           active?: boolean
-          artist_id?: string
-          artwork_id?: string
+          artist_id?: string | null
+          artwork_id?: string | null
           category?: string
           cover_hue?: number
           cover_variant?: number
@@ -634,6 +649,7 @@ export type Database = {
           has_variants?: boolean
           id?: string
           image_urls?: string[]
+          is_template?: boolean
           price?: number
           royalty_rate?: number
           slug?: string
@@ -962,6 +978,8 @@ export type Database = {
       }
       purchase_merch: {
         Args: {
+          p_artwork_id?: string
+          p_design_image_url?: string
           p_email?: string
           p_marketing_opt_in?: boolean
           p_name?: string

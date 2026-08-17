@@ -29,7 +29,7 @@ export default function MerchProductCard({ product }: { product: MerchProduct })
         </span>
         <h3 className="mt-1 text-sm leading-snug font-semibold text-ink">{product.title}</h3>
         <div className="mt-0.5 text-xs text-ink-faint">
-          {product.artistName}의 «{product.artworkTitle}»
+          {product.isTemplate ? "작품을 선택해 디자인" : `${product.artistName}의 «${product.artworkTitle}»`}
         </div>
         <div className="mt-1 text-xs font-semibold text-ink">{formatKRW(product.price)}</div>
       </div>
