@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import { buttonClasses } from "@/lib/ui";
+import type { Artwork } from "@/lib/types";
 
 type Sort = "new" | "priceAsc" | "priceDesc";
 
 export default function WorksFilterPanel({
+  artworks,
   selected,
   onToggle,
   showSold,
@@ -17,6 +19,7 @@ export default function WorksFilterPanel({
   onKeywordChange,
   onClear,
 }: {
+  artworks: Artwork[];
   selected: string[];
   onToggle: (code: string) => void;
   showSold: boolean;
@@ -74,7 +77,11 @@ export default function WorksFilterPanel({
             <div className="flex-1 divide-y divide-board-line border-t border-b border-board-line">
               {MEDIUM_CATEGORIES.map((category) => {
                 const isOpen = openCategory === category.code;
-                const count = category.types.filter((t) => selected.includes(t.code)).length;
+                // Count of artworks in this category (sold-out included), not
+                // how many of its sub-filters happen to be checked.
+                const count = artworks.filter((a) =>
+                  category.types.some((t) => t.code === a.mediumTypeCode)
+                ).length;
                 return (
                   <div key={category.code}>
                     <button

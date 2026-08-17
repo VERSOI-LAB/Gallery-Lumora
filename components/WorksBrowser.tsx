@@ -27,9 +27,14 @@ export default function WorksBrowser({ artworks }: { artworks: Artwork[] }) {
         return false;
       return true;
     });
-    if (sort === "priceAsc") return [...list].sort((a, b) => a.price - b.price);
-    if (sort === "priceDesc") return [...list].sort((a, b) => b.price - a.price);
-    return list;
+    // Sold-out works always sink to the bottom; within each group, apply the
+    // chosen sort (or keep server order — newest first — for "new").
+    return [...list].sort((a, b) => {
+      if (a.sold !== b.sold) return a.sold ? 1 : -1;
+      if (sort === "priceAsc") return a.price - b.price;
+      if (sort === "priceDesc") return b.price - a.price;
+      return 0;
+    });
   }, [artworks, selectedTypes, showSold, sort, keyword]);
 
   function toggleType(code: string) {
@@ -48,6 +53,7 @@ export default function WorksBrowser({ artworks }: { artworks: Artwork[] }) {
       <div className="mb-8 flex items-center justify-between text-xs text-ink-soft">
         <span>총 {filtered.length}점</span>
         <WorksFilterPanel
+          artworks={artworks}
           selected={selectedTypes}
           onToggle={toggleType}
           showSold={showSold}
