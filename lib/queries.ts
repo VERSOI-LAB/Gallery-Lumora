@@ -439,6 +439,21 @@ export interface ArtistInput {
   commissionPriceRange: string;
 }
 
+export async function updateArtistCommissionSettings(
+  id: string,
+  input: { commissionAccepting: boolean; commissionPriceRange: string },
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
+    .from("artists")
+    .update({
+      commission_accepting: input.commissionAccepting,
+      commission_price_range: input.commissionPriceRange,
+    })
+    .eq("id", id);
+  if (error) throw error;
+}
+
 export async function createArtist(
   input: ArtistInput,
   client: SupabaseClient<Database> = supabase

@@ -99,7 +99,7 @@ export default function AdminArtistList({ artists: initial }: { artists: Artist[
                     </Link>
                     {artist.commission.accepting && (
                       <span className="flex-none border border-patina px-1.5 py-0.5 text-[10px] text-patina">
-                        커미션 접수중
+                        커미션 접수(1:1 주문 제작 의뢰 가능 여부)
                       </span>
                     )}
                   </div>
