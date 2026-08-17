@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import FeaturedCarousel from "./FeaturedCarousel";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtworkThumbnail from "./ArtworkThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import type { Artwork } from "@/lib/types";
 
@@ -26,7 +26,8 @@ export default function FeaturedArtworks({
         className="object-cover"
       />
     ) : (
-      <PlaceholderArt
+      <ArtworkThumbnail
+        imageUrls={artwork.imageUrls}
         hue={artwork.hue}
         variant={artwork.variant}
         seed={artwork.slug}

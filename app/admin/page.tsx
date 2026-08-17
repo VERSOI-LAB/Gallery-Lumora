@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatKRW } from "@/lib/format";
 import {
   getAdminDashboardStats,
   getArtistApplications,
   getGeneralInquiries,
+  getAdminAnalytics,
 } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
@@ -22,11 +23,14 @@ const STAT_CARDS: {
 ];
 
 export default async function AdminDashboardPage() {
-  const [stats, applications, inquiries] = await Promise.all([
+  const [stats, applications, inquiries, analytics] = await Promise.all([
     getAdminDashboardStats(supabaseService),
     getArtistApplications(supabaseService),
     getGeneralInquiries(supabaseService),
+    getAdminAnalytics(supabaseService),
   ]);
+  const maxDailyRevenue = Math.max(1, ...analytics.dailyRevenue.map((d) => d.amount));
+  const maxTopArtist = Math.max(1, ...analytics.topArtists.map((a) => a.amount));
 
   const recentApplications = applications.slice(0, 3);
   const recentInquiries = inquiries.slice(0, 3);
@@ -54,6 +58,46 @@ export default async function AdminDashboardPage() {
             </Link>
           );
         })}
+      </div>
+
+      <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-ink">최근 30일 매출 추이</h2>
+          {analytics.dailyRevenue.length === 0 ? (
+            <p className="text-sm text-ink-faint">최근 30일 내 주문이 없습니다.</p>
+          ) : (
+            <div className="flex h-24 items-end gap-[2px] border-b border-line">
+              {analytics.dailyRevenue.map((d) => (
+                <div
+                  key={d.date}
+                  title={`${d.date} · ${formatKRW(d.amount)}`}
+                  className="flex-1 bg-ink"
+                  style={{ height: `${Math.max(4, (d.amount / maxDailyRevenue) * 100)}%` }}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+        <div>
+          <h2 className="mb-3 text-sm font-semibold text-ink">작가별 매출 순위 (최근 30일)</h2>
+          {analytics.topArtists.length === 0 ? (
+            <p className="text-sm text-ink-faint">최근 30일 내 매출이 없습니다.</p>
+          ) : (
+            <ul className="space-y-2">
+              {analytics.topArtists.map((a) => (
+                <li key={a.name} className="text-sm">
+                  <div className="mb-1 flex items-center justify-between">
+                    <span className="text-ink">{a.name}</span>
+                    <span className="text-ink-soft">{formatKRW(a.amount)}</span>
+                  </div>
+                  <div className="h-1.5 bg-paper-raised">
+                    <div className="h-full bg-ink" style={{ width: `${(a.amount / maxTopArtist) * 100}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
 
       <div className="mt-10 grid grid-cols-1 gap-8 md:grid-cols-2">

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import PlaceholderArt from "@/components/PlaceholderArt";
+import ArtistAvatar from "@/components/ArtistAvatar";
 import ArtistProfileTabs from "@/components/ArtistProfileTabs";
 import { getArtist, getArtistSlugs, getArtworksByArtistId } from "@/lib/queries";
 
@@ -29,7 +30,7 @@ export default async function ArtistPage({
       <div className="mx-auto max-w-6xl px-5 md:px-8">
         <div className="mb-8 flex items-end gap-4 -mt-10 md:-mt-14">
           <div className="h-20 w-20 flex-none overflow-hidden border-4 border-paper md:h-28 md:w-28">
-            <PlaceholderArt hue={artist.hue} seed={artist.slug} kind="portrait" className="h-full w-full" />
+            <ArtistAvatar avatarUrl={artist.avatarUrl} hue={artist.hue} seed={artist.slug} className="h-full w-full" />
           </div>
           <div className="pb-2">
             <h1 className="font-display text-xl md:text-2xl">{artist.name}</h1>

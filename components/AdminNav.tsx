@@ -14,6 +14,8 @@ const ITEMS = [
   { href: "/admin/merch", label: "굿즈 관리" },
   { href: "/admin/journal", label: "저널 관리" },
   { href: "/admin/media", label: "사이트 미디어" },
+  { href: "/admin/settlements", label: "정산 관리" },
+  { href: "/admin/activity", label: "활동 로그" },
 ];
 
 export default function AdminNav() {

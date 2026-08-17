@@ -18,11 +18,15 @@ import {
   updateGeneralInquiryStatus,
   updateArtworkOrderStatus,
   updateMerchOrderStatus,
+  bulkUpdateArtworkOrderStatus,
+  bulkUpdateMerchOrderStatus,
+  markOrdersSettled,
   createJournalPost,
   updateJournalPost,
   deleteJournalPost,
   updateSiteAsset,
   getArtworkOrdersByPhone,
+  logAdminActivity,
   type ArtworkUpdateInput,
   type MerchProductInput,
   type MerchVariantInput,
@@ -31,21 +35,32 @@ import {
 } from "./queries";
 import type { ArtworkOrder, OrderStatus, SiteAssetKey } from "./types";
 
+/** Every admin mutation below logs through here after it succeeds. "Who" did
+ * it isn't recorded yet — admin auth is still a single shared password with
+ * no per-admin identity (see lib/adminAuth.ts) — so this only answers "what
+ * changed and when" until individual admin accounts exist. */
+function log(action: string, entityType: string, entityId: string | null, detail: Record<string, unknown> = {}) {
+  return logAdminActivity(action, entityType, entityId, detail, supabaseService);
+}
+
 export async function adminUpdateArtwork(id: string, input: ArtworkUpdateInput): Promise<void> {
   await assertAdminSession();
   await updateArtwork(id, input, supabaseService);
+  await log("update", "artwork", id, { title: input.title });
   revalidatePath("/admin/artworks");
 }
 
 export async function adminDeleteArtwork(id: string): Promise<void> {
   await assertAdminSession();
   await deleteArtwork(id, supabaseService);
+  await log("delete", "artwork", id);
   revalidatePath("/admin/artworks");
 }
 
 export async function adminCreateMerchProduct(input: MerchProductInput): Promise<string> {
   await assertAdminSession();
   const id = await createMerchProduct(input, supabaseService);
+  await log("create", "merch_product", id, { title: input.title });
   revalidatePath("/admin/merch");
   return id;
 }
@@ -53,6 +68,7 @@ export async function adminCreateMerchProduct(input: MerchProductInput): Promise
 export async function adminUpdateMerchProduct(id: string, input: MerchProductInput): Promise<void> {
   await assertAdminSession();
   await updateMerchProduct(id, input, supabaseService);
+  await log("update", "merch_product", id, { title: input.title });
   revalidatePath("/admin/merch");
   revalidatePath(`/admin/merch/${id}/edit`);
 }
@@ -60,12 +76,14 @@ export async function adminUpdateMerchProduct(id: string, input: MerchProductInp
 export async function adminUpdateMerchProductActive(id: string, active: boolean): Promise<void> {
   await assertAdminSession();
   await updateMerchProductActive(id, active, supabaseService);
+  await log("update", "merch_product", id, { active });
   revalidatePath("/admin/merch");
 }
 
 export async function adminCreateMerchVariant(productId: string, input: MerchVariantInput): Promise<string> {
   await assertAdminSession();
   const id = await createMerchVariant(productId, input, supabaseService);
+  await log("create", "merch_variant", id, { productId, label: input.label });
   revalidatePath(`/admin/merch/${productId}/edit`);
   return id;
 }
@@ -73,11 +91,13 @@ export async function adminCreateMerchVariant(productId: string, input: MerchVar
 export async function adminUpdateMerchVariant(id: string, input: MerchVariantInput): Promise<void> {
   await assertAdminSession();
   await updateMerchVariant(id, input, supabaseService);
+  await log("update", "merch_variant", id, { label: input.label });
 }
 
 export async function adminDeleteMerchVariant(id: string): Promise<void> {
   await assertAdminSession();
   await deleteMerchVariant(id, supabaseService);
+  await log("delete", "merch_variant", id);
 }
 
 export async function adminReviewArtistApplication(
@@ -86,12 +106,14 @@ export async function adminReviewArtistApplication(
 ): Promise<void> {
   await assertAdminSession();
   await reviewArtistApplication(id, decision, supabaseService);
+  await log("review", "artist_application", id, { decision });
   revalidatePath("/admin/applications");
 }
 
 export async function adminCreateArtist(input: ArtistInput): Promise<string> {
   await assertAdminSession();
   const id = await createArtist(input, supabaseService);
+  await log("create", "artist", id, { name: input.name });
   revalidatePath("/admin/artists");
   return id;
 }
@@ -99,6 +121,7 @@ export async function adminCreateArtist(input: ArtistInput): Promise<string> {
 export async function adminUpdateArtist(id: string, input: ArtistInput): Promise<void> {
   await assertAdminSession();
   await updateArtist(id, input, supabaseService);
+  await log("update", "artist", id, { name: input.name });
   revalidatePath("/admin/artists");
 }
 
@@ -108,42 +131,74 @@ export async function adminUpdateGeneralInquiryStatus(
 ): Promise<void> {
   await assertAdminSession();
   await updateGeneralInquiryStatus(id, status, supabaseService);
+  await log("update", "general_inquiry", id, { status });
   revalidatePath("/admin/inquiries");
 }
 
 export async function adminUpdateArtworkOrderStatus(id: string, status: OrderStatus): Promise<void> {
   await assertAdminSession();
   await updateArtworkOrderStatus(id, status, supabaseService);
+  await log("update", "artwork_order", id, { status });
   revalidatePath("/admin/orders");
 }
 
 export async function adminUpdateMerchOrderStatus(id: string, status: OrderStatus): Promise<void> {
   await assertAdminSession();
   await updateMerchOrderStatus(id, status, supabaseService);
+  await log("update", "merch_order", id, { status });
   revalidatePath("/admin/orders");
+}
+
+export async function adminBulkUpdateArtworkOrderStatus(ids: string[], status: OrderStatus): Promise<void> {
+  await assertAdminSession();
+  await bulkUpdateArtworkOrderStatus(ids, status, supabaseService);
+  await log("bulk_update", "artwork_order", null, { ids, status });
+  revalidatePath("/admin/orders");
+}
+
+export async function adminBulkUpdateMerchOrderStatus(ids: string[], status: OrderStatus): Promise<void> {
+  await assertAdminSession();
+  await bulkUpdateMerchOrderStatus(ids, status, supabaseService);
+  await log("bulk_update", "merch_order", null, { ids, status });
+  revalidatePath("/admin/orders");
+}
+
+export async function adminMarkOrdersSettled(
+  kind: "artwork" | "merch",
+  ids: string[],
+  settled: boolean
+): Promise<void> {
+  await assertAdminSession();
+  await markOrdersSettled(kind, ids, settled, supabaseService);
+  await log(settled ? "mark_settled" : "unmark_settled", `${kind}_order`, null, { ids });
+  revalidatePath("/admin/settlements");
 }
 
 export async function adminCreateJournalPost(input: JournalPostInput): Promise<void> {
   await assertAdminSession();
   await createJournalPost(input, supabaseService);
+  await log("create", "journal_post", null, { title: input.title });
   revalidatePath("/admin/journal");
 }
 
 export async function adminUpdateJournalPost(id: string, input: JournalPostInput): Promise<void> {
   await assertAdminSession();
   await updateJournalPost(id, input, supabaseService);
+  await log("update", "journal_post", id, { title: input.title });
   revalidatePath("/admin/journal");
 }
 
 export async function adminDeleteJournalPost(id: string): Promise<void> {
   await assertAdminSession();
   await deleteJournalPost(id, supabaseService);
+  await log("delete", "journal_post", id);
   revalidatePath("/admin/journal");
 }
 
 export async function adminUpdateSiteAsset(key: SiteAssetKey, url: string): Promise<void> {
   await assertAdminSession();
   await updateSiteAsset(key, url, supabaseService);
+  await log("update", "site_asset", key);
   revalidatePath("/admin/media");
 }
 

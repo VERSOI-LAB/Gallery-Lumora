@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtworkThumbnail from "./ArtworkThumbnail";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { updateArtworkMerchEnabled } from "@/lib/queries";
@@ -36,7 +36,8 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
       {artworks.map((artwork) => (
         <div key={artwork.id} className="flex items-center gap-4 py-4">
           <div className="h-16 w-[52px] flex-none overflow-hidden">
-            <PlaceholderArt
+            <ArtworkThumbnail
+              imageUrls={artwork.imageUrls}
               hue={artwork.hue}
               variant={artwork.variant}
               seed={artwork.slug}
@@ -55,7 +56,7 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
             </div>
             <div className="text-xs text-ink-soft">
               {getMediumType(artwork.mediumTypeCode)?.nameKo ?? artwork.mediumTypeCode} ·{" "}
-              {formatKRW(artwork.price)}
+              {formatKRW(artwork.price)} · 조회 {artwork.viewCount}
             </div>
           </div>
 

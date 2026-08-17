@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import MerchPurchaseForm from "@/components/MerchPurchaseForm";
 import PlaceholderArt from "@/components/PlaceholderArt";
+import ReviewsSection from "@/components/ReviewsSection";
 import {
   getMerchEditionsRemaining,
   getMerchProduct,
@@ -72,6 +73,10 @@ export default async function MerchProductPage({
             />
           </div>
         </div>
+      </div>
+
+      <div className="mt-12">
+        <ReviewsSection target={{ productId: product.id }} />
       </div>
     </div>
   );

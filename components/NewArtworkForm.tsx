@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { buttonClasses } from "@/lib/ui";
-import { createArtwork } from "@/lib/queries";
+import { createArtwork, uploadMedia } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 
 const PROGRESS = [
@@ -18,7 +18,7 @@ export default function NewArtworkForm({
   artistId: string;
   artistHue: number;
 }) {
-  const [fileCount, setFileCount] = useState(0);
+  const [files, setFiles] = useState<File[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [mediumTypeCode, setMediumTypeCode] = useState("");
@@ -27,6 +27,7 @@ export default function NewArtworkForm({
   const [price, setPrice] = useState(0);
   const [posted, setPosted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function handleSubmit(e: FormEvent) {
@@ -34,17 +35,38 @@ export default function NewArtworkForm({
     setSubmitting(true);
     setError(null);
     try {
-      await createArtwork({ artistId, title, description, mediumTypeCode, size, year, price, hue: artistHue });
+      const imageUrls: string[] = [];
+      for (let i = 0; i < files.length; i++) {
+        setUploadStatus(`이미지 업로드 중... (${i + 1}/${files.length})`);
+        const file = files[i];
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `artworks/${artistId}/${crypto.randomUUID()}.${ext}`;
+        const url = await uploadMedia(path, file);
+        imageUrls.push(url);
+      }
+      setUploadStatus("");
+      await createArtwork({
+        artistId,
+        title,
+        description,
+        mediumTypeCode,
+        size,
+        year,
+        price,
+        hue: artistHue,
+        imageUrls,
+      });
       setPosted(true);
       setTitle("");
       setDescription("");
       setMediumTypeCode("");
       setSize("");
       setPrice(0);
-      setFileCount(0);
+      setFiles([]);
     } catch {
       setError("작품 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
     } finally {
+      setUploadStatus("");
       setSubmitting(false);
     }
   }
@@ -80,10 +102,10 @@ export default function NewArtworkForm({
             multiple
             accept="image/*"
             className="hidden"
-            onChange={(e) => setFileCount(e.target.files?.length ?? 0)}
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
           />
-          {fileCount > 0
-            ? `이미지 ${fileCount}장 선택됨`
+          {files.length > 0
+            ? `이미지 ${files.length}장 선택됨`
             : "작품 이미지를 여러 장 드래그하거나 클릭하여 업로드"}
         </label>
 
@@ -165,7 +187,7 @@ export default function NewArtworkForm({
         </div>
 
         <button type="submit" disabled={submitting} className={buttonClasses("primary")}>
-          {submitting ? "등록 중..." : "게시하기"}
+          {uploadStatus || (submitting ? "등록 중..." : "게시하기")}
         </button>
       </form>
     </div>

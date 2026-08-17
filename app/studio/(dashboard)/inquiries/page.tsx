@@ -1,10 +1,12 @@
 import StudioInquiriesBrowser from "@/components/StudioInquiriesBrowser";
 import { getStudioInquiries } from "@/lib/queries";
 import { getCurrentArtist } from "@/lib/studioAuth";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export default async function StudioInquiriesPage() {
   const artist = await getCurrentArtist();
-  const inquiries = await getStudioInquiries(artist.id);
+  const client = await createServerSupabaseClient();
+  const inquiries = await getStudioInquiries(artist.id, client);
 
   return (
     <div>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtistAvatar from "./ArtistAvatar";
 import type { Artist } from "@/lib/types";
 
 export default function ArtistCard({
@@ -18,10 +18,10 @@ export default function ArtistCard({
         className={`group block ${compact ? "w-40 flex-none" : ""}`}
       >
         <div className="aspect-square overflow-hidden border border-line">
-          <PlaceholderArt
+          <ArtistAvatar
+            avatarUrl={artist.avatarUrl}
             hue={artist.hue}
             seed={artist.slug}
-            kind="portrait"
             className="h-full w-full transition-transform duration-500 group-hover:scale-105"
           />
         </div>
@@ -40,10 +40,10 @@ export default function ArtistCard({
           compact ? "h-28 w-28" : "h-32 w-32"
         }`}
       >
-        <PlaceholderArt
+        <ArtistAvatar
+          avatarUrl={artist.avatarUrl}
           hue={artist.hue}
           seed={artist.slug}
-          kind="portrait"
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
       </div>

@@ -29,8 +29,8 @@ type JournalRow = Database["public"]["Tables"]["journal_posts"]["Row"];
 type MerchProductRow = Database["public"]["Tables"]["merch_products"]["Row"];
 type MerchVariantRow = Database["public"]["Tables"]["merch_variants"]["Row"];
 type MerchOrderByPhoneRow = Database["public"]["Functions"]["get_merch_orders_by_phone"]["Returns"][number];
-type ArtworkWithArtistRow = ArtworkRow & { artists: { name: string } | null };
-type MerchProductWithRelationsRow = MerchProductRow & {
+export type ArtworkWithArtistRow = ArtworkRow & { artists: { name: string } | null };
+export type MerchProductWithRelationsRow = MerchProductRow & {
   artworks: { slug: string; title: string } | null;
   artists: { slug: string; name: string } | null;
 };
@@ -42,10 +42,10 @@ type MerchOrderWithProductRow = MerchOrderRow & {
   merch_variants: { label: string } | null;
 };
 
-const ARTWORK_WITH_ARTIST_SELECT = "*, artists ( name )";
-const MERCH_PRODUCT_SELECT = "*, artworks ( slug, title ), artists ( slug, name )";
+export const ARTWORK_WITH_ARTIST_SELECT = "*, artists ( name )";
+export const MERCH_PRODUCT_SELECT = "*, artworks ( slug, title ), artists ( slug, name )";
 
-function toArtist(row: ArtistRow): Artist {
+export function toArtist(row: ArtistRow): Artist {
   return {
     id: row.id,
     slug: row.slug,
@@ -54,6 +54,7 @@ function toArtist(row: ArtistRow): Artist {
     tagline: row.tagline,
     bio: row.bio,
     hue: row.hue,
+    avatarUrl: row.avatar_url,
     styleTags: row.style_tags,
     commission: {
       accepting: row.commission_accepting,
@@ -64,7 +65,7 @@ function toArtist(row: ArtistRow): Artist {
   };
 }
 
-function toArtwork(row: ArtworkWithArtistRow): Artwork {
+export function toArtwork(row: ArtworkWithArtistRow): Artwork {
   return {
     id: row.id,
     slug: row.slug,
@@ -80,6 +81,8 @@ function toArtwork(row: ArtworkWithArtistRow): Artwork {
     merchEnabled: row.merch_enabled,
     hue: row.hue,
     variant: row.variant,
+    imageUrls: row.image_urls,
+    viewCount: row.view_count,
   };
 }
 
@@ -98,7 +101,7 @@ function toInquiry(row: InquiryRow): CommissionInquiry {
   };
 }
 
-function toJournalPost(row: JournalRow): JournalPost {
+export function toJournalPost(row: JournalRow): JournalPost {
   return {
     id: row.id,
     slug: row.slug,
@@ -121,7 +124,7 @@ function toJournalPost(row: JournalRow): JournalPost {
   };
 }
 
-function toMerchProduct(row: MerchProductWithRelationsRow): MerchProduct {
+export function toMerchProduct(row: MerchProductWithRelationsRow): MerchProduct {
   return {
     id: row.id,
     slug: row.slug,
@@ -236,6 +239,7 @@ function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
     quantity: row.quantity,
     unitPrice: row.unit_price,
     amount: row.amount,
+    royaltyAmount: row.royalty_amount,
     shippingAddress: row.shipping_address,
     phone: row.phone,
     name: row.name,
@@ -261,6 +265,9 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     quantity: row.quantity,
     unitPrice: row.unit_price,
     amount: row.amount,
+    // get_merch_orders_by_phone doesn't return royalty_amount (it's a
+    // studio/admin-only figure, not shown in the guest order-lookup UI).
+    royaltyAmount: 0,
     shippingAddress: row.shipping_address,
     phone: row.phone,
     name: "",
@@ -305,6 +312,7 @@ export interface ArtistInput {
   tagline: string;
   bio: string;
   hue: number;
+  avatarUrl: string | null;
   styleTags: string[];
   commissionAccepting: boolean;
   commissionMedia: string[];
@@ -325,6 +333,7 @@ export async function createArtist(
       tagline: input.tagline,
       bio: input.bio,
       hue: input.hue,
+      avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
@@ -351,6 +360,7 @@ export async function updateArtist(
       tagline: input.tagline,
       bio: input.bio,
       hue: input.hue,
+      avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
@@ -421,8 +431,18 @@ export async function updateArtworkMerchEnabled(id: string, merchEnabled: boolea
   if (error) throw error;
 }
 
-export async function getStudioInquiries(artistId: string): Promise<CommissionInquiry[]> {
-  const { data, error } = await supabase
+/** Fire-and-forget view counter, callable by anonymous visitors via a
+ * SECURITY DEFINER RPC (direct UPDATE is restricted to the owning artist). */
+export async function incrementArtworkView(artworkId: string): Promise<void> {
+  const { error } = await supabase.rpc("increment_artwork_view", { p_artwork_id: artworkId });
+  if (error) throw error;
+}
+
+export async function getStudioInquiries(
+  artistId: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<CommissionInquiry[]> {
+  const { data, error } = await client
     .from("commission_inquiries")
     .select("*")
     .eq("artist_id", artistId)
@@ -516,22 +536,29 @@ export interface NewArtworkInput {
   year: number;
   price: number;
   hue: number;
+  imageUrls: string[];
 }
 
-export async function createArtwork(input: NewArtworkInput): Promise<void> {
-  const { error } = await supabase.from("artworks").insert({
-    slug: slugify(input.title),
-    title: input.title,
-    description: input.description,
-    artist_id: input.artistId,
-    medium_type_code: input.mediumTypeCode,
-    size: input.size,
-    year: input.year,
-    price: input.price,
-    hue: input.hue,
-    variant: Math.floor(Math.random() * 3),
-  });
+export async function createArtwork(input: NewArtworkInput): Promise<string> {
+  const { data, error } = await supabase
+    .from("artworks")
+    .insert({
+      slug: slugify(input.title),
+      title: input.title,
+      description: input.description,
+      artist_id: input.artistId,
+      medium_type_code: input.mediumTypeCode,
+      size: input.size,
+      year: input.year,
+      price: input.price,
+      hue: input.hue,
+      variant: Math.floor(Math.random() * 3),
+      image_urls: input.imageUrls,
+    })
+    .select("id")
+    .single();
   if (error) throw error;
+  return data.id;
 }
 
 export interface ArtworkUpdateInput {
@@ -544,6 +571,7 @@ export interface ArtworkUpdateInput {
   sold: boolean;
   hue: number;
   variant: number;
+  imageUrls: string[];
 }
 
 export async function updateArtwork(
@@ -563,6 +591,7 @@ export async function updateArtwork(
       sold: input.sold,
       hue: input.hue,
       variant: input.variant,
+      image_urls: input.imageUrls,
     })
     .eq("id", id);
   if (error) throw error;
@@ -633,6 +662,17 @@ export async function getMerchProduct(slug: string): Promise<MerchProduct | null
     .returns<MerchProductWithRelationsRow>();
   if (error) throw error;
   return data ? toMerchProduct(data) : null;
+}
+
+export async function getMerchProductsByIds(ids: string[]): Promise<MerchProduct[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await supabase
+    .from("merch_products")
+    .select(MERCH_PRODUCT_SELECT)
+    .in("id", ids)
+    .returns<MerchProductWithRelationsRow[]>();
+  if (error) throw error;
+  return data.map(toMerchProduct);
 }
 
 export async function getMerchProductSlugs(): Promise<string[]> {
@@ -839,7 +879,10 @@ export async function purchaseMerch(
 ): Promise<{ orderNumber: string; amount: number }> {
   const { data, error } = await supabase.rpc("purchase_merch", {
     p_product_id: input.productId,
-    p_variant_id: input.variantId,
+    // purchase_merch's SQL signature has no DEFAULT for p_variant_id, so the
+    // generated type is non-nullable even though the function body accepts
+    // (and expects) null for non-variant products.
+    p_variant_id: input.variantId as string,
     p_quantity: input.quantity,
     p_shipping_address: input.shippingAddress,
     p_phone: input.phone,
@@ -856,6 +899,62 @@ export async function getMerchOrdersByPhone(phone: string): Promise<MerchOrder[]
   const { data, error } = await supabase.rpc("get_merch_orders_by_phone", { p_phone: phone });
   if (error) throw error;
   return data.map(toMerchOrder);
+}
+
+/** Orders placed while logged in, linked via `orders.user_id`/`merch_orders.user_id`
+ * (stamped automatically by the purchase RPCs). RLS scopes these to the caller's
+ * own rows, so no explicit `.eq("user_id", ...)` filter is needed. Returns an
+ * empty array for guests. */
+export async function getMyArtworkOrders(): Promise<ArtworkOrder[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_WITH_ARTWORK_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<OrderWithArtworkRow[]>();
+  if (error) throw error;
+  return data.map(toArtworkOrder);
+}
+
+export async function getMyMerchOrders(): Promise<MerchOrder[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("merch_orders")
+    .select(MERCH_ORDER_WITH_PRODUCT_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<MerchOrderWithProductRow[]>();
+  if (error) throw error;
+  return data.map(toAdminMerchOrder);
+}
+
+/** Sales view for the logged-in artist's own studio dashboard. RLS scopes
+ * these to orders on the artist's own artworks/products, so — like
+ * getMyArtworkOrders/getMyMerchOrders — no explicit artist filter is needed
+ * in the query itself. */
+export async function getArtworkOrdersForCurrentArtist(): Promise<ArtworkOrder[]> {
+  const { data, error } = await supabase
+    .from("orders")
+    .select(ORDER_WITH_ARTWORK_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<OrderWithArtworkRow[]>();
+  if (error) throw error;
+  return data.map(toArtworkOrder);
+}
+
+export async function getMerchOrdersForCurrentArtist(): Promise<MerchOrder[]> {
+  const { data, error } = await supabase
+    .from("merch_orders")
+    .select(MERCH_ORDER_WITH_PRODUCT_SELECT)
+    .order("created_at", { ascending: false })
+    .returns<MerchOrderWithProductRow[]>();
+  if (error) throw error;
+  return data.map(toAdminMerchOrder);
 }
 
 export async function getMyProfile(): Promise<Profile | null> {
@@ -1035,6 +1134,224 @@ export async function updateMerchOrderStatus(
 ): Promise<void> {
   const { error } = await client.from("merch_orders").update({ status }).eq("id", id);
   if (error) throw error;
+}
+
+export async function bulkUpdateArtworkOrderStatus(
+  ids: string[],
+  status: OrderStatus,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("orders").update({ status }).in("id", ids);
+  if (error) throw error;
+}
+
+export async function bulkUpdateMerchOrderStatus(
+  ids: string[],
+  status: OrderStatus,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("merch_orders").update({ status }).in("id", ids);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Settlement — a unified artwork+merch order view for the admin settlement
+// screen. Artwork orders have no defined gallery/artist commission split, so
+// `payoutAmount` is null for them (gross `amount` is shown instead); merch
+// orders already carry a computed `royalty_amount` per order.
+// ---------------------------------------------------------------------------
+
+export interface SettlementOrder {
+  id: string;
+  kind: "artwork" | "merch";
+  artistName: string;
+  itemTitle: string;
+  orderNumber: string;
+  amount: number;
+  payoutAmount: number | null;
+  status: OrderStatus;
+  settledAt: string | null;
+  createdAt: string;
+}
+
+type SettlementOrderRow = OrderRow & { artworks: { title: string; artists: { name: string } | null } | null };
+type SettlementMerchOrderRow = MerchOrderRow & {
+  merch_products: { title: string; artists: { name: string } | null } | null;
+};
+
+export async function getAdminSettlementOrders(
+  client: SupabaseClient<Database> = supabase
+): Promise<SettlementOrder[]> {
+  const [artworkRes, merchRes] = await Promise.all([
+    client
+      .from("orders")
+      .select("*, artworks ( title, artists ( name ) )")
+      .order("created_at", { ascending: false })
+      .returns<SettlementOrderRow[]>(),
+    client
+      .from("merch_orders")
+      .select("*, merch_products ( title, artists ( name ) )")
+      .order("created_at", { ascending: false })
+      .returns<SettlementMerchOrderRow[]>(),
+  ]);
+  if (artworkRes.error) throw artworkRes.error;
+  if (merchRes.error) throw merchRes.error;
+
+  const artworkOrders: SettlementOrder[] = artworkRes.data.map((row) => ({
+    id: row.id,
+    kind: "artwork",
+    artistName: row.artworks?.artists?.name ?? "",
+    itemTitle: row.artworks?.title ?? "(삭제된 작품)",
+    orderNumber: row.order_number,
+    amount: row.amount,
+    payoutAmount: null,
+    status: row.status as OrderStatus,
+    settledAt: row.settled_at,
+    createdAt: row.created_at,
+  }));
+  const merchOrders: SettlementOrder[] = merchRes.data.map((row) => ({
+    id: row.id,
+    kind: "merch",
+    artistName: row.merch_products?.artists?.name ?? "",
+    itemTitle: row.merch_products?.title ?? "(삭제된 상품)",
+    orderNumber: row.order_number,
+    amount: row.amount,
+    payoutAmount: row.royalty_amount,
+    status: row.status as OrderStatus,
+    settledAt: row.settled_at,
+    createdAt: row.created_at,
+  }));
+
+  return [...artworkOrders, ...merchOrders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export async function markOrdersSettled(
+  kind: "artwork" | "merch",
+  ids: string[],
+  settled: boolean,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const table = kind === "artwork" ? "orders" : "merch_orders";
+  const { error } = await client
+    .from(table)
+    .update({ settled_at: settled ? new Date().toISOString() : null })
+    .in("id", ids);
+  if (error) throw error;
+}
+
+// ---------------------------------------------------------------------------
+// Activity log
+// ---------------------------------------------------------------------------
+
+export interface ActivityLogEntry {
+  id: string;
+  action: string;
+  entityType: string;
+  entityId: string | null;
+  detail: Record<string, unknown>;
+  createdAt: string;
+}
+
+export async function logAdminActivity(
+  action: string,
+  entityType: string,
+  entityId: string | null,
+  detail: Record<string, unknown> = {},
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
+    .from("admin_activity_log")
+    .insert({ action, entity_type: entityType, entity_id: entityId, detail: detail as Database["public"]["Tables"]["admin_activity_log"]["Insert"]["detail"] });
+  if (error) throw error;
+}
+
+export async function getAdminActivityLog(
+  client: SupabaseClient<Database> = supabase,
+  limit = 100
+): Promise<ActivityLogEntry[]> {
+  const { data, error } = await client
+    .from("admin_activity_log")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    action: row.action,
+    entityType: row.entity_type,
+    entityId: row.entity_id,
+    detail: row.detail as Record<string, unknown>,
+    createdAt: row.created_at,
+  }));
+}
+
+// ---------------------------------------------------------------------------
+// Analytics — revenue trend and top sellers, derived from existing order
+// tables (no new aggregate tables needed).
+// ---------------------------------------------------------------------------
+
+export interface AdminAnalytics {
+  dailyRevenue: { date: string; amount: number }[];
+  topArtists: { name: string; amount: number }[];
+  topArtworks: { title: string; amount: number }[];
+}
+
+export async function getAdminAnalytics(
+  client: SupabaseClient<Database> = supabase
+): Promise<AdminAnalytics> {
+  const since = new Date();
+  since.setDate(since.getDate() - 30);
+  const sinceIso = since.toISOString();
+
+  const [artworkRes, merchRes] = await Promise.all([
+    client
+      .from("orders")
+      .select("amount, created_at, status, artworks ( title, artists ( name ) )")
+      .gte("created_at", sinceIso)
+      .neq("status", "cancelled")
+      .returns<{ amount: number; created_at: string; status: string; artworks: { title: string; artists: { name: string } | null } | null }[]>(),
+    client
+      .from("merch_orders")
+      .select("amount, created_at, status, merch_products ( title, artists ( name ) )")
+      .gte("created_at", sinceIso)
+      .neq("status", "cancelled")
+      .returns<{ amount: number; created_at: string; status: string; merch_products: { title: string; artists: { name: string } | null } | null }[]>(),
+  ]);
+  if (artworkRes.error) throw artworkRes.error;
+  if (merchRes.error) throw merchRes.error;
+
+  const byDay = new Map<string, number>();
+  const byArtist = new Map<string, number>();
+  const byArtwork = new Map<string, number>();
+
+  for (const row of artworkRes.data) {
+    const day = row.created_at.slice(0, 10);
+    byDay.set(day, (byDay.get(day) ?? 0) + row.amount);
+    const artistName = row.artworks?.artists?.name;
+    if (artistName) byArtist.set(artistName, (byArtist.get(artistName) ?? 0) + row.amount);
+    const title = row.artworks?.title;
+    if (title) byArtwork.set(title, (byArtwork.get(title) ?? 0) + row.amount);
+  }
+  for (const row of merchRes.data) {
+    const day = row.created_at.slice(0, 10);
+    byDay.set(day, (byDay.get(day) ?? 0) + row.amount);
+    const artistName = row.merch_products?.artists?.name;
+    if (artistName) byArtist.set(artistName, (byArtist.get(artistName) ?? 0) + row.amount);
+  }
+
+  const dailyRevenue = Array.from(byDay.entries())
+    .map(([date, amount]) => ({ date, amount }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const topArtists = Array.from(byArtist.entries())
+    .map(([name, amount]) => ({ name, amount }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+  const topArtworks = Array.from(byArtwork.entries())
+    .map(([title, amount]) => ({ title, amount }))
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 5);
+
+  return { dailyRevenue, topArtists, topArtworks };
 }
 
 export interface JournalPostInput {

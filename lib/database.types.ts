@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity_log: {
+        Row: {
+          action: string
+          created_at: string
+          detail: Json
+          entity_id: string | null
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          detail?: Json
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          detail?: Json
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+        }
+        Relationships: []
+      }
       artist_applications: {
         Row: {
           artist_name: string
@@ -76,6 +103,7 @@ export type Database = {
       }
       artists: {
         Row: {
+          avatar_url: string | null
           bio: string
           commission_accepting: boolean
           commission_lead_time: string
@@ -91,6 +119,7 @@ export type Database = {
           tagline: string
         }
         Insert: {
+          avatar_url?: string | null
           bio?: string
           commission_accepting?: boolean
           commission_lead_time?: string
@@ -106,6 +135,7 @@ export type Database = {
           tagline?: string
         }
         Update: {
+          avatar_url?: string | null
           bio?: string
           commission_accepting?: boolean
           commission_lead_time?: string
@@ -129,6 +159,7 @@ export type Database = {
           description: string
           hue: number
           id: string
+          image_urls: string[]
           medium_type_code: string
           merch_enabled: boolean
           price: number
@@ -137,6 +168,7 @@ export type Database = {
           sold: boolean
           title: string
           variant: number
+          view_count: number
           year: number
         }
         Insert: {
@@ -145,6 +177,7 @@ export type Database = {
           description?: string
           hue?: number
           id?: string
+          image_urls?: string[]
           medium_type_code: string
           merch_enabled?: boolean
           price: number
@@ -153,6 +186,7 @@ export type Database = {
           sold?: boolean
           title: string
           variant?: number
+          view_count?: number
           year: number
         }
         Update: {
@@ -161,6 +195,7 @@ export type Database = {
           description?: string
           hue?: number
           id?: string
+          image_urls?: string[]
           medium_type_code?: string
           merch_enabled?: boolean
           price?: number
@@ -169,6 +204,7 @@ export type Database = {
           sold?: boolean
           title?: string
           variant?: number
+          view_count?: number
           year?: number
         }
         Relationships: [
@@ -388,9 +424,11 @@ export type Database = {
           product_id: string
           quantity: number
           royalty_amount: number
+          settled_at: string | null
           shipping_address: string
           status: string
           unit_price: number
+          user_id: string | null
           variant_id: string | null
         }
         Insert: {
@@ -406,9 +444,11 @@ export type Database = {
           product_id: string
           quantity?: number
           royalty_amount: number
+          settled_at?: string | null
           shipping_address: string
           status?: string
           unit_price: number
+          user_id?: string | null
           variant_id?: string | null
         }
         Update: {
@@ -424,9 +464,11 @@ export type Database = {
           product_id?: string
           quantity?: number
           royalty_amount?: number
+          settled_at?: string | null
           shipping_address?: string
           status?: string
           unit_price?: number
+          user_id?: string | null
           variant_id?: string | null
         }
         Relationships: [
@@ -565,8 +607,10 @@ export type Database = {
           order_number: string
           payment_method: string
           phone: string
+          settled_at: string | null
           shipping_address: string
           status: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -579,8 +623,10 @@ export type Database = {
           order_number: string
           payment_method: string
           phone: string
+          settled_at?: string | null
           shipping_address: string
           status?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -593,8 +639,10 @@ export type Database = {
           order_number?: string
           payment_method?: string
           phone?: string
+          settled_at?: string | null
           shipping_address?: string
           status?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -647,6 +695,54 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          artwork_id: string | null
+          body: string
+          created_at: string
+          id: string
+          order_id: string | null
+          product_id: string | null
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          artwork_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          rating: number
+          user_id: string
+        }
+        Update: {
+          artwork_id?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          product_id?: string | null
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "merch_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site_assets: {
         Row: {
           key: string
@@ -664,6 +760,45 @@ export type Database = {
           url?: string | null
         }
         Relationships: []
+      }
+      wishlists: {
+        Row: {
+          artwork_id: string | null
+          created_at: string
+          id: string
+          product_id: string | null
+          user_id: string
+        }
+        Insert: {
+          artwork_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          user_id: string
+        }
+        Update: {
+          artwork_id?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlists_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wishlists_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "merch_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -693,13 +828,11 @@ export type Database = {
           variant_label: string
         }[]
       }
-      is_username_available: { Args: { p_username: string }; Returns: boolean }
-      review_artist_application: {
-        Args: { p_application_id: string; p_decision: string }
-        Returns: {
-          artist_id: string
-        }[]
+      increment_artwork_view: {
+        Args: { p_artwork_id: string }
+        Returns: undefined
       }
+      is_username_available: { Args: { p_username: string }; Returns: boolean }
       purchase_artwork: {
         Args: {
           p_artwork_id: string
@@ -724,12 +857,27 @@ export type Database = {
           p_product_id: string
           p_quantity: number
           p_shipping_address: string
-          p_variant_id: string | null
+          p_variant_id: string
         }
         Returns: {
           amount: number
           order_number: string
         }[]
+      }
+      review_artist_application: {
+        Args: { p_application_id: string; p_decision: string }
+        Returns: {
+          artist_id: string
+        }[]
+      }
+      submit_review: {
+        Args: {
+          p_artwork_id: string
+          p_body: string
+          p_product_id: string
+          p_rating: number
+        }
+        Returns: string
       }
     }
     Enums: {

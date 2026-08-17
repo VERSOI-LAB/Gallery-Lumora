@@ -1,59 +1,58 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import ArtistAvatar from "./ArtistAvatar";
 import { buttonClasses } from "@/lib/ui";
-import { adminCreateArtist, adminUpdateArtist } from "@/lib/adminActions";
-import type { ArtistInput } from "@/lib/queries";
+import { updateArtist, uploadMedia, type ArtistInput } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import type { Artist } from "@/lib/types";
 
-function slugify(name: string): string {
-  const base = name
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  const suffix = Math.random().toString(36).slice(2, 7);
-  return `${base || "artist"}-${suffix}`;
-}
-
-export default function AdminArtistForm({ artist }: { artist?: Artist }) {
-  const router = useRouter();
-  const [slug, setSlug] = useState(artist?.slug ?? "");
-  const [name, setName] = useState(artist?.name ?? "");
-  const [nameEn, setNameEn] = useState(artist?.nameEn ?? "");
-  const [tagline, setTagline] = useState(artist?.tagline ?? "");
-  const [bio, setBio] = useState(artist?.bio ?? "");
-  const [hue, setHue] = useState(artist?.hue ?? 90);
-  const [styleTags, setStyleTags] = useState(artist?.styleTags.join(", ") ?? "");
-  const [commissionAccepting, setCommissionAccepting] = useState(
-    artist?.commission.accepting ?? true
-  );
-  const [commissionMedia, setCommissionMedia] = useState<string[]>(artist?.commission.media ?? []);
-  const [commissionLeadTime, setCommissionLeadTime] = useState(artist?.commission.leadTime ?? "");
-  const [commissionPriceRange, setCommissionPriceRange] = useState(
-    artist?.commission.priceRange ?? ""
-  );
+export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
+  const [avatarUrl, setAvatarUrl] = useState(artist.avatarUrl);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [nameEn, setNameEn] = useState(artist.nameEn);
+  const [tagline, setTagline] = useState(artist.tagline);
+  const [bio, setBio] = useState(artist.bio);
+  const [styleTags, setStyleTags] = useState(artist.styleTags.join(", "));
+  const [commissionAccepting, setCommissionAccepting] = useState(artist.commission.accepting);
+  const [commissionMedia, setCommissionMedia] = useState<string[]>(artist.commission.media);
+  const [commissionLeadTime, setCommissionLeadTime] = useState(artist.commission.leadTime);
+  const [commissionPriceRange, setCommissionPriceRange] = useState(artist.commission.priceRange);
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function toggleMedia(code: string) {
     setCommissionMedia((prev) => (prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]));
   }
 
+  async function handleAvatarUpload(file: File) {
+    setAvatarUploading(true);
+    setError(null);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const url = await uploadMedia(`artists/${artist.id}/avatar.${ext}`, file);
+      setAvatarUrl(url);
+    } catch {
+      setError("사진 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    setSaved(false);
     setError(null);
     const input: ArtistInput = {
-      slug: slug || slugify(name),
-      name,
+      slug: artist.slug,
+      name: artist.name,
       nameEn,
       tagline,
       bio,
-      hue,
-      avatarUrl: artist?.avatarUrl ?? null,
+      hue: artist.hue,
+      avatarUrl,
       styleTags: styleTags
         .split(",")
         .map((t) => t.trim())
@@ -64,29 +63,45 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
       commissionPriceRange,
     };
     try {
-      if (artist) {
-        await adminUpdateArtist(artist.id, input);
-      } else {
-        await adminCreateArtist(input);
-      }
-      router.push("/admin/artists");
-      router.refresh();
+      await updateArtist(artist.id, input);
+      setSaved(true);
     } catch {
       setError("저장에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
       setSubmitting(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
+      <div>
+        <span className="mb-2 block text-[11px] tracking-wide text-ink-soft uppercase">프로필 사진</span>
+        <div className="flex items-center gap-4">
+          <div className="h-20 w-20 flex-none overflow-hidden border border-line">
+            <ArtistAvatar avatarUrl={avatarUrl} hue={artist.hue} seed={artist.slug} className="h-full w-full" />
+          </div>
+          <label className="cursor-pointer text-xs text-ink-soft hover:text-ink hover:underline">
+            {avatarUploading ? "업로드 중..." : "사진 변경"}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={avatarUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleAvatarUpload(file);
+              }}
+            />
+          </label>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <Field label="작가명">
           <input
-            required
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            value={artist.name}
+            disabled
+            className="h-10 w-full border border-line bg-paper-raised px-3 text-sm text-ink-faint"
           />
         </Field>
         <Field label="영문명">
@@ -94,25 +109,6 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
             type="text"
             value={nameEn}
             onChange={(e) => setNameEn(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
-        <Field label="슬러그 (비워두면 자동 생성)">
-          <input
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="url-에-쓰일-slug"
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
-        <Field label="색상 (hue, 0~360)">
-          <input
-            type="number"
-            min={0}
-            max={360}
-            value={hue}
-            onChange={(e) => setHue(Number(e.target.value))}
             className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
           />
         </Field>
@@ -203,8 +199,9 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
       </div>
 
       <button type="submit" disabled={submitting} className={buttonClasses("primary")}>
-        {submitting ? "저장 중..." : artist ? "수정 완료" : "작가 등록"}
+        {submitting ? "저장 중..." : "저장하기"}
       </button>
+      {saved && <p className="text-sm text-patina">저장되었습니다.</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
     </form>
   );

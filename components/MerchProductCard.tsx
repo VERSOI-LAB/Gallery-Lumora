@@ -1,5 +1,6 @@
 import Link from "next/link";
 import PlaceholderArt from "./PlaceholderArt";
+import WishlistButton from "./WishlistButton";
 import { formatKRW } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import type { MerchProduct } from "@/lib/types";
@@ -14,6 +15,7 @@ export default function MerchProductCard({ product }: { product: MerchProduct })
           seed={product.slug}
           className="h-full w-full transition-transform duration-500 group-hover:scale-105"
         />
+        <WishlistButton kind="product" itemId={product.id} className="absolute top-2 right-2" />
         {product.fulfillment === "edition" && (
           <span className="absolute top-2 left-2 bg-ink px-2 py-1 text-[10px] font-semibold tracking-wide text-paper">
             한정 {product.editionSize}

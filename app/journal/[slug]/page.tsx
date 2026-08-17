@@ -3,6 +3,8 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import ArticleCard from "@/components/ArticleCard";
 import PlaceholderArt from "@/components/PlaceholderArt";
+import ArtistAvatar from "@/components/ArtistAvatar";
+import ArtworkThumbnail from "@/components/ArtworkThumbnail";
 import {
   getArtistById,
   getArtworkById,
@@ -77,10 +79,10 @@ export default async function JournalDetailPage({
               {relatedArtist && (
                 <Link href={`/artists/${relatedArtist.slug}`} className="group block text-center">
                   <div className="mx-auto mb-2 h-20 w-20 overflow-hidden border border-line">
-                    <PlaceholderArt
+                    <ArtistAvatar
+                      avatarUrl={relatedArtist.avatarUrl}
                       hue={relatedArtist.hue}
                       seed={relatedArtist.slug}
-                      kind="portrait"
                       className="h-full w-full transition-transform duration-500 group-hover:scale-105"
                     />
                   </div>
@@ -91,7 +93,8 @@ export default async function JournalDetailPage({
               {relatedArtwork && (
                 <Link href={`/works/${relatedArtwork.slug}`} className="group block text-center">
                   <div className="mx-auto mb-2 aspect-square w-20 overflow-hidden">
-                    <PlaceholderArt
+                    <ArtworkThumbnail
+                      imageUrls={relatedArtwork.imageUrls}
                       hue={relatedArtwork.hue}
                       variant={relatedArtwork.variant}
                       seed={relatedArtwork.slug}

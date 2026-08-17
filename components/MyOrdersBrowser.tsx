@@ -6,13 +6,147 @@ import PlaceholderArt from "./PlaceholderArt";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
-import { getMerchOrdersByPhone } from "@/lib/queries";
+import { getMerchOrdersByPhone, getMyArtworkOrders, getMyMerchOrders } from "@/lib/queries";
+import { supabase } from "@/lib/supabase";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
-import type { MerchOrder } from "@/lib/types";
+import type { ArtworkOrder, MerchOrder } from "@/lib/types";
 
 const LAST_PHONE_KEY = "lumora:mypage:phone";
 
-export default function MyOrdersBrowser() {
+function MerchOrderRow({ order }: { order: MerchOrder }) {
+  return (
+    <li className="border border-line p-4">
+      <div className="flex gap-4">
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden">
+          <PlaceholderArt
+            hue={order.hue}
+            variant={order.variant}
+            seed={order.productSlug || undefined}
+            className="h-full w-full"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
+                {getMerchCategoryLabel(order.productCategory)}
+              </span>
+              {order.productSlug ? (
+                <Link
+                  href={`/shop/${order.productSlug}`}
+                  className="mt-0.5 block truncate text-sm font-semibold text-ink hover:underline"
+                >
+                  {order.productTitle}
+                </Link>
+              ) : (
+                <p className="mt-0.5 truncate text-sm font-semibold text-ink">{order.productTitle}</p>
+              )}
+            </div>
+            <span className="shrink-0 text-xs text-ink-faint">{formatDate(order.createdAt)}</span>
+          </div>
+
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
+            <span className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
+              {ORDER_STATUS_LABEL[order.status]}
+            </span>
+            {order.variantLabel && <span>옵션 {order.variantLabel}</span>}
+            {order.editionNumber != null && <span>에디션 #{order.editionNumber}</span>}
+            <span>수량 {order.quantity}개</span>
+            <span>{order.paymentMethod}</span>
+          </div>
+
+          <div className="mt-2 flex items-center justify-between">
+            <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
+            <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function ArtworkOrderRow({ order }: { order: ArtworkOrder }) {
+  return (
+    <li className="border border-line p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">작품 주문</span>
+          <Link
+            href={`/works`}
+            className="mt-0.5 block truncate text-sm font-semibold text-ink hover:underline"
+          >
+            {order.artworkTitle}
+          </Link>
+          <p className="mt-0.5 text-xs text-ink-faint">{order.artistName}</p>
+        </div>
+        <span className="shrink-0 text-xs text-ink-faint">{formatDate(order.createdAt)}</span>
+      </div>
+
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
+        <span className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
+          {ORDER_STATUS_LABEL[order.status]}
+        </span>
+        <span>{order.paymentMethod}</span>
+        {order.insured && <span>보험 가입</span>}
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
+        <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
+        <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
+      </div>
+    </li>
+  );
+}
+
+function LoggedInOrders() {
+  const [artworkOrders, setArtworkOrders] = useState<ArtworkOrder[] | null>(null);
+  const [merchOrders, setMerchOrders] = useState<MerchOrder[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    Promise.all([getMyArtworkOrders(), getMyMerchOrders()])
+      .then(([a, m]) => {
+        setArtworkOrders(a);
+        setMerchOrders(m);
+      })
+      .catch(() => setError("주문내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."));
+  }, []);
+
+  if (error) return <p className="text-xs text-red-600">{error}</p>;
+  if (artworkOrders === null || merchOrders === null) {
+    return <p className="text-sm text-ink-faint">불러오는 중...</p>;
+  }
+  if (artworkOrders.length === 0 && merchOrders.length === 0) {
+    return <p className="text-sm text-ink-faint">아직 주문내역이 없습니다.</p>;
+  }
+
+  return (
+    <div className="space-y-8">
+      {artworkOrders.length > 0 && (
+        <div>
+          <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">작품 주문</p>
+          <ul className="space-y-4">
+            {artworkOrders.map((order) => (
+              <ArtworkOrderRow key={order.id} order={order} />
+            ))}
+          </ul>
+        </div>
+      )}
+      {merchOrders.length > 0 && (
+        <div>
+          <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">굿즈 주문</p>
+          <ul className="space-y-4">
+            {merchOrders.map((order) => (
+              <MerchOrderRow key={order.id} order={order} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GuestPhoneLookup() {
   const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<MerchOrder[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,57 +201,7 @@ export default function MyOrdersBrowser() {
           ) : (
             <ul className="space-y-4">
               {orders.map((order) => (
-                <li key={order.id} className="border border-line p-4">
-                  <div className="flex gap-4">
-                    <div className="relative h-20 w-20 shrink-0 overflow-hidden">
-                      <PlaceholderArt
-                        hue={order.hue}
-                        variant={order.variant}
-                        seed={order.productSlug || undefined}
-                        className="h-full w-full"
-                      />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
-                            {getMerchCategoryLabel(order.productCategory)}
-                          </span>
-                          {order.productSlug ? (
-                            <Link
-                              href={`/shop/${order.productSlug}`}
-                              className="mt-0.5 block truncate text-sm font-semibold text-ink hover:underline"
-                            >
-                              {order.productTitle}
-                            </Link>
-                          ) : (
-                            <p className="mt-0.5 truncate text-sm font-semibold text-ink">
-                              {order.productTitle}
-                            </p>
-                          )}
-                        </div>
-                        <span className="shrink-0 text-xs text-ink-faint">{formatDate(order.createdAt)}</span>
-                      </div>
-
-                      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft">
-                        <span
-                          className={`border px-1.5 py-0.5 text-[10px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}
-                        >
-                          {ORDER_STATUS_LABEL[order.status]}
-                        </span>
-                        {order.variantLabel && <span>옵션 {order.variantLabel}</span>}
-                        {order.editionNumber != null && <span>에디션 #{order.editionNumber}</span>}
-                        <span>수량 {order.quantity}개</span>
-                        <span>{order.paymentMethod}</span>
-                      </div>
-
-                      <div className="mt-2 flex items-center justify-between">
-                        <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
-                        <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </li>
+                <MerchOrderRow key={order.id} order={order} />
               ))}
             </ul>
           )}
@@ -125,4 +209,15 @@ export default function MyOrdersBrowser() {
       )}
     </div>
   );
+}
+
+export default function MyOrdersBrowser() {
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setLoggedIn(!!data.user));
+  }, []);
+
+  if (loggedIn === null) return null;
+  return loggedIn ? <LoggedInOrders /> : <GuestPhoneLookup />;
 }

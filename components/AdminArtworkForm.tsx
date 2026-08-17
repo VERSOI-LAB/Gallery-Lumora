@@ -36,6 +36,7 @@ export default function AdminArtworkForm({ artwork }: { artwork: Artwork }) {
       sold,
       hue,
       variant,
+      imageUrls: artwork.imageUrls,
     };
     try {
       await adminUpdateArtwork(artwork.id, input);

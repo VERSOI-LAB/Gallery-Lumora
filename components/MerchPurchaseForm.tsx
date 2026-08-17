@@ -5,6 +5,7 @@ import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { purchaseMerch } from "@/lib/queries";
+import { useCart } from "@/components/CartContext";
 import type { MerchProduct, MerchVariant } from "@/lib/types";
 
 export default function MerchPurchaseForm({
@@ -26,8 +27,15 @@ export default function MerchPurchaseForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
+  const [addedToCart, setAddedToCart] = useState(false);
+  const { addItem } = useCart();
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
+  // Cart checkout re-runs purchaseMerch per line item (see /shop/cart), which
+  // doesn't model editions' one-at-a-time draw or variant stock races well
+  // across multiple cart sessions — so only plain stock items support "add to
+  // cart"; editions/variants stay direct-purchase-only.
+  const cartEligible = product.fulfillment === "stock" && !product.hasVariants;
 
   const maxQuantity = useMemo(() => {
     if (product.fulfillment === "edition") return 1;
@@ -194,13 +202,27 @@ export default function MerchPurchaseForm({
         </select>
       </Field>
 
-      <button
-        type="submit"
-        disabled={submitting || (product.hasVariants && !variantId)}
-        className={`w-full ${buttonClasses("primary")}`}
-      >
-        {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
-      </button>
+      <div className="flex gap-3">
+        {cartEligible && (
+          <button
+            type="button"
+            onClick={() => {
+              addItem(product.id, null, quantity);
+              setAddedToCart(true);
+            }}
+            className={`flex-1 ${buttonClasses("ghost")}`}
+          >
+            {addedToCart ? "담았습니다" : "장바구니에 담기"}
+          </button>
+        )}
+        <button
+          type="submit"
+          disabled={submitting || (product.hasVariants && !variantId)}
+          className={`flex-1 ${buttonClasses("primary")}`}
+        >
+          {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
+        </button>
+      </div>
       {error && <p className="text-xs text-red-600">{error}</p>}
     </form>
   );

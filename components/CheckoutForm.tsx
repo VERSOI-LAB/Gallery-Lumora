@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtworkThumbnail from "./ArtworkThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { purchaseArtwork } from "@/lib/queries";
@@ -141,7 +141,8 @@ export default function CheckoutForm({
         <aside className="h-fit border border-line p-5">
           <div className="mb-4 flex gap-3">
             <div className="h-[70px] w-[56px] flex-none overflow-hidden">
-              <PlaceholderArt
+              <ArtworkThumbnail
+                imageUrls={artwork.imageUrls}
                 hue={artwork.hue}
                 variant={artwork.variant}
                 seed={artwork.slug}

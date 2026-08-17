@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtworkThumbnail from "./ArtworkThumbnail";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { adminDeleteArtwork } from "@/lib/adminActions";
@@ -37,7 +37,8 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
         <div key={artwork.id}>
           <div className="flex items-center gap-4 py-4">
             <div className="h-16 w-[52px] flex-none overflow-hidden">
-              <PlaceholderArt
+              <ArtworkThumbnail
+                imageUrls={artwork.imageUrls}
                 hue={artwork.hue}
                 variant={artwork.variant}
                 seed={artwork.slug}

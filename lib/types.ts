@@ -6,6 +6,7 @@ export interface Artist {
   tagline: string;
   bio: string;
   hue: number;
+  avatarUrl: string | null;
   styleTags: string[];
   commission: {
     accepting: boolean;
@@ -30,6 +31,8 @@ export interface Artwork {
   merchEnabled: boolean;
   hue: number;
   variant: number;
+  imageUrls: string[];
+  viewCount: number;
 }
 
 export interface JournalPost {
@@ -97,6 +100,7 @@ export interface MerchOrder {
   quantity: number;
   unitPrice: number;
   amount: number;
+  royaltyAmount: number;
   shippingAddress: string;
   phone: string;
   name: string;

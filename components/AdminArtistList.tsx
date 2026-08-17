@@ -1,5 +1,5 @@
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import ArtistAvatar from "./ArtistAvatar";
 import type { Artist } from "@/lib/types";
 
 export default function AdminArtistList({ artists }: { artists: Artist[] }) {
@@ -12,7 +12,7 @@ export default function AdminArtistList({ artists }: { artists: Artist[] }) {
       {artists.map((artist) => (
         <div key={artist.id} className="flex items-center gap-4 py-4">
           <div className="h-14 w-14 flex-none overflow-hidden border border-line">
-            <PlaceholderArt hue={artist.hue} seed={artist.slug} kind="portrait" className="h-full w-full" />
+            <ArtistAvatar avatarUrl={artist.avatarUrl} hue={artist.hue} seed={artist.slug} className="h-full w-full" />
           </div>
 
           <div className="min-w-0 flex-1">

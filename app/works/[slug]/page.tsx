@@ -1,7 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import PlaceholderArt from "@/components/PlaceholderArt";
-import { getArtistById, getArtwork, getArtworkSlugs } from "@/lib/queries";
+import ArtworkThumbnail from "@/components/ArtworkThumbnail";
+import ReviewsSection from "@/components/ReviewsSection";
+import { getArtistById, getArtwork, getArtworkSlugs, incrementArtworkView } from "@/lib/queries";
 import { formatKRW } from "@/lib/format";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
@@ -22,6 +24,7 @@ export default async function WorkDetailPage({
   const artist = await getArtistById(artwork.artistId);
   if (!artist) notFound();
   const mediumType = getMediumType(artwork.mediumTypeCode);
+  incrementArtworkView(artwork.id).catch(() => {});
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
@@ -34,12 +37,32 @@ export default async function WorkDetailPage({
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.3fr_1fr]">
         <div>
-          <PlaceholderArt
+          <ArtworkThumbnail
+            imageUrls={artwork.imageUrls}
             hue={artwork.hue}
             variant={artwork.variant}
             seed={artwork.slug}
             className="aspect-[4/5] w-full"
+            sizes="(max-width: 1024px) 100vw, 60vw"
           />
+          {artwork.imageUrls.length > 1 && (
+            <div className="mt-3 grid grid-cols-4 gap-3">
+              {artwork.imageUrls.slice(1).map((url, i) => (
+                <div key={url} className="relative aspect-square overflow-hidden">
+                  <Image
+                    src={url}
+                    alt=""
+                    fill
+                    sizes="200px"
+                    className="object-cover"
+                    unoptimized
+                  />
+                  {/* index offset by 1 since the first photo is the hero image above */}
+                  <span className="sr-only">{`사진 ${i + 2}`}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div>
@@ -99,6 +122,10 @@ export default async function WorkDetailPage({
             </Link>
           </div>
         </div>
+      </div>
+
+      <div className="mt-12">
+        <ReviewsSection target={{ artworkId: artwork.id }} />
       </div>
     </div>
   );
