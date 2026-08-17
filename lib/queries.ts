@@ -422,12 +422,6 @@ export async function getArtistById(
   return data ? toArtist(data) : null;
 }
 
-export async function getArtistSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from("artists").select("slug");
-  if (error) throw error;
-  return data.map((r) => r.slug);
-}
-
 export interface ArtistInput {
   slug: string;
   name: string;
@@ -528,12 +522,6 @@ export async function getArtwork(slug: string): Promise<Artwork | null> {
   return data ? toArtwork(data) : null;
 }
 
-export async function getArtworkSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from("artworks").select("slug");
-  if (error) throw error;
-  return data.map((r) => r.slug);
-}
-
 export async function getArtworkById(id: string): Promise<Artwork | null> {
   const { data, error } = await supabase
     .from("artworks")
@@ -543,12 +531,6 @@ export async function getArtworkById(id: string): Promise<Artwork | null> {
     .returns<ArtworkWithArtistRow>();
   if (error) throw error;
   return data ? toArtwork(data) : null;
-}
-
-export async function getUnsoldArtworkSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from("artworks").select("slug").eq("sold", false);
-  if (error) throw error;
-  return data.map((r) => r.slug);
 }
 
 export async function getArtworksByArtistId(artistId: string): Promise<Artwork[]> {
@@ -808,12 +790,6 @@ export async function getJournalPost(slug: string): Promise<JournalPost | null> 
   return data ? toJournalPost(data) : null;
 }
 
-export async function getJournalPostSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from("journal_posts").select("slug");
-  if (error) throw error;
-  return data.map((r) => r.slug);
-}
-
 export async function getRelatedJournalPosts(
   excludeSlug: string,
   limit = 3
@@ -860,12 +836,6 @@ export async function getMerchProductsByIds(ids: string[]): Promise<MerchProduct
     .returns<MerchProductWithRelationsRow[]>();
   if (error) throw error;
   return data.map(toMerchProduct);
-}
-
-export async function getMerchProductSlugs(): Promise<string[]> {
-  const { data, error } = await supabase.from("merch_products").select("slug").eq("active", true);
-  if (error) throw error;
-  return data.map((r) => r.slug);
 }
 
 export async function getAllMerchProductsAdmin(

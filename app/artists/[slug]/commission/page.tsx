@@ -1,11 +1,8 @@
 import { notFound } from "next/navigation";
 import CommissionForm from "@/components/CommissionForm";
-import { getArtist, getArtistSlugs } from "@/lib/queries";
+import { getArtist } from "@/lib/queries";
 
-export async function generateStaticParams() {
-  const slugs = await getArtistSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function ArtistCommissionPage({
   params,

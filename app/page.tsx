@@ -7,6 +7,9 @@ import HeroVideo from "@/components/HeroVideo";
 import { getArtists, getArtworks, getJournalPosts, getMerchProducts, getSiteAsset } from "@/lib/queries";
 import { buttonClasses } from "@/lib/ui";
 
+// 관리자 화면에서 바꾼 작가·작품·굿즈가 재배포 없이 바로 반영되도록 매 요청마다 새로 렌더링.
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [artists, artworks, journalPosts, merchProducts, heroVideo] = await Promise.all([
     getArtists(),

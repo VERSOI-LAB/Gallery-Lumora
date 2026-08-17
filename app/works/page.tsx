@@ -2,6 +2,8 @@ import WorksBrowser from "@/components/WorksBrowser";
 import FeaturedArtworks from "@/components/FeaturedArtworks";
 import { getArtworks, getSiteAsset } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function WorksPage() {
   const [artworks, mainImageUrl] = await Promise.all([
     getArtworks(),

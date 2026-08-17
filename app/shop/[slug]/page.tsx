@@ -5,18 +5,10 @@ import MerchTemplateDetail from "@/components/MerchTemplateDetail";
 import MerchThumbnail from "@/components/MerchThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
 import WishlistButton from "@/components/WishlistButton";
-import {
-  getMerchEditionsRemaining,
-  getMerchProduct,
-  getMerchProductSlugs,
-  getMerchVariants,
-} from "@/lib/queries";
+import { getMerchEditionsRemaining, getMerchProduct, getMerchVariants } from "@/lib/queries";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 
-export async function generateStaticParams() {
-  const slugs = await getMerchProductSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function MerchProductPage({
   params,

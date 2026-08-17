@@ -2,6 +2,8 @@ import FadeInOnScroll from "@/components/FadeInOnScroll";
 import HeroVideo from "@/components/HeroVideo";
 import { getSiteAsset } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 const CORE_VALUES = [
   {
     number: "01",

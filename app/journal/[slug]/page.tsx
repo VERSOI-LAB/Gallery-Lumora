@@ -9,17 +9,13 @@ import {
   getArtistById,
   getArtworkById,
   getJournalPost,
-  getJournalPostSlugs,
   getRelatedJournalPosts,
 } from "@/lib/queries";
 import { formatDate, formatKRW } from "@/lib/format";
 import { getJournalCategoryLabel } from "@/lib/journalTaxonomy";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 
-export async function generateStaticParams() {
-  const slugs = await getJournalPostSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function JournalDetailPage({
   params,

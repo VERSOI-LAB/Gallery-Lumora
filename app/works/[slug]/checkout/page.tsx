@@ -1,11 +1,8 @@
 import { notFound } from "next/navigation";
 import CheckoutForm from "@/components/CheckoutForm";
-import { getArtistById, getArtwork, getUnsoldArtworkSlugs } from "@/lib/queries";
+import { getArtistById, getArtwork } from "@/lib/queries";
 
-export async function generateStaticParams() {
-  const slugs = await getUnsoldArtworkSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage({
   params,

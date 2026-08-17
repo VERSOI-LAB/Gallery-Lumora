@@ -4,15 +4,12 @@ import { notFound } from "next/navigation";
 import ArtworkThumbnail from "@/components/ArtworkThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
 import WishlistButton from "@/components/WishlistButton";
-import { getArtistById, getArtwork, getArtworkSlugs, incrementArtworkView } from "@/lib/queries";
+import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
 import { formatKRW } from "@/lib/format";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 
-export async function generateStaticParams() {
-  const slugs = await getArtworkSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function WorkDetailPage({
   params,
