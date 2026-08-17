@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import MerchThumbnail from "./MerchThumbnail";
 import { formatKRW } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import { adminUpdateMerchProductActive } from "@/lib/adminActions";
@@ -34,7 +34,8 @@ export default function AdminMerchList({ products: initial }: { products: MerchP
       {products.map((product) => (
         <div key={product.id} className="flex items-center gap-4 py-4">
           <div className="h-16 w-16 flex-none overflow-hidden">
-            <PlaceholderArt
+            <MerchThumbnail
+              imageUrls={product.imageUrls}
               hue={product.hue}
               variant={product.variant}
               seed={product.slug}

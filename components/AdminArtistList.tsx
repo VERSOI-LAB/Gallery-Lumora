@@ -17,7 +17,12 @@ export default function AdminArtistList({ artists }: { artists: Artist[] }) {
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate text-sm font-medium text-ink">{artist.name}</span>
+              <Link
+                href={`/admin/artists/${artist.id}`}
+                className="truncate text-sm font-medium text-ink hover:underline"
+              >
+                {artist.name}
+              </Link>
               {artist.commission.accepting && (
                 <span className="flex-none border border-patina px-1.5 py-0.5 text-[10px] text-patina">
                   커미션 접수중
@@ -27,6 +32,12 @@ export default function AdminArtistList({ artists }: { artists: Artist[] }) {
             <div className="text-xs text-ink-soft">{artist.tagline}</div>
           </div>
 
+          <Link
+            href={`/admin/artists/${artist.id}`}
+            className="flex-none text-xs text-ink-soft hover:text-ink hover:underline"
+          >
+            상세보기
+          </Link>
           <Link
             href={`/admin/artists/${artist.id}/edit`}
             className="flex-none text-xs text-ink-soft hover:text-ink hover:underline"

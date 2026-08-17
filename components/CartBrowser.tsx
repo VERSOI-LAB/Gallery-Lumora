@@ -2,12 +2,14 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
 import { getMerchProductsByIds, purchaseMerch } from "@/lib/queries";
 import type { MerchProduct } from "@/lib/types";
+
+const MADE_TO_ORDER_MAX_QUANTITY = 10;
 
 export default function CartBrowser() {
   const { items, updateQuantity, removeItem, clear } = useCart();
@@ -111,7 +113,13 @@ export default function CartBrowser() {
           return (
             <div key={`${item.productId}-${item.variantId ?? ""}`} className="flex gap-4 py-4">
               <div className="h-20 w-20 flex-none overflow-hidden">
-                <PlaceholderArt hue={product.hue} variant={product.variant} seed={product.slug} className="h-full w-full" />
+                <MerchThumbnail
+                  imageUrls={product.imageUrls}
+                  hue={product.hue}
+                  variant={product.variant}
+                  seed={product.slug}
+                  className="h-full w-full"
+                />
               </div>
               <div className="min-w-0 flex-1">
                 <Link href={`/shop/${product.slug}`} className="text-sm font-semibold hover:underline">
@@ -133,7 +141,7 @@ export default function CartBrowser() {
                       updateQuantity(
                         item.productId,
                         item.variantId,
-                        Math.min(product.stockQuantity ?? item.quantity, item.quantity + 1)
+                        Math.min(MADE_TO_ORDER_MAX_QUANTITY, item.quantity + 1)
                       )
                     }
                     className="h-8 w-8 border border-line-strong text-sm"

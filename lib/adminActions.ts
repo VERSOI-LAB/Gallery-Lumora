@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdminSession } from "./adminAuth";
 import { supabaseService } from "./supabase/service";
+import { sendNewArtworkEmail } from "./email";
 import {
   updateArtwork,
   deleteArtwork,
@@ -26,6 +27,10 @@ import {
   deleteJournalPost,
   updateSiteAsset,
   getArtworkOrdersByPhone,
+  getArtworkById,
+  getCustomersByIds,
+  updateCustomerMarketingOptIn,
+  recordCustomerNotifications,
   logAdminActivity,
   type ArtworkUpdateInput,
   type MerchProductInput,
@@ -205,4 +210,38 @@ export async function adminUpdateSiteAsset(key: SiteAssetKey, url: string): Prom
 export async function adminGetArtworkOrdersByPhone(phone: string): Promise<ArtworkOrder[]> {
   await assertAdminSession();
   return getArtworkOrdersByPhone(phone, supabaseService);
+}
+
+export async function adminUpdateCustomerMarketingOptIn(id: string, optIn: boolean): Promise<void> {
+  await assertAdminSession();
+  await updateCustomerMarketingOptIn(id, optIn, supabaseService);
+  await log("update", "customer", id, { marketingOptIn: optIn });
+  revalidatePath("/admin/customers");
+}
+
+export async function adminSendNewArtworkNotification(
+  artworkId: string,
+  customerIds: string[]
+): Promise<{ sentCount: number }> {
+  await assertAdminSession();
+  const artwork = await getArtworkById(artworkId);
+  if (!artwork) throw new Error("작품을 찾을 수 없습니다.");
+
+  const customers = await getCustomersByIds(customerIds, supabaseService);
+  const eligible = customers.filter((c) => c.marketingOptIn && c.email);
+  if (eligible.length === 0) return { sentCount: 0 };
+
+  await sendNewArtworkEmail(
+    eligible.map((c) => c.email),
+    artwork
+  );
+  await recordCustomerNotifications(
+    eligible.map((c) => c.id),
+    artworkId,
+    `새 작품 소식: ${artwork.title}`,
+    supabaseService
+  );
+  await log("send_notification", "artwork", artworkId, { customerCount: eligible.length });
+  revalidatePath("/admin/customers");
+  return { sentCount: eligible.length };
 }

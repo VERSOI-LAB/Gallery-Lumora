@@ -8,6 +8,7 @@ export interface Artist {
   hue: number;
   avatarUrl: string | null;
   styleTags: string[];
+  artistSplitRate: number;
   commission: {
     accepting: boolean;
     media: string[];
@@ -67,26 +68,34 @@ export interface MerchProduct {
   description: string;
   price: number;
   royaltyRate: number;
-  fulfillment: "edition" | "stock";
+  fulfillment: "edition" | "made_to_order";
   editionSize: number | null;
-  stockQuantity: number | null;
   hasVariants: boolean;
   active: boolean;
   hue: number;
   variant: number;
+  imageUrls: string[];
 }
 
 export interface MerchVariant {
   id: string;
   productId: string;
   label: string;
-  stockQuantity: number;
   priceDelta: number;
 }
 
 export type OrderStatus = "paid" | "preparing" | "shipped" | "delivered" | "cancelled";
 
-export interface MerchOrder {
+export interface ShippingInfo {
+  shippingMethod: "parcel" | "freight" | null;
+  trackingCarrier: string | null;
+  trackingNumber: string | null;
+  courierName: string | null;
+  courierPhone: string | null;
+  vehicleNumber: string | null;
+}
+
+export interface MerchOrder extends ShippingInfo {
   id: string;
   orderNumber: string;
   productId: string;
@@ -95,6 +104,7 @@ export interface MerchOrder {
   productCategory: string;
   hue: number;
   variant: number;
+  imageUrls: string[];
   variantLabel: string | null;
   editionNumber: number | null;
   quantity: number;
@@ -162,7 +172,7 @@ export interface GeneralInquiry {
   createdAt: string;
 }
 
-export interface ArtworkOrder {
+export interface ArtworkOrder extends ShippingInfo {
   id: string;
   orderNumber: string;
   artworkId: string;
@@ -175,8 +185,31 @@ export interface ArtworkOrder {
   paymentMethod: string;
   insured: boolean;
   amount: number;
+  artistPayoutAmount: number | null;
   status: OrderStatus;
   createdAt: string;
+}
+
+export interface Customer {
+  id: string;
+  phone: string;
+  name: string;
+  email: string;
+  marketingOptIn: boolean;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt: string | null;
+  preferenceTags: string[];
+  createdAt: string;
+}
+
+export interface CustomerNotification {
+  id: string;
+  customerId: string;
+  artworkId: string | null;
+  artworkTitle: string | null;
+  subject: string;
+  sentAt: string;
 }
 
 export type SiteAssetKey =

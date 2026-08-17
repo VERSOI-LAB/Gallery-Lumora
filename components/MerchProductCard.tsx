@@ -1,5 +1,5 @@
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import MerchThumbnail from "./MerchThumbnail";
 import WishlistButton from "./WishlistButton";
 import { formatKRW } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
@@ -9,7 +9,8 @@ export default function MerchProductCard({ product }: { product: MerchProduct })
   return (
     <Link href={`/shop/${product.slug}`} className="group block">
       <div className="relative aspect-square overflow-hidden">
-        <PlaceholderArt
+        <MerchThumbnail
+          imageUrls={product.imageUrls}
           hue={product.hue}
           variant={product.variant}
           seed={product.slug}

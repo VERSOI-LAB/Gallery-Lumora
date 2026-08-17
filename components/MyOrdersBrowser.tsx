@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
-import PlaceholderArt from "./PlaceholderArt";
+import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
@@ -13,15 +13,36 @@ import type { ArtworkOrder, MerchOrder } from "@/lib/types";
 
 const LAST_PHONE_KEY = "lumora:mypage:phone";
 
+function TrackingLine({ order }: { order: ArtworkOrder | MerchOrder }) {
+  if (!order.shippingMethod) return null;
+  if (order.shippingMethod === "parcel" && order.trackingNumber) {
+    return (
+      <p className="mt-1 text-xs text-ink-soft">
+        송장번호 {order.trackingNumber}
+        {order.trackingCarrier ? ` (${order.trackingCarrier})` : ""}
+      </p>
+    );
+  }
+  if (order.shippingMethod === "freight" && order.courierPhone) {
+    return (
+      <p className="mt-1 text-xs text-ink-soft">
+        기사님 연락처 {order.courierPhone} · 차량번호 {order.vehicleNumber}
+      </p>
+    );
+  }
+  return null;
+}
+
 function MerchOrderRow({ order }: { order: MerchOrder }) {
   return (
     <li className="border border-line p-4">
       <div className="flex gap-4">
         <div className="relative h-20 w-20 shrink-0 overflow-hidden">
-          <PlaceholderArt
+          <MerchThumbnail
+            imageUrls={order.imageUrls}
             hue={order.hue}
             variant={order.variant}
-            seed={order.productSlug || undefined}
+            seed={order.productSlug || "merch"}
             className="h-full w-full"
           />
         </div>
@@ -54,6 +75,7 @@ function MerchOrderRow({ order }: { order: MerchOrder }) {
             <span>수량 {order.quantity}개</span>
             <span>{order.paymentMethod}</span>
           </div>
+          <TrackingLine order={order} />
 
           <div className="mt-2 flex items-center justify-between">
             <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
@@ -89,6 +111,7 @@ function ArtworkOrderRow({ order }: { order: ArtworkOrder }) {
         <span>{order.paymentMethod}</span>
         {order.insured && <span>보험 가입</span>}
       </div>
+      <TrackingLine order={order} />
 
       <div className="mt-2 flex items-center justify-between">
         <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>

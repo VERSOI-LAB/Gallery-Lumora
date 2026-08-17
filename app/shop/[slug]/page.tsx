@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import MerchPurchaseForm from "@/components/MerchPurchaseForm";
-import PlaceholderArt from "@/components/PlaceholderArt";
+import MerchThumbnail from "@/components/MerchThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
 import {
   getMerchEditionsRemaining,
@@ -41,7 +41,8 @@ export default async function MerchProductPage({
 
       <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1.1fr_1fr]">
         <div>
-          <PlaceholderArt
+          <MerchThumbnail
+            imageUrls={product.imageUrls}
             hue={product.hue}
             variant={product.variant}
             seed={product.slug}

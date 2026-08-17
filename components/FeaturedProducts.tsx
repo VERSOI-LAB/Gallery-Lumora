@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import FeaturedCarousel from "./FeaturedCarousel";
-import PlaceholderArt from "./PlaceholderArt";
+import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import type { MerchProduct } from "@/lib/types";
@@ -27,7 +27,8 @@ export default function FeaturedProducts({
         className="object-cover"
       />
     ) : (
-      <PlaceholderArt
+      <MerchThumbnail
+        imageUrls={product.imageUrls}
         hue={product.hue}
         variant={product.variant}
         seed={product.slug}

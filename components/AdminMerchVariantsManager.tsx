@@ -19,7 +19,6 @@ export default function AdminMerchVariantsManager({
 }) {
   const [variants, setVariants] = useState(initial);
   const [label, setLabel] = useState("");
-  const [stockQuantity, setStockQuantity] = useState(0);
   const [priceDelta, setPriceDelta] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -29,27 +28,12 @@ export default function AdminMerchVariantsManager({
     if (!label.trim()) return;
     setSubmitting(true);
     try {
-      const id = await adminCreateMerchVariant(productId, { label, stockQuantity, priceDelta });
-      setVariants((prev) => [...prev, { id, productId, label, stockQuantity, priceDelta }]);
+      const id = await adminCreateMerchVariant(productId, { label, priceDelta });
+      setVariants((prev) => [...prev, { id, productId, label, priceDelta }]);
       setLabel("");
-      setStockQuantity(0);
       setPriceDelta(0);
     } finally {
       setSubmitting(false);
-    }
-  }
-
-  async function handleStockChange(variant: MerchVariant, nextStock: number) {
-    setPendingId(variant.id);
-    setVariants((prev) => prev.map((v) => (v.id === variant.id ? { ...v, stockQuantity: nextStock } : v)));
-    try {
-      await adminUpdateMerchVariant(variant.id, {
-        label: variant.label,
-        stockQuantity: nextStock,
-        priceDelta: variant.priceDelta,
-      });
-    } finally {
-      setPendingId(null);
     }
   }
 
@@ -79,15 +63,6 @@ export default function AdminMerchVariantsManager({
                   {formatKRW(v.priceDelta)}
                 </span>
               )}
-              <input
-                type="number"
-                min={0}
-                value={v.stockQuantity}
-                disabled={pendingId === v.id}
-                onChange={(e) => handleStockChange(v, Number(e.target.value))}
-                className="h-8 w-20 border border-line-strong bg-paper-raised px-2 text-xs outline-patina"
-              />
-              <span className="text-xs text-ink-faint">재고</span>
               <button
                 type="button"
                 disabled={pendingId === v.id}
@@ -111,16 +86,6 @@ export default function AdminMerchVariantsManager({
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             className="h-9 w-32 border border-line-strong bg-paper-raised px-2 text-sm outline-patina"
-          />
-        </label>
-        <label className="block">
-          <span className="mb-1 block text-[11px] text-ink-soft uppercase">재고</span>
-          <input
-            type="number"
-            min={0}
-            value={stockQuantity}
-            onChange={(e) => setStockQuantity(Number(e.target.value))}
-            className="h-9 w-24 border border-line-strong bg-paper-raised px-2 text-sm outline-patina"
           />
         </label>
         <label className="block">

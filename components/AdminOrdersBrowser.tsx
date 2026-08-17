@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { buttonClasses, tabClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
 import {
@@ -288,7 +289,9 @@ export default function AdminOrdersBrowser({
                 />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-sm font-semibold">{order.artworkTitle}</span>
+                    <Link href={`/admin/orders/artwork/${order.id}`} className="text-sm font-semibold hover:underline">
+                      {order.artworkTitle}
+                    </Link>
                     <div className="flex items-center gap-3">
                       <span className="text-sm">{formatKRW(order.amount)}</span>
                       <StatusSelect
@@ -329,11 +332,11 @@ export default function AdminOrdersBrowser({
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="text-sm font-semibold">
+                  <Link href={`/admin/orders/merch/${order.id}`} className="text-sm font-semibold hover:underline">
                     {order.productTitle}
                     {order.variantLabel && ` · ${order.variantLabel}`}
                     {order.editionNumber != null && ` · #${order.editionNumber}`}
-                  </span>
+                  </Link>
                   <div className="flex items-center gap-3">
                     <span className="text-sm">{formatKRW(order.amount)}</span>
                     <StatusSelect

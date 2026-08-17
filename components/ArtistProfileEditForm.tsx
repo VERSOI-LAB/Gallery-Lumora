@@ -52,6 +52,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
       tagline,
       bio,
       hue: artist.hue,
+      artistSplitRate: artist.artistSplitRate,
       avatarUrl,
       styleTags: styleTags
         .split(",")
@@ -143,6 +144,14 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
           className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
       </Field>
+
+      <div className="border-t border-line pt-5">
+        <p className="mb-2 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">정산 비율</p>
+        <p className="text-sm text-ink-soft">
+          작가 {Math.round(artist.artistSplitRate * 100)}% / 갤러리 {Math.round((1 - artist.artistSplitRate) * 100)}%
+        </p>
+        <p className="mt-1 text-xs text-ink-faint">운영팀이 설정하는 값으로, 작품 판매 정산에 적용됩니다.</p>
+      </div>
 
       <div className="border-t border-line pt-5">
         <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">커미션 설정</p>

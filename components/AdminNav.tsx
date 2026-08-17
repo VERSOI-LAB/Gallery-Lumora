@@ -8,7 +8,7 @@ const ITEMS = [
   { href: "/admin/applications", label: "작가 지원" },
   { href: "/admin/inquiries", label: "문의 관리" },
   { href: "/admin/orders", label: "주문 현황" },
-  { href: "/admin/customers", label: "고객 조회" },
+  { href: "/admin/customers", label: "고객 관리" },
   { href: "/admin/artists", label: "작가 관리" },
   { href: "/admin/artworks", label: "작품 관리" },
   { href: "/admin/merch", label: "굿즈 관리" },

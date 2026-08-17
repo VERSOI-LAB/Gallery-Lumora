@@ -103,6 +103,7 @@ export type Database = {
       }
       artists: {
         Row: {
+          artist_split_rate: number
           avatar_url: string | null
           bio: string
           commission_accepting: boolean
@@ -119,6 +120,7 @@ export type Database = {
           tagline: string
         }
         Insert: {
+          artist_split_rate?: number
           avatar_url?: string | null
           bio?: string
           commission_accepting?: boolean
@@ -135,6 +137,7 @@ export type Database = {
           tagline?: string
         }
         Update: {
+          artist_split_rate?: number
           avatar_url?: string | null
           bio?: string
           commission_accepting?: boolean
@@ -276,6 +279,75 @@ export type Database = {
           },
         ]
       }
+      customer_notifications: {
+        Row: {
+          artwork_id: string | null
+          customer_id: string
+          id: string
+          sent_at: string
+          subject: string
+        }
+        Insert: {
+          artwork_id?: string | null
+          customer_id: string
+          id?: string
+          sent_at?: string
+          subject?: string
+        }
+        Update: {
+          artwork_id?: string | null
+          customer_id?: string
+          id?: string
+          sent_at?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_notifications_artwork_id_fkey"
+            columns: ["artwork_id"]
+            isOneToOne: false
+            referencedRelation: "artworks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customer_notifications_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      customers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          marketing_opt_in: boolean
+          name: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string
+          id?: string
+          marketing_opt_in?: boolean
+          name?: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          marketing_opt_in?: boolean
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       general_inquiries: {
         Row: {
           category: string
@@ -413,6 +485,8 @@ export type Database = {
       merch_orders: {
         Row: {
           amount: number
+          courier_name: string | null
+          courier_phone: string | null
           created_at: string
           edition_number: number | null
           email: string
@@ -426,13 +500,19 @@ export type Database = {
           royalty_amount: number
           settled_at: string | null
           shipping_address: string
+          shipping_method: string | null
           status: string
+          tracking_carrier: string | null
+          tracking_number: string | null
           unit_price: number
           user_id: string | null
           variant_id: string | null
+          vehicle_number: string | null
         }
         Insert: {
           amount: number
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           edition_number?: number | null
           email?: string
@@ -446,13 +526,19 @@ export type Database = {
           royalty_amount: number
           settled_at?: string | null
           shipping_address: string
+          shipping_method?: string | null
           status?: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
           unit_price: number
           user_id?: string | null
           variant_id?: string | null
+          vehicle_number?: string | null
         }
         Update: {
           amount?: number
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           edition_number?: number | null
           email?: string
@@ -466,10 +552,14 @@ export type Database = {
           royalty_amount?: number
           settled_at?: string | null
           shipping_address?: string
+          shipping_method?: string | null
           status?: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
           unit_price?: number
           user_id?: string | null
           variant_id?: string | null
+          vehicle_number?: string | null
         }
         Relationships: [
           {
@@ -502,10 +592,10 @@ export type Database = {
           fulfillment: string
           has_variants: boolean
           id: string
+          image_urls: string[]
           price: number
           royalty_rate: number
           slug: string
-          stock_quantity: number | null
           title: string
         }
         Insert: {
@@ -521,10 +611,10 @@ export type Database = {
           fulfillment: string
           has_variants?: boolean
           id?: string
+          image_urls?: string[]
           price: number
           royalty_rate?: number
           slug: string
-          stock_quantity?: number | null
           title: string
         }
         Update: {
@@ -540,10 +630,10 @@ export type Database = {
           fulfillment?: string
           has_variants?: boolean
           id?: string
+          image_urls?: string[]
           price?: number
           royalty_rate?: number
           slug?: string
-          stock_quantity?: number | null
           title?: string
         }
         Relationships: [
@@ -569,21 +659,18 @@ export type Database = {
           label: string
           price_delta: number
           product_id: string
-          stock_quantity: number
         }
         Insert: {
           id?: string
           label: string
           price_delta?: number
           product_id: string
-          stock_quantity?: number
         }
         Update: {
           id?: string
           label?: string
           price_delta?: number
           product_id?: string
-          stock_quantity?: number
         }
         Relationships: [
           {
@@ -598,7 +685,10 @@ export type Database = {
       orders: {
         Row: {
           amount: number
+          artist_payout_amount: number | null
           artwork_id: string
+          courier_name: string | null
+          courier_phone: string | null
           created_at: string
           email: string
           id: string
@@ -609,12 +699,19 @@ export type Database = {
           phone: string
           settled_at: string | null
           shipping_address: string
+          shipping_method: string | null
           status: string
+          tracking_carrier: string | null
+          tracking_number: string | null
           user_id: string | null
+          vehicle_number: string | null
         }
         Insert: {
           amount: number
+          artist_payout_amount?: number | null
           artwork_id: string
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -625,12 +722,19 @@ export type Database = {
           phone: string
           settled_at?: string | null
           shipping_address: string
+          shipping_method?: string | null
           status?: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
           user_id?: string | null
+          vehicle_number?: string | null
         }
         Update: {
           amount?: number
+          artist_payout_amount?: number | null
           artwork_id?: string
+          courier_name?: string | null
+          courier_phone?: string | null
           created_at?: string
           email?: string
           id?: string
@@ -641,8 +745,12 @@ export type Database = {
           phone?: string
           settled_at?: string | null
           shipping_address?: string
+          shipping_method?: string | null
           status?: string
+          tracking_carrier?: string | null
+          tracking_number?: string | null
           user_id?: string | null
+          vehicle_number?: string | null
         }
         Relationships: [
           {
@@ -838,6 +946,7 @@ export type Database = {
           p_artwork_id: string
           p_email?: string
           p_insured: boolean
+          p_marketing_opt_in?: boolean
           p_name?: string
           p_payment_method: string
           p_phone: string
@@ -851,6 +960,7 @@ export type Database = {
       purchase_merch: {
         Args: {
           p_email?: string
+          p_marketing_opt_in?: boolean
           p_name?: string
           p_payment_method: string
           p_phone: string
@@ -878,6 +988,29 @@ export type Database = {
           p_rating: number
         }
         Returns: string
+      }
+      update_order_shipping: {
+        Args: {
+          p_courier_name?: string
+          p_courier_phone?: string
+          p_kind: string
+          p_order_id: string
+          p_shipping_method?: string
+          p_status: string
+          p_tracking_carrier?: string
+          p_tracking_number?: string
+          p_vehicle_number?: string
+        }
+        Returns: undefined
+      }
+      upsert_customer: {
+        Args: {
+          p_email: string
+          p_marketing_opt_in?: boolean
+          p_name: string
+          p_phone: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
@@ -1005,9 +1138,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const

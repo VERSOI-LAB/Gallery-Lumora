@@ -21,6 +21,7 @@ export default function CheckoutForm({
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
   const [insured, setInsured] = useState(true);
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
@@ -38,6 +39,7 @@ export default function CheckoutForm({
         email,
         paymentMethod,
         insured,
+        marketingOptIn,
       });
       setReceipt(result);
     } catch {
@@ -127,6 +129,15 @@ export default function CheckoutForm({
               className="accent-patina"
             />
             배송 보험 포함 (권장)
+          </label>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-soft">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              onChange={() => setMarketingOptIn((v) => !v)}
+              className="accent-patina"
+            />
+            신작 소식 등 마케팅 이메일 수신에 동의합니다
           </label>
 
           <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>

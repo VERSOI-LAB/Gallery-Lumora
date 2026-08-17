@@ -7,6 +7,8 @@ import type {
   Artwork,
   ArtworkOrder,
   CommissionInquiry,
+  Customer,
+  CustomerNotification,
   GeneralInquiry,
   JournalPost,
   MerchOrder,
@@ -14,8 +16,11 @@ import type {
   MerchVariant,
   OrderStatus,
   Profile,
+  ShippingInfo,
   SiteAssetKey,
 } from "./types";
+import { getMediumTypeLabel } from "./mediumTaxonomy";
+import { getMerchCategoryLabel } from "./merchTaxonomy";
 
 type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
 type ArtistRow = Database["public"]["Tables"]["artists"]["Row"];
@@ -38,7 +43,14 @@ type OrderWithArtworkRow = OrderRow & {
   artworks: { title: string; artists: { name: string } | null } | null;
 };
 type MerchOrderWithProductRow = MerchOrderRow & {
-  merch_products: { slug: string; title: string; category: string; cover_hue: number; cover_variant: number } | null;
+  merch_products: {
+    slug: string;
+    title: string;
+    category: string;
+    cover_hue: number;
+    cover_variant: number;
+    image_urls: string[];
+  } | null;
   merch_variants: { label: string } | null;
 };
 
@@ -56,6 +68,7 @@ export function toArtist(row: ArtistRow): Artist {
     hue: row.hue,
     avatarUrl: row.avatar_url,
     styleTags: row.style_tags,
+    artistSplitRate: row.artist_split_rate,
     commission: {
       accepting: row.commission_accepting,
       media: row.commission_media,
@@ -141,11 +154,11 @@ export function toMerchProduct(row: MerchProductWithRelationsRow): MerchProduct 
     royaltyRate: Number(row.royalty_rate),
     fulfillment: row.fulfillment as MerchProduct["fulfillment"],
     editionSize: row.edition_size,
-    stockQuantity: row.stock_quantity,
     hasVariants: row.has_variants,
     active: row.active,
     hue: row.cover_hue,
     variant: row.cover_variant,
+    imageUrls: row.image_urls,
   };
 }
 
@@ -154,7 +167,6 @@ function toMerchVariant(row: MerchVariantRow): MerchVariant {
     id: row.id,
     productId: row.product_id,
     label: row.label,
-    stockQuantity: row.stock_quantity,
     priceDelta: row.price_delta,
   };
 }
@@ -205,6 +217,24 @@ function toGeneralInquiry(row: GeneralInquiryRow): GeneralInquiry {
   };
 }
 
+function toShippingInfo(row: {
+  shipping_method: string | null;
+  tracking_carrier: string | null;
+  tracking_number: string | null;
+  courier_name: string | null;
+  courier_phone: string | null;
+  vehicle_number: string | null;
+}): ShippingInfo {
+  return {
+    shippingMethod: row.shipping_method as ShippingInfo["shippingMethod"],
+    trackingCarrier: row.tracking_carrier,
+    trackingNumber: row.tracking_number,
+    courierName: row.courier_name,
+    courierPhone: row.courier_phone,
+    vehicleNumber: row.vehicle_number,
+  };
+}
+
 function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
   return {
     id: row.id,
@@ -219,8 +249,10 @@ function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
     paymentMethod: row.payment_method,
     insured: row.insured,
     amount: row.amount,
+    artistPayoutAmount: row.artist_payout_amount,
     status: row.status as ArtworkOrder["status"],
     createdAt: row.created_at,
+    ...toShippingInfo(row),
   };
 }
 
@@ -234,6 +266,7 @@ function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
     productCategory: row.merch_products?.category ?? "",
     hue: row.merch_products?.cover_hue ?? 90,
     variant: row.merch_products?.cover_variant ?? 0,
+    imageUrls: row.merch_products?.image_urls ?? [],
     variantLabel: row.merch_variants?.label ?? null,
     editionNumber: row.edition_number,
     quantity: row.quantity,
@@ -247,6 +280,7 @@ function toAdminMerchOrder(row: MerchOrderWithProductRow): MerchOrder {
     paymentMethod: row.payment_method,
     status: row.status as MerchOrder["status"],
     createdAt: row.created_at,
+    ...toShippingInfo(row),
   };
 }
 
@@ -260,6 +294,7 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     productCategory: row.product_category ?? "",
     hue: row.cover_hue ?? 90,
     variant: row.cover_variant ?? 0,
+    imageUrls: [],
     variantLabel: row.variant_label,
     editionNumber: row.edition_number,
     quantity: row.quantity,
@@ -275,6 +310,12 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     paymentMethod: row.payment_method,
     status: row.status as MerchOrder["status"],
     createdAt: row.created_at,
+    shippingMethod: null,
+    trackingCarrier: null,
+    trackingNumber: null,
+    courierName: null,
+    courierPhone: null,
+    vehicleNumber: null,
   };
 }
 
@@ -314,6 +355,7 @@ export interface ArtistInput {
   hue: number;
   avatarUrl: string | null;
   styleTags: string[];
+  artistSplitRate: number;
   commissionAccepting: boolean;
   commissionMedia: string[];
   commissionLeadTime: string;
@@ -335,6 +377,7 @@ export async function createArtist(
       hue: input.hue,
       avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
+      artist_split_rate: input.artistSplitRate,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -362,6 +405,7 @@ export async function updateArtist(
       hue: input.hue,
       avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
+      artist_split_rate: input.artistSplitRate,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -498,6 +542,7 @@ export interface PurchaseInput {
   email: string;
   paymentMethod: string;
   insured: boolean;
+  marketingOptIn?: boolean;
 }
 
 export async function purchaseArtwork(
@@ -511,6 +556,7 @@ export async function purchaseArtwork(
     p_email: input.email,
     p_payment_method: input.paymentMethod,
     p_insured: input.insured,
+    p_marketing_opt_in: input.marketingOptIn ?? true,
   });
   if (error) throw error;
   const row = data[0];
@@ -716,13 +762,13 @@ export interface MerchProductInput {
   description: string;
   price: number;
   royaltyRate: number;
-  fulfillment: "edition" | "stock";
+  fulfillment: "edition" | "made_to_order";
   editionSize: number | null;
-  stockQuantity: number | null;
   hasVariants: boolean;
   active: boolean;
   coverHue: number;
   coverVariant: number;
+  imageUrls: string[];
 }
 
 export async function createMerchProduct(
@@ -742,11 +788,11 @@ export async function createMerchProduct(
       royalty_rate: input.royaltyRate,
       fulfillment: input.fulfillment,
       edition_size: input.fulfillment === "edition" ? input.editionSize : null,
-      stock_quantity: input.fulfillment === "stock" && !input.hasVariants ? input.stockQuantity : null,
       has_variants: input.hasVariants,
       active: input.active,
       cover_hue: input.coverHue,
       cover_variant: input.coverVariant,
+      image_urls: input.imageUrls,
     })
     .select("id")
     .single();
@@ -782,7 +828,7 @@ export async function updateMerchProduct(
       royalty_rate: input.royaltyRate,
       has_variants: input.hasVariants,
       active: input.active,
-      stock_quantity: input.fulfillment === "stock" && !input.hasVariants ? input.stockQuantity : null,
+      image_urls: input.imageUrls,
     })
     .eq("id", id);
   if (error) throw error;
@@ -790,7 +836,6 @@ export async function updateMerchProduct(
 
 export interface MerchVariantInput {
   label: string;
-  stockQuantity: number;
   priceDelta: number;
 }
 
@@ -804,7 +849,6 @@ export async function createMerchVariant(
     .insert({
       product_id: productId,
       label: input.label,
-      stock_quantity: input.stockQuantity,
       price_delta: input.priceDelta,
     })
     .select("id")
@@ -822,7 +866,6 @@ export async function updateMerchVariant(
     .from("merch_variants")
     .update({
       label: input.label,
-      stock_quantity: input.stockQuantity,
       price_delta: input.priceDelta,
     })
     .eq("id", id);
@@ -872,6 +915,7 @@ export interface MerchPurchaseInput {
   name: string;
   email: string;
   paymentMethod: string;
+  marketingOptIn?: boolean;
 }
 
 export async function purchaseMerch(
@@ -889,6 +933,7 @@ export async function purchaseMerch(
     p_name: input.name,
     p_email: input.email,
     p_payment_method: input.paymentMethod,
+    p_marketing_opt_in: input.marketingOptIn ?? true,
   });
   if (error) throw error;
   const row = data[0];
@@ -1078,7 +1123,7 @@ export async function updateGeneralInquiryStatus(
 
 const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, artists ( name ) )";
 const MERCH_ORDER_WITH_PRODUCT_SELECT =
-  "*, merch_products ( slug, title, category, cover_hue, cover_variant ), merch_variants ( label )";
+  "*, merch_products ( slug, title, category, cover_hue, cover_variant, image_urls ), merch_variants ( label )";
 
 export async function getAllArtworkOrders(
   client: SupabaseClient<Database> = supabase
@@ -1102,6 +1147,65 @@ export async function getAllMerchOrders(
     .returns<MerchOrderWithProductRow[]>();
   if (error) throw error;
   return data.map(toAdminMerchOrder);
+}
+
+export async function getArtworkOrderById(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<ArtworkOrder | null> {
+  const { data, error } = await client
+    .from("orders")
+    .select(ORDER_WITH_ARTWORK_SELECT)
+    .eq("id", id)
+    .maybeSingle()
+    .returns<OrderWithArtworkRow>();
+  if (error) throw error;
+  return data ? toArtworkOrder(data) : null;
+}
+
+export async function getMerchOrderById(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<MerchOrder | null> {
+  const { data, error } = await client
+    .from("merch_orders")
+    .select(MERCH_ORDER_WITH_PRODUCT_SELECT)
+    .eq("id", id)
+    .maybeSingle()
+    .returns<MerchOrderWithProductRow>();
+  if (error) throw error;
+  return data ? toAdminMerchOrder(data) : null;
+}
+
+export interface ShippingUpdateInput {
+  status: OrderStatus;
+  shippingMethod?: "parcel" | "freight";
+  trackingCarrier?: string;
+  trackingNumber?: string;
+  courierName?: string;
+  courierPhone?: string;
+  vehicleNumber?: string;
+}
+
+/** Called by the logged-in artist from the studio sales dashboard. Backed by
+ * the update_order_shipping SECURITY DEFINER RPC, which verifies the order
+ * belongs to the caller's own artist_id — not a plain table update, since
+ * artists have no RLS UPDATE policy on orders/merch_orders (see AGENTS notes
+ * in the admin actions for why: keeps arbitrary-column tampering impossible
+ * via direct REST calls). */
+export async function updateOrderShippingStatus(kind: "artwork" | "merch", id: string, input: ShippingUpdateInput): Promise<void> {
+  const { error } = await supabase.rpc("update_order_shipping", {
+    p_kind: kind,
+    p_order_id: id,
+    p_status: input.status,
+    p_shipping_method: input.shippingMethod,
+    p_tracking_carrier: input.trackingCarrier,
+    p_tracking_number: input.trackingNumber,
+    p_courier_name: input.courierName,
+    p_courier_phone: input.courierPhone,
+    p_vehicle_number: input.vehicleNumber,
+  });
+  if (error) throw error;
 }
 
 export async function getArtworkOrdersByPhone(
@@ -1492,4 +1596,186 @@ export async function getAdminDashboardStats(
     newInquiries: newInquiries.count ?? 0,
     totalOrders: (artworkOrders.count ?? 0) + (merchOrders.count ?? 0),
   };
+}
+
+type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
+type CustomerNotificationRow = Database["public"]["Tables"]["customer_notifications"]["Row"];
+type OrderPhoneAggRow = {
+  phone: string;
+  amount: number;
+  created_at: string;
+  artworks: { medium_type_code: string } | null;
+};
+type MerchOrderPhoneAggRow = {
+  phone: string;
+  amount: number;
+  created_at: string;
+  merch_products: { category: string } | null;
+};
+
+function toCustomer(
+  row: CustomerRow,
+  agg?: { orderCount: number; totalSpent: number; lastOrderAt: string | null; tagCounts: Map<string, number> }
+): Customer {
+  const preferenceTags = agg
+    ? Array.from(agg.tagCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([tag]) => tag)
+    : [];
+  return {
+    id: row.id,
+    phone: row.phone,
+    name: row.name,
+    email: row.email,
+    marketingOptIn: row.marketing_opt_in,
+    orderCount: agg?.orderCount ?? 0,
+    totalSpent: agg?.totalSpent ?? 0,
+    lastOrderAt: agg?.lastOrderAt ?? null,
+    preferenceTags,
+    createdAt: row.created_at,
+  };
+}
+
+type PhoneAgg = { orderCount: number; totalSpent: number; lastOrderAt: string | null; tagCounts: Map<string, number> };
+
+function bumpPhoneAgg(map: Map<string, PhoneAgg>, phone: string, amount: number, createdAt: string, tag: string | null) {
+  if (!phone) return;
+  const agg = map.get(phone) ?? { orderCount: 0, totalSpent: 0, lastOrderAt: null, tagCounts: new Map<string, number>() };
+  agg.orderCount += 1;
+  agg.totalSpent += amount;
+  if (!agg.lastOrderAt || createdAt > agg.lastOrderAt) agg.lastOrderAt = createdAt;
+  if (tag) agg.tagCounts.set(tag, (agg.tagCounts.get(tag) ?? 0) + 1);
+  map.set(phone, agg);
+}
+
+/** Admin-only customer directory: every row in `customers`, joined against
+ * non-cancelled order history (by phone, since guest checkout is the primary
+ * path and there's no real customer-account table) to derive spend totals
+ * and "preference" tags (top medium/category by purchase count). */
+export async function getCustomers(client: SupabaseClient<Database> = supabase): Promise<Customer[]> {
+  const [{ data: customerRows, error }, { data: artworkRows, error: artworkErr }, { data: merchRows, error: merchErr }] =
+    await Promise.all([
+      client.from("customers").select("*").order("updated_at", { ascending: false }),
+      client
+        .from("orders")
+        .select("phone, amount, created_at, artworks ( medium_type_code )")
+        .neq("status", "cancelled")
+        .returns<OrderPhoneAggRow[]>(),
+      client
+        .from("merch_orders")
+        .select("phone, amount, created_at, merch_products ( category )")
+        .neq("status", "cancelled")
+        .returns<MerchOrderPhoneAggRow[]>(),
+    ]);
+  if (error) throw error;
+  if (artworkErr) throw artworkErr;
+  if (merchErr) throw merchErr;
+
+  const byPhone = new Map<string, PhoneAgg>();
+  for (const row of artworkRows ?? []) {
+    const tag = row.artworks?.medium_type_code ? getMediumTypeLabel(row.artworks.medium_type_code) : null;
+    bumpPhoneAgg(byPhone, row.phone, row.amount, row.created_at, tag);
+  }
+  for (const row of merchRows ?? []) {
+    const tag = row.merch_products?.category ? getMerchCategoryLabel(row.merch_products.category) : null;
+    bumpPhoneAgg(byPhone, row.phone, row.amount, row.created_at, tag);
+  }
+
+  return customerRows.map((row) => toCustomer(row, byPhone.get(row.phone)));
+}
+
+export interface CustomerDetail {
+  customer: Customer;
+  artworkOrders: ArtworkOrder[];
+  merchOrders: MerchOrder[];
+  notifications: CustomerNotification[];
+}
+
+export async function getCustomerDetail(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<CustomerDetail | null> {
+  const { data: row, error } = await client.from("customers").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  if (!row) return null;
+
+  const [artworkOrders, merchOrders, notificationRows] = await Promise.all([
+    getArtworkOrdersByPhone(row.phone, client),
+    getMerchOrdersByPhone(row.phone),
+    client
+      .from("customer_notifications")
+      .select("*, artworks ( title )")
+      .eq("customer_id", id)
+      .order("sent_at", { ascending: false })
+      .returns<(CustomerNotificationRow & { artworks: { title: string } | null })[]>(),
+  ]);
+  if (notificationRows.error) throw notificationRows.error;
+
+  const tagCounts = new Map<string, number>();
+  for (const o of artworkOrders) {
+    // artistName doubles as a rough style signal alongside the medium; keep
+    // this simple rather than re-fetching medium_type_code per order.
+    tagCounts.set(o.artistName, (tagCounts.get(o.artistName) ?? 0) + 1);
+  }
+  for (const o of merchOrders) {
+    const label = getMerchCategoryLabel(o.productCategory);
+    tagCounts.set(label, (tagCounts.get(label) ?? 0) + 1);
+  }
+  const nonCancelled = [...artworkOrders, ...merchOrders].filter((o) => o.status !== "cancelled");
+  const agg: PhoneAgg = {
+    orderCount: nonCancelled.length,
+    totalSpent: nonCancelled.reduce((sum, o) => sum + o.amount, 0),
+    lastOrderAt:
+      [...artworkOrders, ...merchOrders].reduce<string | null>(
+        (latest, o) => (!latest || o.createdAt > latest ? o.createdAt : latest),
+        null
+      ) ?? null,
+    tagCounts,
+  };
+
+  return {
+    customer: toCustomer(row, agg),
+    artworkOrders,
+    merchOrders,
+    notifications: (notificationRows.data ?? []).map((n) => ({
+      id: n.id,
+      customerId: n.customer_id,
+      artworkId: n.artwork_id,
+      artworkTitle: n.artworks?.title ?? null,
+      subject: n.subject,
+      sentAt: n.sent_at,
+    })),
+  };
+}
+
+export async function getCustomersByIds(
+  ids: string[],
+  client: SupabaseClient<Database> = supabase
+): Promise<Customer[]> {
+  if (ids.length === 0) return [];
+  const { data, error } = await client.from("customers").select("*").in("id", ids);
+  if (error) throw error;
+  return data.map((row) => toCustomer(row));
+}
+
+export async function updateCustomerMarketingOptIn(
+  id: string,
+  optIn: boolean,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("customers").update({ marketing_opt_in: optIn }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function recordCustomerNotifications(
+  customerIds: string[],
+  artworkId: string,
+  subject: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client
+    .from("customer_notifications")
+    .insert(customerIds.map((customerId) => ({ customer_id: customerId, artwork_id: artworkId, subject })));
+  if (error) throw error;
 }

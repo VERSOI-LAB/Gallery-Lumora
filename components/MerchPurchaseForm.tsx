@@ -24,6 +24,7 @@ export default function MerchPurchaseForm({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
+  const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
@@ -32,23 +33,19 @@ export default function MerchPurchaseForm({
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
   // Cart checkout re-runs purchaseMerch per line item (see /shop/cart), which
-  // doesn't model editions' one-at-a-time draw or variant stock races well
-  // across multiple cart sessions — so only plain stock items support "add to
-  // cart"; editions/variants stay direct-purchase-only.
-  const cartEligible = product.fulfillment === "stock" && !product.hasVariants;
+  // doesn't model editions' one-at-a-time draw well across multiple cart
+  // sessions — so only plain made-to-order items support "add to cart";
+  // editions/variants stay direct-purchase-only.
+  const cartEligible = product.fulfillment === "made_to_order" && !product.hasVariants;
+
+  const MADE_TO_ORDER_MAX_QUANTITY = 10;
 
   const maxQuantity = useMemo(() => {
     if (product.fulfillment === "edition") return 1;
-    if (product.hasVariants) return selectedVariant?.stockQuantity ?? 0;
-    return product.stockQuantity ?? 0;
-  }, [product, selectedVariant]);
+    return MADE_TO_ORDER_MAX_QUANTITY;
+  }, [product]);
 
-  const soldOut =
-    product.fulfillment === "edition"
-      ? (editionsRemaining ?? 0) <= 0
-      : product.hasVariants
-        ? variants.every((v) => v.stockQuantity <= 0)
-        : (product.stockQuantity ?? 0) <= 0;
+  const soldOut = product.fulfillment === "edition" ? (editionsRemaining ?? 0) <= 0 : false;
 
   const unitPrice = product.price + (selectedVariant?.priceDelta ?? 0);
   const total = unitPrice * quantity;
@@ -67,6 +64,7 @@ export default function MerchPurchaseForm({
         name,
         email,
         paymentMethod,
+        marketingOptIn,
       });
       setReceipt(result);
     } catch {
@@ -104,30 +102,24 @@ export default function MerchPurchaseForm({
       {product.hasVariants && (
         <Field label="옵션">
           <div className="flex flex-wrap gap-2">
-            {variants.map((v) => {
-              const disabled = v.stockQuantity <= 0;
-              return (
-                <button
-                  key={v.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => setVariantId(v.id)}
-                  className={`border px-3 py-2 text-xs ${
-                    variantId === v.id
-                      ? "border-patina font-semibold text-patina"
-                      : "border-line-strong text-ink-soft"
-                  } ${disabled ? "cursor-not-allowed opacity-40 line-through" : ""}`}
-                >
-                  {v.label}
-                  {v.priceDelta > 0 ? ` (+${formatKRW(v.priceDelta)})` : ""}
-                </button>
-              );
-            })}
+            {variants.map((v) => (
+              <button
+                key={v.id}
+                type="button"
+                onClick={() => setVariantId(v.id)}
+                className={`border px-3 py-2 text-xs ${
+                  variantId === v.id ? "border-patina font-semibold text-patina" : "border-line-strong text-ink-soft"
+                }`}
+              >
+                {v.label}
+                {v.priceDelta > 0 ? ` (+${formatKRW(v.priceDelta)})` : ""}
+              </button>
+            ))}
           </div>
         </Field>
       )}
 
-      {product.fulfillment === "stock" && (
+      {product.fulfillment === "made_to_order" && (
         <Field label="수량">
           <div className="flex items-center gap-3">
             <button
@@ -145,7 +137,6 @@ export default function MerchPurchaseForm({
             >
               +
             </button>
-            <span className="text-xs text-ink-faint">{maxQuantity}개 남음</span>
           </div>
         </Field>
       )}
@@ -201,6 +192,15 @@ export default function MerchPurchaseForm({
           <option>간편결제</option>
         </select>
       </Field>
+      <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-soft">
+        <input
+          type="checkbox"
+          checked={marketingOptIn}
+          onChange={() => setMarketingOptIn((v) => !v)}
+          className="accent-patina"
+        />
+        신작 소식 등 마케팅 이메일 수신에 동의합니다
+      </label>
 
       <div className="flex gap-3">
         {cartEligible && (

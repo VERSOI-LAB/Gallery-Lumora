@@ -35,6 +35,7 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
   const [commissionPriceRange, setCommissionPriceRange] = useState(
     artist?.commission.priceRange ?? ""
   );
+  const [artistSplitRate, setArtistSplitRate] = useState(artist?.artistSplitRate ?? 0.7);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -58,6 +59,7 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean),
+      artistSplitRate,
       commissionAccepting,
       commissionMedia,
       commissionLeadTime,
@@ -147,6 +149,26 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
           className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
       </Field>
+
+      <div className="border-t border-line pt-5">
+        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">정산 비율</p>
+        <Field label="작가 정산 비율 (0~1, 예: 0.7 = 작가 70% / 갤러리 30%)">
+          <input
+            required
+            type="number"
+            min={0}
+            max={1}
+            step={0.01}
+            value={artistSplitRate}
+            onChange={(e) => setArtistSplitRate(Number(e.target.value))}
+            className="h-10 w-full max-w-xs border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <p className="mt-2 text-xs text-ink-faint">
+          작품 판매 시 이 비율로 작가 정산액이 자동 계산됩니다 (작가 {Math.round(artistSplitRate * 100)}% /
+          갤러리 {Math.round((1 - artistSplitRate) * 100)}%).
+        </p>
+      </div>
 
       <div className="border-t border-line pt-5">
         <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">커미션 설정</p>
