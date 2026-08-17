@@ -101,6 +101,7 @@ export function toArtwork(row: ArtworkWithArtistRow): Artwork {
     variant: row.variant,
     imageUrls: row.image_urls,
     viewCount: row.view_count,
+    isExhibitionFeatured: row.is_exhibition_featured,
   };
 }
 
@@ -509,6 +510,31 @@ export async function getArtworks(): Promise<Artwork[]> {
     .returns<ArtworkWithArtistRow[]>();
   if (error) throw error;
   return data.map(toArtwork);
+}
+
+export async function getExhibitionFeaturedArtwork(
+  client: SupabaseClient<Database> = supabase
+): Promise<Artwork | null> {
+  const { data, error } = await client
+    .from("artworks")
+    .select(ARTWORK_WITH_ARTIST_SELECT)
+    .eq("is_exhibition_featured", true)
+    .maybeSingle()
+    .returns<ArtworkWithArtistRow>();
+  if (error) throw error;
+  return data ? toArtwork(data) : null;
+}
+
+export async function setExhibitionFeaturedArtwork(
+  artworkId: string | null,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  // The generated RPC arg type doesn't capture that the SQL param is
+  // nullable (used to clear the current feature); Postgres accepts null fine.
+  const { error } = await client.rpc("set_exhibition_featured_artwork", {
+    p_artwork_id: artworkId as string,
+  });
+  if (error) throw error;
 }
 
 export async function getArtwork(slug: string): Promise<Artwork | null> {

@@ -7,13 +7,14 @@ import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { downloadCsv } from "@/lib/csv";
-import { adminDeleteArtwork } from "@/lib/adminActions";
+import { adminDeleteArtwork, adminSetExhibitionFeaturedArtwork } from "@/lib/adminActions";
 import type { Artwork } from "@/lib/types";
 
 export default function AdminArtworkList({ artworks: initial }: { artworks: Artwork[] }) {
   const [artworks, setArtworks] = useState(initial);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
+  const [featurePendingId, setFeaturePendingId] = useState<string | null>(null);
   const [keyword, setKeyword] = useState("");
 
   const term = keyword.trim().toLowerCase();
@@ -23,6 +24,19 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
       (a) => a.title.toLowerCase().includes(term) || a.artistName.toLowerCase().includes(term)
     );
   }, [artworks, term]);
+
+  async function toggleExhibitionFeatured(id: string, currentlyFeatured: boolean) {
+    setFeaturePendingId(id);
+    try {
+      const nextId = currentlyFeatured ? null : id;
+      await adminSetExhibitionFeaturedArtwork(nextId);
+      setArtworks((prev) => prev.map((a) => ({ ...a, isExhibitionFeatured: a.id === nextId })));
+    } catch {
+      setErrorId(id);
+    } finally {
+      setFeaturePendingId(null);
+    }
+  }
 
   async function remove(id: string) {
     if (!confirm("이 작품을 삭제하시겠습니까? 연결된 주문·굿즈 상품이 있으면 삭제할 수 없습니다.")) return;
@@ -100,6 +114,11 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
                     SOLD
                   </span>
                 )}
+                {artwork.isExhibitionFeatured && (
+                  <span className="flex-none border border-patina px-1.5 py-0.5 text-[10px] font-semibold text-patina">
+                    전시 메인
+                  </span>
+                )}
               </div>
               <div className="text-xs text-ink-soft">
                 {artwork.artistName} · {getMediumType(artwork.mediumTypeCode)?.nameKo ?? artwork.mediumTypeCode} ·{" "}
@@ -108,6 +127,14 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
             </div>
 
             <div className="flex flex-none items-center gap-4">
+              <button
+                type="button"
+                disabled={featurePendingId === artwork.id}
+                onClick={() => toggleExhibitionFeatured(artwork.id, artwork.isExhibitionFeatured)}
+                className="text-xs text-ink-soft hover:text-ink hover:underline disabled:opacity-40"
+              >
+                {artwork.isExhibitionFeatured ? "전시 메인 해제" : "전시 메인으로 설정"}
+              </button>
               <Link
                 href={`/admin/artworks/${artwork.id}/edit`}
                 className="text-xs text-ink-soft hover:text-ink hover:underline"

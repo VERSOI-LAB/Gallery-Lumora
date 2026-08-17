@@ -166,6 +166,7 @@ export type Database = {
           hue: number
           id: string
           image_urls: string[]
+          is_exhibition_featured: boolean
           medium_type_code: string
           merch_enabled: boolean
           price: number
@@ -184,6 +185,7 @@ export type Database = {
           hue?: number
           id?: string
           image_urls?: string[]
+          is_exhibition_featured?: boolean
           medium_type_code: string
           merch_enabled?: boolean
           price: number
@@ -202,6 +204,7 @@ export type Database = {
           hue?: number
           id?: string
           image_urls?: string[]
+          is_exhibition_featured?: boolean
           medium_type_code?: string
           merch_enabled?: boolean
           price?: number
@@ -1042,6 +1045,10 @@ export type Database = {
         Returns: {
           artist_id: string
         }[]
+      }
+      set_exhibition_featured_artwork: {
+        Args: { p_artwork_id: string }
+        Returns: undefined
       }
       submit_review: {
         Args: {

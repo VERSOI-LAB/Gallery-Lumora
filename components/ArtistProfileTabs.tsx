@@ -1,14 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import ArtworkCard from "./ArtworkCard";
 import { buttonClasses, tabClasses } from "@/lib/ui";
-import { getMediumTypeLabel } from "@/lib/mediumTaxonomy";
+import { MEDIUM_CATEGORIES, getMediumType, getMediumTypeLabel } from "@/lib/mediumTaxonomy";
 import type { Artist, Artwork } from "@/lib/types";
 
 const TABS = ["작품", "소개", "커미션 조건"] as const;
 type Tab = (typeof TABS)[number];
+
+const CATEGORY_ORDER = Object.fromEntries(MEDIUM_CATEGORIES.map((c, i) => [c.code, i]));
+
+/** Groups works by their medium's category (회화, 공예, ... in taxonomy
+ * order) before recency, so e.g. paintings consistently lead craft pieces
+ * on an artist's profile even when the craft pieces were uploaded more
+ * recently. Stable sort keeps each category's existing created_at order. */
+function sortByMediumCategory(works: Artwork[]): Artwork[] {
+  return [...works].sort((a, b) => {
+    const orderA = CATEGORY_ORDER[getMediumType(a.mediumTypeCode)?.categoryCode ?? ""] ?? Infinity;
+    const orderB = CATEGORY_ORDER[getMediumType(b.mediumTypeCode)?.categoryCode ?? ""] ?? Infinity;
+    return orderA - orderB;
+  });
+}
 
 export default function ArtistProfileTabs({
   artist,
@@ -18,6 +32,7 @@ export default function ArtistProfileTabs({
   works: Artwork[];
 }) {
   const [tab, setTab] = useState<Tab>("작품");
+  const sortedWorks = useMemo(() => sortByMediumCategory(works), [works]);
 
   return (
     <div className="pb-16">
@@ -32,7 +47,7 @@ export default function ArtistProfileTabs({
 
       {tab === "작품" && (
         <div className="grid grid-cols-2 gap-6 md:grid-cols-3">
-          {works.map((w) => (
+          {sortedWorks.map((w) => (
             <ArtworkCard key={w.slug} artwork={w} />
           ))}
         </div>
