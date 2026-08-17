@@ -4,10 +4,14 @@ export interface MerchCategory {
 }
 
 export const MERCH_CATEGORIES: MerchCategory[] = [
-  { code: "print", nameKo: "파인아트 프린트" },
-  { code: "card-poster", nameKo: "아트카드 · 포스터" },
-  { code: "living", nameKo: "생활용품" },
-  { code: "object", nameKo: "리미티드 오브제" },
+  { code: "postcard", nameKo: "엽서" },
+  { code: "poster", nameKo: "포스터" },
+  { code: "canvas-frame", nameKo: "캔버스 액자" },
+  { code: "notebook", nameKo: "노트" },
+  { code: "eco-bag", nameKo: "에코백" },
+  { code: "mug", nameKo: "머그컵" },
+  { code: "tumbler", nameKo: "텀블러" },
+  { code: "scarf", nameKo: "스카프" },
 ];
 
 const MERCH_CATEGORY_INDEX: Record<string, string> = Object.fromEntries(
