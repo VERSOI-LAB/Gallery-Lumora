@@ -239,4 +239,4 @@ export interface CustomerNotification {
   sentAt: string;
 }
 
-export type SiteAssetKey = "home_hero_video" | "about_hero_video" | "shop_main_image";
+export type SiteAssetKey = "home_hero_video" | "about_hero_video";

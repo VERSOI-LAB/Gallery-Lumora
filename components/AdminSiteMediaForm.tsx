@@ -13,12 +13,6 @@ const ASSETS: {
 }[] = [
   { key: "home_hero_video", label: "홈 화면 영상", hint: "홈페이지 최상단 배경 영상", kind: "video" },
   { key: "about_hero_video", label: "About 영상", hint: "About 페이지 최상단 배경 영상", kind: "video" },
-  {
-    key: "shop_main_image",
-    label: "Shop 메인사진",
-    hint: "Shop 페이지 캐러셀에 표시될 대표 사진",
-    kind: "image",
-  },
 ];
 
 export default function AdminSiteMediaForm({
