@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import MerchThumbnail from "./MerchThumbnail";
+import OrderNoteEditor from "./OrderNoteEditor";
 import { formatDate, formatKRW } from "@/lib/format";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { ArtworkOrder, MerchOrder } from "@/lib/types";
@@ -38,11 +39,13 @@ export default function AdminOrderDetail({
   order,
   customerArtworkOrders,
   customerMerchOrders,
+  staffNote,
 }: {
   kind: "artwork" | "merch";
   order: ArtworkOrder | MerchOrder;
   customerArtworkOrders: ArtworkOrder[];
   customerMerchOrders: MerchOrder[];
+  staffNote: string;
 }) {
   const title = kind === "artwork" ? (order as ArtworkOrder).artworkTitle : (order as MerchOrder).productTitle;
   const otherOrderCount =
@@ -118,6 +121,8 @@ export default function AdminOrderDetail({
           <p className="mb-3 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">배송 정보</p>
           <ShippingInfoBlock order={order} />
         </div>
+
+        <OrderNoteEditor kind={kind} orderId={order.id} initialNote={staffNote} />
       </div>
 
       <div className="border-t border-line pt-5">

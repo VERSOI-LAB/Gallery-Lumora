@@ -52,6 +52,12 @@ export default function LoginForm() {
           />
         </Field>
 
+        <div className="text-right">
+          <Link href="/reset-password" className="text-xs text-ink-faint hover:text-ink">
+            비밀번호를 잊으셨나요?
+          </Link>
+        </div>
+
         <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
           {submitting ? "로그인 중..." : "로그인"}
         </button>

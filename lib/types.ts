@@ -150,6 +150,20 @@ export interface CommissionInquiry {
   status: "new" | "reviewing" | "coordinating" | "accepted" | "declined";
 }
 
+export interface MyCommissionInquiry {
+  id: string;
+  artistName: string;
+  artistSlug: string;
+  status: "new" | "reviewing" | "coordinating" | "accepted" | "declined";
+  medium: string;
+  size: string;
+  budgetMin: number | null;
+  budgetMax: number | null;
+  timeline: string;
+  message: string;
+  createdAt: string;
+}
+
 export interface ArtistApplication {
   id: string;
   artistName: string;

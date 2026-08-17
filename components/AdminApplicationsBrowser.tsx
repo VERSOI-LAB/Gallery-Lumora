@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate } from "@/lib/format";
 import { adminReviewArtistApplication } from "@/lib/adminActions";
@@ -29,6 +29,19 @@ export default function AdminApplicationsBrowser({
   const [selectedId, setSelectedId] = useState(initialApplications[0]?.id ?? "");
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
+
+  const term = keyword.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!term) return applications;
+    return applications.filter(
+      (a) =>
+        a.artistName.toLowerCase().includes(term) ||
+        a.name.toLowerCase().includes(term) ||
+        a.email.toLowerCase().includes(term) ||
+        a.phone.includes(term)
+    );
+  }, [applications, term]);
 
   const selected = applications.find((a) => a.id === selectedId);
 
@@ -51,8 +64,16 @@ export default function AdminApplicationsBrowser({
 
   return (
     <div>
+      <input
+        type="text"
+        value={keyword}
+        onChange={(e) => setKeyword(e.target.value)}
+        placeholder="작가명, 이름, 이메일, 연락처로 검색"
+        className="mb-5 h-10 w-full max-w-md border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+      />
+      {filtered.length === 0 && <p className="text-sm text-ink-faint">검색 결과가 없습니다.</p>}
       <div className="space-y-3">
-        {applications.map((application) => {
+        {filtered.map((application) => {
           const active = application.id === selectedId;
           return (
             <button

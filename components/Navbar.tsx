@@ -93,12 +93,13 @@ export default function Navbar() {
           </Link>
           {session ? (
             <div className="flex items-center gap-3 text-sm text-board-ink-soft">
-              {isArtist ? (
-                <Link href="/studio/works" className="max-w-[10rem] truncate hover:text-board-ink">
-                  {displayName} 님
+              <Link href="/mypage" className="max-w-[10rem] truncate hover:text-board-ink">
+                {displayName} 님
+              </Link>
+              {isArtist && (
+                <Link href="/studio/works" className="hover:text-board-ink">
+                  스튜디오
                 </Link>
-              ) : (
-                <span className="max-w-[10rem] truncate">{displayName} 님</span>
               )}
               <button type="button" onClick={handleLogout} className="hover:text-board-ink">
                 로그아웃
@@ -148,6 +149,13 @@ export default function Navbar() {
           ))}
           {session ? (
             <>
+              <Link
+                href="/mypage"
+                onClick={() => setOpen(false)}
+                className="font-editorial px-1 py-2.5 text-sm tracking-wide text-board-ink-soft"
+              >
+                마이페이지
+              </Link>
               {isArtist && (
                 <Link
                   href="/studio/works"

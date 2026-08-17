@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
-import { purchaseMerch } from "@/lib/queries";
+import { getMyProfile, purchaseMerch } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
 import type { MerchProduct, MerchVariant } from "@/lib/types";
 
@@ -40,6 +40,17 @@ export default function MerchPurchaseForm({
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
   const { addItem } = useCart();
+
+  useEffect(() => {
+    getMyProfile()
+      .then((profile) => {
+        if (!profile) return;
+        setName(profile.name);
+        setEmail(profile.email);
+        setPhone(profile.phone);
+      })
+      .catch(() => {});
+  }, []);
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
   // Cart checkout re-runs purchaseMerch per line item (see /shop/cart), which

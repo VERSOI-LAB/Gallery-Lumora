@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { formatDate, formatKRW } from "@/lib/format";
+import { downloadCsv } from "@/lib/csv";
 import { adminSendNewArtworkNotification } from "@/lib/adminActions";
 import type { Artwork, Customer } from "@/lib/types";
 
@@ -66,15 +67,42 @@ export default function AdminCustomerList({
     }
   }
 
+  function exportCsv() {
+    downloadCsv(
+      `lumora-customers-${new Date().toISOString().slice(0, 10)}.csv`,
+      filtered.map((c) => ({
+        이름: c.name,
+        연락처: c.phone,
+        이메일: c.email,
+        마케팅수신: c.marketingOptIn ? "Y" : "N",
+        주문건수: c.orderCount,
+        누적결제액: c.totalSpent,
+        최근주문일: c.lastOrderAt ? formatDate(c.lastOrderAt) : "",
+        취향태그: c.preferenceTags.join(" / "),
+        가입일: formatDate(c.createdAt),
+      }))
+    );
+  }
+
   return (
     <div>
-      <input
-        type="text"
-        value={keyword}
-        onChange={(e) => setKeyword(e.target.value)}
-        placeholder="이름, 연락처, 이메일, 취향 태그로 검색"
-        className="mb-5 h-10 w-full max-w-md border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-      />
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="이름, 연락처, 이메일, 취향 태그로 검색"
+          className="h-10 flex-1 min-w-[200px] border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+          className={`${buttonClasses("ghost", "sm")} disabled:opacity-40`}
+        >
+          CSV 내보내기
+        </button>
+      </div>
 
       {notifiableArtworks.length > 0 && (
         <div className="mb-5 flex flex-wrap items-center gap-3 border border-line p-3">

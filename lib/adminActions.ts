@@ -10,15 +10,19 @@ import {
   createMerchProduct,
   updateMerchProduct,
   updateMerchProductActive,
+  addMerchEditions,
   createMerchVariant,
   updateMerchVariant,
   deleteMerchVariant,
   reviewArtistApplication,
   createArtist,
   updateArtist,
+  deleteArtist,
+  deleteMerchProduct,
   updateGeneralInquiryStatus,
   updateArtworkOrderStatus,
   updateMerchOrderStatus,
+  updateOrderStaffNote,
   bulkUpdateArtworkOrderStatus,
   bulkUpdateMerchOrderStatus,
   markOrdersSettled,
@@ -32,6 +36,9 @@ import {
   updateCustomerMarketingOptIn,
   recordCustomerNotifications,
   logAdminActivity,
+  getAdminActivityLog,
+  type ActivityLogEntry,
+  type ActivityLogPageOptions,
   type ArtworkUpdateInput,
   type MerchProductInput,
   type MerchVariantInput,
@@ -46,6 +53,11 @@ import type { ArtworkOrder, OrderStatus, SiteAssetKey } from "./types";
  * changed and when" until individual admin accounts exist. */
 function log(action: string, entityType: string, entityId: string | null, detail: Record<string, unknown> = {}) {
   return logAdminActivity(action, entityType, entityId, detail, supabaseService);
+}
+
+export async function adminGetActivityLogPage(options: ActivityLogPageOptions): Promise<ActivityLogEntry[]> {
+  await assertAdminSession();
+  return getAdminActivityLog(supabaseService, options);
 }
 
 export async function adminUpdateArtwork(id: string, input: ArtworkUpdateInput): Promise<void> {
@@ -82,6 +94,13 @@ export async function adminUpdateMerchProductActive(id: string, active: boolean)
   await assertAdminSession();
   await updateMerchProductActive(id, active, supabaseService);
   await log("update", "merch_product", id, { active });
+  revalidatePath("/admin/merch");
+}
+
+export async function adminAddMerchEditions(id: string, count: number): Promise<void> {
+  await assertAdminSession();
+  await addMerchEditions(id, count, supabaseService);
+  await log("update", "merch_product", id, { restock: count });
   revalidatePath("/admin/merch");
 }
 
@@ -130,6 +149,20 @@ export async function adminUpdateArtist(id: string, input: ArtistInput): Promise
   revalidatePath("/admin/artists");
 }
 
+export async function adminDeleteArtist(id: string): Promise<void> {
+  await assertAdminSession();
+  await deleteArtist(id, supabaseService);
+  await log("delete", "artist", id);
+  revalidatePath("/admin/artists");
+}
+
+export async function adminDeleteMerchProduct(id: string): Promise<void> {
+  await assertAdminSession();
+  await deleteMerchProduct(id, supabaseService);
+  await log("delete", "merch_product", id);
+  revalidatePath("/admin/merch");
+}
+
 export async function adminUpdateGeneralInquiryStatus(
   id: string,
   status: "reviewing" | "done"
@@ -152,6 +185,16 @@ export async function adminUpdateMerchOrderStatus(id: string, status: OrderStatu
   await updateMerchOrderStatus(id, status, supabaseService);
   await log("update", "merch_order", id, { status });
   revalidatePath("/admin/orders");
+}
+
+export async function adminUpdateOrderStaffNote(
+  kind: "artwork" | "merch",
+  id: string,
+  note: string
+): Promise<void> {
+  await assertAdminSession();
+  await updateOrderStaffNote(kind, id, note, supabaseService);
+  revalidatePath(kind === "artwork" ? `/admin/orders/artwork/${id}` : `/admin/orders/merch/${id}`);
 }
 
 export async function adminBulkUpdateArtworkOrderStatus(ids: string[], status: OrderStatus): Promise<void> {

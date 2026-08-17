@@ -5,13 +5,14 @@ type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
 
 export interface Review {
   id: string;
+  userId: string;
   rating: number;
   body: string;
   createdAt: string;
 }
 
 function toReview(row: ReviewRow): Review {
-  return { id: row.id, rating: row.rating, body: row.body, createdAt: row.created_at };
+  return { id: row.id, userId: row.user_id, rating: row.rating, body: row.body, createdAt: row.created_at };
 }
 
 export async function getReviewsForArtwork(artworkId: string): Promise<Review[]> {
@@ -76,4 +77,24 @@ export async function submitReview(
     p_body: body,
   });
   if (error) throw error;
+}
+
+/** RLS restricts this to the caller's own review (see the "members can
+ * update their own reviews" policy). */
+export async function updateReview(id: string, rating: number, body: string): Promise<void> {
+  const { error } = await supabase.from("reviews").update({ rating, body }).eq("id", id);
+  if (error) throw error;
+}
+
+/** RLS restricts this to the caller's own review. */
+export async function deleteReview(id: string): Promise<void> {
+  const { error } = await supabase.from("reviews").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getCurrentUserId(): Promise<string | null> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
 }

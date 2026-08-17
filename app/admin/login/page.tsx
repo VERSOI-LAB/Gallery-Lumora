@@ -1,7 +1,16 @@
-import { cookies } from "next/headers";
+import { timingSafeEqual } from "crypto";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { ADMIN_COOKIE_NAME, sha256Hex } from "@/lib/passwordAuth";
+import { clearAttempts, isRateLimited, recordFailedAttempt } from "@/lib/adminLoginRateLimit";
+
+function passwordMatches(input: string, expected: string): boolean {
+  const a = Buffer.from(input);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length) return false;
+  return timingSafeEqual(a, b);
+}
 
 async function login(formData: FormData) {
   "use server";
@@ -9,10 +18,18 @@ async function login(formData: FormData) {
   const redirectTo = (formData.get("redirect") as string) || "/admin";
   const expected = process.env.ADMIN_PASSWORD;
 
-  if (!expected || typeof password !== "string" || password !== expected) {
+  const ip = (await headers()).get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+
+  if (isRateLimited(ip)) {
+    redirect(`/admin/login?error=rate_limited&redirect=${encodeURIComponent(redirectTo)}`);
+  }
+
+  if (!expected || typeof password !== "string" || !passwordMatches(password, expected)) {
+    recordFailedAttempt(ip);
     redirect(`/admin/login?error=1&redirect=${encodeURIComponent(redirectTo)}`);
   }
 
+  clearAttempts(ip);
   const token = await sha256Hex(expected);
   const cookieStore = await cookies();
   cookieStore.set(ADMIN_COOKIE_NAME, token, {
@@ -53,7 +70,10 @@ export default async function AdminLoginPage({
         <button type="submit" className={`w-full ${buttonClasses("primary")}`}>
           로그인
         </button>
-        {params.error && <p className="text-xs text-red-600">비밀번호가 올바르지 않습니다.</p>}
+        {params.error === "rate_limited" && (
+          <p className="text-xs text-red-600">로그인 시도가 너무 많습니다. 15분 후 다시 시도해주세요.</p>
+        )}
+        {params.error === "1" && <p className="text-xs text-red-600">비밀번호가 올바르지 않습니다.</p>}
       </form>
     </div>
   );

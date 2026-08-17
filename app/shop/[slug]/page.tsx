@@ -4,6 +4,7 @@ import MerchPurchaseForm from "@/components/MerchPurchaseForm";
 import MerchTemplateDetail from "@/components/MerchTemplateDetail";
 import MerchThumbnail from "@/components/MerchThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
+import WishlistButton from "@/components/WishlistButton";
 import {
   getMerchEditionsRemaining,
   getMerchProduct,
@@ -55,10 +56,15 @@ export default async function MerchProductPage({
           </div>
 
           <div>
-            <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
-              {getMerchCategoryLabel(product.category)}
-            </span>
-            <h1 className="mt-2 mb-2 font-display text-2xl">{product.title}</h1>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
+                  {getMerchCategoryLabel(product.category)}
+                </span>
+                <h1 className="mt-2 mb-2 font-display text-2xl">{product.title}</h1>
+              </div>
+              <WishlistButton kind="product" itemId={product.id} />
+            </div>
             <Link
               href={`/works/${product.artworkSlug}`}
               className="text-sm text-patina hover:underline"

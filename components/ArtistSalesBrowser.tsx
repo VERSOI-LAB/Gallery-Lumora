@@ -184,6 +184,13 @@ export default function ArtistSalesBrowser() {
     () => (artworkOrders ?? []).filter((o) => o.status !== "cancelled").reduce((sum, o) => sum + o.amount, 0),
     [artworkOrders]
   );
+  const artworkPayoutTotal = useMemo(
+    () =>
+      (artworkOrders ?? [])
+        .filter((o) => o.status !== "cancelled")
+        .reduce((sum, o) => sum + (o.artistPayoutAmount ?? 0), 0),
+    [artworkOrders]
+  );
   const merchRoyaltyTotal = useMemo(
     () =>
       (merchOrders ?? [])
@@ -201,10 +208,11 @@ export default function ArtistSalesBrowser() {
     <div>
       <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="border border-line p-4">
-          <p className="text-xs text-ink-faint">작품 판매 총액</p>
+          <p className="text-xs text-ink-faint">작품 판매 총액 (수수료 차감 전)</p>
           <p className="mt-1 text-xl font-semibold">{formatKRW(artworkTotal)}</p>
+          <p className="mt-1 text-sm text-patina">실수령 예정액 {formatKRW(artworkPayoutTotal)}</p>
           <p className="mt-1 text-[11px] text-ink-faint">
-            갤러리 수수료 차감 전 금액이며, 실제 정산액은 운영팀 안내를 따릅니다.
+            작가 정산비율이 반영된 예상 금액이며, 실제 정산은 운영팀 안내를 따릅니다.
           </p>
         </div>
         <div className="border border-line p-4">
@@ -251,6 +259,7 @@ export default function ArtistSalesBrowser() {
                 </div>
                 <div className="mt-1 text-xs text-ink-faint">
                   주문번호 {order.orderNumber} · {formatDate(order.createdAt)}
+                  {order.artistPayoutAmount != null && ` · 실수령 예정 ${formatKRW(order.artistPayoutAmount)}`}
                 </div>
               </div>
             ))}

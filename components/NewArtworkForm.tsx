@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { buttonClasses } from "@/lib/ui";
 import { createArtwork, uploadMedia } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
@@ -29,6 +29,25 @@ export default function NewArtworkForm({
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const previewUrls = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files]);
+  useEffect(() => {
+    return () => previewUrls.forEach((url) => URL.revokeObjectURL(url));
+  }, [previewUrls]);
+
+  function moveFile(index: number, direction: -1 | 1) {
+    setFiles((prev) => {
+      const next = [...prev];
+      const target = index + direction;
+      if (target < 0 || target >= next.length) return prev;
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  }
+
+  function removeFile(index: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -109,6 +128,56 @@ export default function NewArtworkForm({
             : "작품 이미지를 여러 장 드래그하거나 클릭하여 업로드"}
         </label>
 
+        {files.length > 0 && (
+          <div>
+            <p className="mb-2 text-xs text-ink-faint">
+              첫 번째 사진이 대표 이미지로 사용됩니다. 화살표로 순서를 바꿀 수 있어요.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {files.map((file, i) => (
+                // eslint-disable-next-line react/no-array-index-key -- files can share a name; position is the stable identity here
+                <div key={i} className="relative h-24 w-24 overflow-hidden border border-line">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={previewUrls[i]} alt="" className="h-full w-full object-cover" />
+                  {i === 0 && (
+                    <span className="absolute top-1 left-1 bg-ink px-1.5 py-0.5 text-[9px] font-semibold text-paper">
+                      대표
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeFile(i)}
+                    aria-label="이미지 삭제"
+                    className="absolute top-1 right-1 flex h-5 w-5 items-center justify-center bg-ink/70 text-xs text-paper"
+                  >
+                    ✕
+                  </button>
+                  <div className="absolute bottom-1 left-1 flex gap-1">
+                    <button
+                      type="button"
+                      disabled={i === 0}
+                      onClick={() => moveFile(i, -1)}
+                      aria-label="앞으로 이동"
+                      className="flex h-5 w-5 items-center justify-center bg-ink/70 text-xs text-paper disabled:opacity-30"
+                    >
+                      ←
+                    </button>
+                    <button
+                      type="button"
+                      disabled={i === files.length - 1}
+                      onClick={() => moveFile(i, 1)}
+                      aria-label="뒤로 이동"
+                      className="flex h-5 w-5 items-center justify-center bg-ink/70 text-xs text-paper disabled:opacity-30"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Field label="작품명">
             <input
@@ -174,13 +243,6 @@ export default function NewArtworkForm({
               value={price || ""}
               onChange={(e) => setPrice(Number(e.target.value))}
               placeholder="1200000"
-              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-            />
-          </Field>
-          <Field label="화풍 태그">
-            <input
-              type="text"
-              placeholder="예: 인물, 유화, 빛"
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>

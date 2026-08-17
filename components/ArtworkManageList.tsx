@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
@@ -82,6 +83,13 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
               {artwork.merchEnabled ? "굿즈 허용됨" : "굿즈 비허용"}
             </span>
           </div>
+
+          <Link
+            href={`/studio/works/${artwork.id}/edit`}
+            className="flex-none text-xs text-ink-soft hover:text-ink hover:underline"
+          >
+            수정
+          </Link>
         </div>
       ))}
 

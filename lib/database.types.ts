@@ -239,6 +239,7 @@ export type Database = {
           size: string
           status: string
           timeline: string
+          user_id: string | null
         }
         Insert: {
           artist_id: string
@@ -255,6 +256,7 @@ export type Database = {
           size?: string
           status?: string
           timeline?: string
+          user_id?: string | null
         }
         Update: {
           artist_id?: string
@@ -271,6 +273,7 @@ export type Database = {
           size?: string
           status?: string
           timeline?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -506,6 +509,7 @@ export type Database = {
           settled_at: string | null
           shipping_address: string
           shipping_method: string | null
+          staff_note: string
           status: string
           tracking_carrier: string | null
           tracking_number: string | null
@@ -534,6 +538,7 @@ export type Database = {
           settled_at?: string | null
           shipping_address: string
           shipping_method?: string | null
+          staff_note?: string
           status?: string
           tracking_carrier?: string | null
           tracking_number?: string | null
@@ -562,6 +567,7 @@ export type Database = {
           settled_at?: string | null
           shipping_address?: string
           shipping_method?: string | null
+          staff_note?: string
           status?: string
           tracking_carrier?: string | null
           tracking_number?: string | null
@@ -719,6 +725,7 @@ export type Database = {
           settled_at: string | null
           shipping_address: string
           shipping_method: string | null
+          staff_note: string
           status: string
           tracking_carrier: string | null
           tracking_number: string | null
@@ -742,6 +749,7 @@ export type Database = {
           settled_at?: string | null
           shipping_address: string
           shipping_method?: string | null
+          staff_note?: string
           status?: string
           tracking_carrier?: string | null
           tracking_number?: string | null
@@ -765,6 +773,7 @@ export type Database = {
           settled_at?: string | null
           shipping_address?: string
           shipping_method?: string | null
+          staff_note?: string
           status?: string
           tracking_carrier?: string | null
           tracking_number?: string | null
@@ -932,6 +941,39 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cancel_order: {
+        Args: { p_kind: string; p_order_id: string; p_phone?: string }
+        Returns: undefined
+      }
+      get_artwork_orders_by_phone: {
+        Args: { p_phone: string }
+        Returns: {
+          amount: number
+          artist_name: string
+          artist_payout_amount: number
+          artwork_id: string
+          artwork_title: string
+          courier_name: string
+          courier_phone: string
+          created_at: string
+          email: string
+          hue: number
+          id: string
+          image_urls: string[]
+          insured: boolean
+          name: string
+          order_number: string
+          payment_method: string
+          phone: string
+          shipping_address: string
+          shipping_method: string
+          status: string
+          tracking_carrier: string
+          tracking_number: string
+          variant: number
+          vehicle_number: string
+        }[]
+      }
       get_merch_orders_by_phone: {
         Args: { p_phone: string }
         Returns: {
@@ -1159,3 +1201,9 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

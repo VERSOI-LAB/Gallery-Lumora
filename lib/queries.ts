@@ -14,6 +14,7 @@ import type {
   MerchOrder,
   MerchProduct,
   MerchVariant,
+  MyCommissionInquiry,
   OrderStatus,
   Profile,
   ShippingInfo,
@@ -34,6 +35,7 @@ type JournalRow = Database["public"]["Tables"]["journal_posts"]["Row"];
 type MerchProductRow = Database["public"]["Tables"]["merch_products"]["Row"];
 type MerchVariantRow = Database["public"]["Tables"]["merch_variants"]["Row"];
 type MerchOrderByPhoneRow = Database["public"]["Functions"]["get_merch_orders_by_phone"]["Returns"][number];
+type ArtworkOrderByPhoneRow = Database["public"]["Functions"]["get_artwork_orders_by_phone"]["Returns"][number];
 export type ArtworkWithArtistRow = ArtworkRow & { artists: { name: string } | null };
 export type MerchProductWithRelationsRow = MerchProductRow & {
   artworks: { slug: string; title: string } | null;
@@ -343,6 +345,62 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
   };
 }
 
+function toArtworkOrderByPhone(row: ArtworkOrderByPhoneRow): ArtworkOrder {
+  return {
+    id: row.id,
+    orderNumber: row.order_number,
+    artworkId: row.artwork_id,
+    artworkTitle: row.artwork_title ?? "(삭제된 작품)",
+    artistName: row.artist_name ?? "",
+    imageUrls: row.image_urls ?? [],
+    hue: row.hue ?? 90,
+    variant: row.variant ?? 0,
+    shippingAddress: row.shipping_address,
+    phone: row.phone,
+    name: row.name,
+    email: row.email,
+    paymentMethod: row.payment_method,
+    insured: row.insured,
+    amount: row.amount,
+    artistPayoutAmount: row.artist_payout_amount,
+    status: row.status as ArtworkOrder["status"],
+    createdAt: row.created_at,
+    shippingMethod: row.shipping_method as ShippingInfo["shippingMethod"],
+    trackingCarrier: row.tracking_carrier,
+    trackingNumber: row.tracking_number,
+    courierName: row.courier_name,
+    courierPhone: row.courier_phone,
+    vehicleNumber: row.vehicle_number,
+  };
+}
+
+/** Guest (unauthenticated) order lookup by phone — goes through the
+ * SECURITY DEFINER `get_artwork_orders_by_phone` RPC since the `orders`
+ * table's RLS policy only allows a caller to see their own `user_id`-linked
+ * rows. Distinct from `getArtworkOrdersByPhone` below, which is a plain
+ * table select used server-side (admin) with an explicit trusted client. */
+export async function getArtworkOrdersByPhoneRpc(phone: string): Promise<ArtworkOrder[]> {
+  const { data, error } = await supabase.rpc("get_artwork_orders_by_phone", { p_phone: phone });
+  if (error) throw error;
+  return data.map(toArtworkOrderByPhone);
+}
+
+/** Customer-initiated cancellation, allowed only while an order is still
+ * `paid`/`preparing` (server-side enforced in the `cancel_order` RPC).
+ * `phone` lets a guest (no session) cancel an order looked up by phone. */
+export async function cancelOrder(
+  kind: "artwork" | "merch",
+  orderId: string,
+  phone?: string
+): Promise<void> {
+  const { error } = await supabase.rpc("cancel_order", {
+    p_kind: kind,
+    p_order_id: orderId,
+    p_phone: phone,
+  });
+  if (error) throw error;
+}
+
 export async function getArtists(): Promise<Artist[]> {
   const { data, error } = await supabase.from("artists").select("*").order("created_at");
   if (error) throw error;
@@ -436,6 +494,16 @@ export async function updateArtist(
       commission_price_range: input.commissionPriceRange,
     })
     .eq("id", id);
+  if (error) throw error;
+}
+
+/** Blocked by FK (NO ACTION) if the artist still has a linked login
+ * (profiles.artist_id) or any merch products; artworks and commission
+ * inquiries cascade-delete, which itself is blocked if any of those
+ * artworks have orders or merch products of their own. In practice this
+ * only succeeds for an artist row with no real activity yet. */
+export async function deleteArtist(id: string, client: SupabaseClient<Database> = supabase): Promise<void> {
+  const { error } = await client.from("artists").delete().eq("id", id);
   if (error) throw error;
 }
 
@@ -536,6 +604,38 @@ export async function getStudioInquiries(
   return data.map(toInquiry);
 }
 
+type MyInquiryRow = InquiryRow & { artists: { name: string; slug: string } | null };
+
+/** Orders placed while logged in are linked via `commission_inquiries.user_id`
+ * (stamped server-side by the `commission_inquiries_set_user_id` trigger).
+ * RLS scopes these to the caller's own rows, so no explicit filter is
+ * needed. Returns an empty array for guests. */
+export async function getMyCommissionInquiries(): Promise<MyCommissionInquiry[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("commission_inquiries")
+    .select("*, artists ( name, slug )")
+    .order("created_at", { ascending: false })
+    .returns<MyInquiryRow[]>();
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    artistName: row.artists?.name ?? "",
+    artistSlug: row.artists?.slug ?? "",
+    status: row.status as MyCommissionInquiry["status"],
+    medium: row.medium,
+    size: row.size,
+    budgetMin: row.budget_min,
+    budgetMax: row.budget_max,
+    timeline: row.timeline,
+    message: row.message,
+    createdAt: row.created_at,
+  }));
+}
+
 export interface CommissionInquiryInput {
   artistId: string;
   collectorName: string;
@@ -569,7 +669,7 @@ export async function createCommissionInquiry(input: CommissionInquiryInput): Pr
 
 export async function updateInquiryStatus(
   id: string,
-  status: "accepted" | "declined"
+  status: CommissionInquiry["status"]
 ): Promise<void> {
   const { error } = await supabase.from("commission_inquiries").update({ status }).eq("id", id);
   if (error) throw error;
@@ -929,6 +1029,16 @@ export async function updateMerchProductActive(
   if (error) throw error;
 }
 
+/** Blocked by FK (NO ACTION) if any merch_orders reference this product —
+ * variants/editions/reviews/wishlists cascade-delete along with it. */
+export async function deleteMerchProduct(
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { error } = await client.from("merch_products").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function getMerchVariants(productId: string): Promise<MerchVariant[]> {
   const { data, error } = await supabase
     .from("merch_variants")
@@ -947,6 +1057,55 @@ export async function getMerchEditionsRemaining(productId: string): Promise<numb
     .eq("sold", false);
   if (error) throw error;
   return count ?? 0;
+}
+
+/** Batched remaining-stock lookup for the admin merch list — one query for
+ * every edition-fulfillment product instead of N. */
+export async function getMerchEditionsRemainingMap(
+  productIds: string[],
+  client: SupabaseClient<Database> = supabase
+): Promise<Record<string, number>> {
+  if (productIds.length === 0) return {};
+  const { data, error } = await client
+    .from("merch_editions")
+    .select("product_id")
+    .in("product_id", productIds)
+    .eq("sold", false);
+  if (error) throw error;
+  const counts: Record<string, number> = {};
+  for (const row of data) {
+    counts[row.product_id] = (counts[row.product_id] ?? 0) + 1;
+  }
+  return counts;
+}
+
+/** Restock — appends fresh, unsold edition slots after the current highest
+ * edition_number for the product. */
+export async function addMerchEditions(
+  productId: string,
+  count: number,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const { data: maxRow, error: maxError } = await client
+    .from("merch_editions")
+    .select("edition_number")
+    .eq("product_id", productId)
+    .order("edition_number", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (maxError) throw maxError;
+  const start = (maxRow?.edition_number ?? 0) + 1;
+  const editions = Array.from({ length: count }, (_, i) => ({
+    product_id: productId,
+    edition_number: start + i,
+  }));
+  const { error } = await client.from("merch_editions").insert(editions);
+  if (error) throw error;
+  const { error: sizeError } = await client
+    .from("merch_products")
+    .update({ edition_size: start - 1 + count })
+    .eq("id", productId);
+  if (sizeError) throw sizeError;
 }
 
 export interface MerchPurchaseInput {
@@ -1061,6 +1220,23 @@ export async function getMyProfile(): Promise<Profile | null> {
   const { data, error } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
   if (error) throw error;
   return data ? toProfile(data) : null;
+}
+
+export async function updateMyProfile(input: { name: string; phone: string }): Promise<void> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("로그인이 필요합니다.");
+  const { error } = await supabase
+    .from("profiles")
+    .update({ name: input.name, phone: input.phone })
+    .eq("id", user.id);
+  if (error) throw error;
+}
+
+export async function updateMyPassword(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) throw error;
 }
 
 export async function isUsernameAvailable(username: string): Promise<boolean> {
@@ -1293,6 +1469,30 @@ export async function updateMerchOrderStatus(
   if (error) throw error;
 }
 
+/** Internal-only note, never surfaced through the customer-facing order
+ * types — always called with the admin service client. */
+export async function getOrderStaffNote(
+  kind: "artwork" | "merch",
+  id: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<string> {
+  const table = kind === "artwork" ? "orders" : "merch_orders";
+  const { data, error } = await client.from(table).select("staff_note").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data?.staff_note ?? "";
+}
+
+export async function updateOrderStaffNote(
+  kind: "artwork" | "merch",
+  id: string,
+  note: string,
+  client: SupabaseClient<Database> = supabase
+): Promise<void> {
+  const table = kind === "artwork" ? "orders" : "merch_orders";
+  const { error } = await client.from(table).update({ staff_note: note }).eq("id", id);
+  if (error) throw error;
+}
+
 export async function bulkUpdateArtworkOrderStatus(
   ids: string[],
   status: OrderStatus,
@@ -1425,15 +1625,28 @@ export async function logAdminActivity(
   if (error) throw error;
 }
 
+export interface ActivityLogPageOptions {
+  offset?: number;
+  limit?: number;
+  /** Inclusive start date, "YYYY-MM-DD". */
+  startDate?: string;
+  /** Inclusive end date, "YYYY-MM-DD" — internally treated as < (date + 1 day). */
+  endDate?: string;
+}
+
 export async function getAdminActivityLog(
   client: SupabaseClient<Database> = supabase,
-  limit = 100
+  options: ActivityLogPageOptions = {}
 ): Promise<ActivityLogEntry[]> {
-  const { data, error } = await client
-    .from("admin_activity_log")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(limit);
+  const { offset = 0, limit = 100, startDate, endDate } = options;
+  let query = client.from("admin_activity_log").select("*").order("created_at", { ascending: false });
+  if (startDate) query = query.gte("created_at", `${startDate}T00:00:00.000Z`);
+  if (endDate) {
+    const exclusiveEnd = new Date(`${endDate}T00:00:00.000Z`);
+    exclusiveEnd.setUTCDate(exclusiveEnd.getUTCDate() + 1);
+    query = query.lt("created_at", exclusiveEnd.toISOString());
+  }
+  const { data, error } = await query.range(offset, offset + limit - 1);
   if (error) throw error;
   return data.map((row) => ({
     id: row.id,

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import AdminOrderDetail from "@/components/AdminOrderDetail";
-import { getArtworkOrderById, getArtworkOrdersByPhone, getMerchOrdersByPhone } from "@/lib/queries";
+import { getArtworkOrderById, getArtworkOrdersByPhone, getMerchOrdersByPhone, getOrderStaffNote } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminArtworkOrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -8,9 +8,10 @@ export default async function AdminArtworkOrderDetailPage({ params }: { params: 
   const order = await getArtworkOrderById(id, supabaseService);
   if (!order) notFound();
 
-  const [customerArtworkOrders, customerMerchOrders] = await Promise.all([
+  const [customerArtworkOrders, customerMerchOrders, staffNote] = await Promise.all([
     getArtworkOrdersByPhone(order.phone, supabaseService),
     getMerchOrdersByPhone(order.phone),
+    getOrderStaffNote("artwork", id, supabaseService),
   ]);
 
   return (
@@ -19,6 +20,7 @@ export default async function AdminArtworkOrderDetailPage({ params }: { params: 
       order={order}
       customerArtworkOrders={customerArtworkOrders}
       customerMerchOrders={customerMerchOrders}
+      staffNote={staffNote}
     />
   );
 }

@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import MerchArtworkPicker from "./MerchArtworkPicker";
 import MerchCanvasEditor, { type MerchCanvasEditorHandle } from "./MerchCanvasEditor";
 import MerchPurchaseForm from "./MerchPurchaseForm";
+import WishlistButton from "./WishlistButton";
 import { uploadMedia } from "@/lib/queries";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import type { Artwork, MerchProduct, MerchVariant } from "@/lib/types";
@@ -46,10 +47,15 @@ export default function MerchTemplateDetail({
       </div>
 
       <div>
-        <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
-          {getMerchCategoryLabel(product.category)}
-        </span>
-        <h1 className="mt-2 mb-2 font-display text-2xl">{product.title}</h1>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className="text-[11px] font-semibold tracking-wide text-gold uppercase">
+              {getMerchCategoryLabel(product.category)}
+            </span>
+            <h1 className="mt-2 mb-2 font-display text-2xl">{product.title}</h1>
+          </div>
+          <WishlistButton kind="product" itemId={product.id} />
+        </div>
         <p className="text-sm text-patina">고객이 작품을 직접 선택해 디자인하는 상품입니다</p>
 
         {product.description && (

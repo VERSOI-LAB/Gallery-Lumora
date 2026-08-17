@@ -6,12 +6,40 @@ import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
-import { getMerchOrdersByPhone, getMyArtworkOrders, getMyMerchOrders } from "@/lib/queries";
+import {
+  cancelOrder,
+  getArtworkOrdersByPhoneRpc,
+  getMerchOrdersByPhone,
+  getMyArtworkOrders,
+  getMyMerchOrders,
+} from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { ArtworkOrder, MerchOrder } from "@/lib/types";
 
 const LAST_PHONE_KEY = "lumora:mypage:phone";
+
+function CancelOrderButton({
+  status,
+  pending,
+  onCancel,
+}: {
+  status: ArtworkOrder["status"];
+  pending: boolean;
+  onCancel: () => void;
+}) {
+  if (status !== "paid" && status !== "preparing") return null;
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={onCancel}
+      className="text-xs text-red-600 hover:underline disabled:opacity-50"
+    >
+      {pending ? "취소 처리 중..." : "주문 취소"}
+    </button>
+  );
+}
 
 function TrackingLine({ order }: { order: ArtworkOrder | MerchOrder }) {
   if (!order.shippingMethod) return null;
@@ -33,7 +61,15 @@ function TrackingLine({ order }: { order: ArtworkOrder | MerchOrder }) {
   return null;
 }
 
-function MerchOrderRow({ order }: { order: MerchOrder }) {
+function MerchOrderRow({
+  order,
+  onCancel,
+  cancelPending,
+}: {
+  order: MerchOrder;
+  onCancel?: () => void;
+  cancelPending?: boolean;
+}) {
   return (
     <li className="border border-line p-4">
       <div className="flex gap-4">
@@ -81,13 +117,26 @@ function MerchOrderRow({ order }: { order: MerchOrder }) {
             <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
             <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
           </div>
+          {onCancel && (
+            <div className="mt-2 text-right">
+              <CancelOrderButton status={order.status} pending={!!cancelPending} onCancel={onCancel} />
+            </div>
+          )}
         </div>
       </div>
     </li>
   );
 }
 
-function ArtworkOrderRow({ order }: { order: ArtworkOrder }) {
+function ArtworkOrderRow({
+  order,
+  onCancel,
+  cancelPending,
+}: {
+  order: ArtworkOrder;
+  onCancel?: () => void;
+  cancelPending?: boolean;
+}) {
   return (
     <li className="border border-line p-4">
       <div className="flex items-start justify-between gap-3">
@@ -117,6 +166,11 @@ function ArtworkOrderRow({ order }: { order: ArtworkOrder }) {
         <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
         <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
       </div>
+      {onCancel && (
+        <div className="mt-2 text-right">
+          <CancelOrderButton status={order.status} pending={!!cancelPending} onCancel={onCancel} />
+        </div>
+      )}
     </li>
   );
 }
@@ -125,6 +179,7 @@ function LoggedInOrders() {
   const [artworkOrders, setArtworkOrders] = useState<ArtworkOrder[] | null>(null);
   const [merchOrders, setMerchOrders] = useState<MerchOrder[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([getMyArtworkOrders(), getMyMerchOrders()])
@@ -135,7 +190,26 @@ function LoggedInOrders() {
       .catch(() => setError("주문내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요."));
   }, []);
 
-  if (error) return <p className="text-xs text-red-600">{error}</p>;
+  async function handleCancel(kind: "artwork" | "merch", id: string) {
+    setCancellingId(id);
+    try {
+      await cancelOrder(kind, id);
+      if (kind === "artwork") {
+        setArtworkOrders((prev) =>
+          prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
+        );
+      } else {
+        setMerchOrders((prev) =>
+          prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
+        );
+      }
+    } catch {
+      setError("주문 취소에 실패했습니다. 이미 배송이 시작되었을 수 있습니다.");
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
   if (artworkOrders === null || merchOrders === null) {
     return <p className="text-sm text-ink-faint">불러오는 중...</p>;
   }
@@ -145,12 +219,18 @@ function LoggedInOrders() {
 
   return (
     <div className="space-y-8">
+      {error && <p className="text-xs text-red-600">{error}</p>}
       {artworkOrders.length > 0 && (
         <div>
           <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">작품 주문</p>
           <ul className="space-y-4">
             {artworkOrders.map((order) => (
-              <ArtworkOrderRow key={order.id} order={order} />
+              <ArtworkOrderRow
+                key={order.id}
+                order={order}
+                onCancel={() => handleCancel("artwork", order.id)}
+                cancelPending={cancellingId === order.id}
+              />
             ))}
           </ul>
         </div>
@@ -160,7 +240,12 @@ function LoggedInOrders() {
           <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">굿즈 주문</p>
           <ul className="space-y-4">
             {merchOrders.map((order) => (
-              <MerchOrderRow key={order.id} order={order} />
+              <MerchOrderRow
+                key={order.id}
+                order={order}
+                onCancel={() => handleCancel("merch", order.id)}
+                cancelPending={cancellingId === order.id}
+              />
             ))}
           </ul>
         </div>
@@ -171,9 +256,31 @@ function LoggedInOrders() {
 
 function GuestPhoneLookup() {
   const [phone, setPhone] = useState("");
-  const [orders, setOrders] = useState<MerchOrder[] | null>(null);
+  const [artworkOrders, setArtworkOrders] = useState<ArtworkOrder[] | null>(null);
+  const [merchOrders, setMerchOrders] = useState<MerchOrder[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  async function handleCancel(kind: "artwork" | "merch", id: string) {
+    setCancellingId(id);
+    try {
+      await cancelOrder(kind, id, phone.trim());
+      if (kind === "artwork") {
+        setArtworkOrders((prev) =>
+          prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
+        );
+      } else {
+        setMerchOrders((prev) =>
+          prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
+        );
+      }
+    } catch {
+      setError("주문 취소에 실패했습니다. 이미 배송이 시작되었을 수 있습니다.");
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem(LAST_PHONE_KEY);
@@ -184,8 +291,12 @@ function GuestPhoneLookup() {
     setLoading(true);
     setError(null);
     try {
-      const result = await getMerchOrdersByPhone(targetPhone);
-      setOrders(result);
+      const [artworkResult, merchResult] = await Promise.all([
+        getArtworkOrdersByPhoneRpc(targetPhone),
+        getMerchOrdersByPhone(targetPhone),
+      ]);
+      setArtworkOrders(artworkResult);
+      setMerchOrders(merchResult);
       localStorage.setItem(LAST_PHONE_KEY, targetPhone);
     } catch {
       setError("주문내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -217,16 +328,47 @@ function GuestPhoneLookup() {
       </form>
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
-      {orders && (
-        <div className="mt-8">
-          {orders.length === 0 ? (
-            <p className="text-sm text-ink-faint">해당 연락처로 조회된 굿즈 주문내역이 없습니다.</p>
+      {artworkOrders && merchOrders && (
+        <div className="mt-8 space-y-8">
+          {artworkOrders.length === 0 && merchOrders.length === 0 ? (
+            <p className="text-sm text-ink-faint">해당 연락처로 조회된 주문내역이 없습니다.</p>
           ) : (
-            <ul className="space-y-4">
-              {orders.map((order) => (
-                <MerchOrderRow key={order.id} order={order} />
-              ))}
-            </ul>
+            <>
+              {artworkOrders.length > 0 && (
+                <div>
+                  <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">
+                    작품 주문
+                  </p>
+                  <ul className="space-y-4">
+                    {artworkOrders.map((order) => (
+                      <ArtworkOrderRow
+                        key={order.id}
+                        order={order}
+                        onCancel={() => handleCancel("artwork", order.id)}
+                        cancelPending={cancellingId === order.id}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {merchOrders.length > 0 && (
+                <div>
+                  <p className="mb-3 text-xs font-semibold tracking-wide text-ink-faint uppercase">
+                    굿즈 주문
+                  </p>
+                  <ul className="space-y-4">
+                    {merchOrders.map((order) => (
+                      <MerchOrderRow
+                        key={order.id}
+                        order={order}
+                        onCancel={() => handleCancel("merch", order.id)}
+                        cancelPending={cancellingId === order.id}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

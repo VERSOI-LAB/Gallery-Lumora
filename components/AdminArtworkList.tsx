@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
+import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
+import { downloadCsv } from "@/lib/csv";
 import { adminDeleteArtwork } from "@/lib/adminActions";
 import type { Artwork } from "@/lib/types";
 
@@ -12,6 +14,15 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
   const [artworks, setArtworks] = useState(initial);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
+  const [keyword, setKeyword] = useState("");
+
+  const term = keyword.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    if (!term) return artworks;
+    return artworks.filter(
+      (a) => a.title.toLowerCase().includes(term) || a.artistName.toLowerCase().includes(term)
+    );
+  }, [artworks, term]);
 
   async function remove(id: string) {
     if (!confirm("이 작품을 삭제하시겠습니까? 연결된 주문·굿즈 상품이 있으면 삭제할 수 없습니다.")) return;
@@ -27,13 +38,48 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
     }
   }
 
+  function exportCsv() {
+    downloadCsv(
+      `lumora-artworks-${new Date().toISOString().slice(0, 10)}.csv`,
+      filtered.map((a) => ({
+        작품명: a.title,
+        작가: a.artistName,
+        매체: getMediumType(a.mediumTypeCode)?.nameKo ?? a.mediumTypeCode,
+        가격: a.price,
+        판매여부: a.sold ? "판매완료" : "판매중",
+        조회수: a.viewCount,
+      }))
+    );
+  }
+
   if (artworks.length === 0) {
     return <p className="text-sm text-ink-faint">등록된 작품이 없습니다.</p>;
   }
 
   return (
-    <div className="divide-y divide-line border-y border-line">
-      {artworks.map((artwork) => (
+    <div>
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder="작품명, 작가명으로 검색"
+          className="h-10 flex-1 min-w-[200px] border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+          className={`${buttonClasses("ghost", "sm")} disabled:opacity-40`}
+        >
+          CSV 내보내기
+        </button>
+      </div>
+      {filtered.length === 0 ? (
+        <p className="text-sm text-ink-faint">검색 결과가 없습니다.</p>
+      ) : (
+        <div className="divide-y divide-line border-y border-line">
+          {filtered.map((artwork) => (
         <div key={artwork.id}>
           <div className="flex items-center gap-4 py-4">
             <div className="h-16 w-[52px] flex-none overflow-hidden">
@@ -84,7 +130,9 @@ export default function AdminArtworkList({ artworks: initial }: { artworks: Artw
             </p>
           )}
         </div>
-      ))}
+          ))}
+        </div>
+      )}
     </div>
   );
 }

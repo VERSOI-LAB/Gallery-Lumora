@@ -22,6 +22,7 @@ export default function AdminMerchVariantsManager({
   const [priceDelta, setPriceDelta] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [errorId, setErrorId] = useState<string | null>(null);
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault();
@@ -38,11 +39,14 @@ export default function AdminMerchVariantsManager({
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("이 옵션을 삭제하시겠습니까?")) return;
+    if (!confirm("이 옵션을 삭제하시겠습니까? 이 옵션으로 주문된 이력이 있으면 삭제할 수 없습니다.")) return;
     setPendingId(id);
+    setErrorId(null);
     try {
       await adminDeleteMerchVariant(id);
       setVariants((prev) => prev.filter((v) => v.id !== id));
+    } catch {
+      setErrorId(id);
     } finally {
       setPendingId(null);
     }
@@ -55,22 +59,29 @@ export default function AdminMerchVariantsManager({
       {variants.length > 0 && (
         <div className="mb-5 divide-y divide-line border-y border-line">
           {variants.map((v) => (
-            <div key={v.id} className="flex items-center gap-3 py-3 text-sm">
-              <span className="flex-1 font-medium text-ink">{v.label}</span>
-              {v.priceDelta !== 0 && (
-                <span className="text-xs text-ink-faint">
-                  {v.priceDelta > 0 ? "+" : ""}
-                  {formatKRW(v.priceDelta)}
-                </span>
+            <div key={v.id} className="py-3">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="flex-1 font-medium text-ink">{v.label}</span>
+                {v.priceDelta !== 0 && (
+                  <span className="text-xs text-ink-faint">
+                    {v.priceDelta > 0 ? "+" : ""}
+                    {formatKRW(v.priceDelta)}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  disabled={pendingId === v.id}
+                  onClick={() => handleDelete(v.id)}
+                  className="text-xs text-red-600 hover:underline disabled:opacity-40"
+                >
+                  삭제
+                </button>
+              </div>
+              {errorId === v.id && (
+                <p className="mt-1 text-xs text-red-600">
+                  삭제하지 못했습니다. 이 옵션으로 주문된 이력이 있습니다.
+                </p>
               )}
-              <button
-                type="button"
-                disabled={pendingId === v.id}
-                onClick={() => handleDelete(v.id)}
-                className="text-xs text-red-600 hover:underline disabled:opacity-40"
-              >
-                삭제
-              </button>
             </div>
           ))}
         </div>

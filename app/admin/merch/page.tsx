@@ -1,11 +1,13 @@
 import Link from "next/link";
 import AdminMerchList from "@/components/AdminMerchList";
 import { buttonClasses } from "@/lib/ui";
-import { getAllMerchProductsAdmin } from "@/lib/queries";
+import { getAllMerchProductsAdmin, getMerchEditionsRemainingMap } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminMerchPage() {
   const products = await getAllMerchProductsAdmin(supabaseService);
+  const editionProductIds = products.filter((p) => p.fulfillment === "edition").map((p) => p.id);
+  const editionsRemaining = await getMerchEditionsRemainingMap(editionProductIds, supabaseService);
 
   return (
     <div>
@@ -15,7 +17,7 @@ export default async function AdminMerchPage() {
           새 상품 등록
         </Link>
       </div>
-      <AdminMerchList products={products} />
+      <AdminMerchList products={products} editionsRemaining={editionsRemaining} />
     </div>
   );
 }

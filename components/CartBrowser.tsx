@@ -6,7 +6,7 @@ import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
-import { getMerchProductsByIds, purchaseMerch } from "@/lib/queries";
+import { getMerchProductsByIds, getMyProfile, purchaseMerch } from "@/lib/queries";
 import type { MerchProduct } from "@/lib/types";
 
 const MADE_TO_ORDER_MAX_QUANTITY = 10;
@@ -41,6 +41,17 @@ export default function CartBrowser() {
     // Re-fetch whenever the cart's product set changes (items added/removed).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.map((i) => i.productId).join(",")]);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((profile) => {
+        if (!profile) return;
+        setName(profile.name);
+        setEmail(profile.email);
+        setPhone(profile.phone);
+      })
+      .catch(() => {});
+  }, []);
 
   const total = items.reduce((sum, i) => {
     const product = products[i.productId];

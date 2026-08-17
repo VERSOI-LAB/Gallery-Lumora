@@ -3,7 +3,7 @@ import { getAdminActivityLog } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
 export default async function AdminActivityPage() {
-  const entries = await getAdminActivityLog(supabaseService);
+  const entries = await getAdminActivityLog(supabaseService, { limit: 50 });
 
   return (
     <div>

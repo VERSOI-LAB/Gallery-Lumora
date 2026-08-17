@@ -32,7 +32,7 @@ export default function StudioInquiriesBrowser({
 
   const selected = inquiries.find((i) => i.id === selectedId);
 
-  async function respond(id: string, decision: "accepted" | "declined") {
+  async function respond(id: string, decision: CommissionInquiry["status"]) {
     setPending(id);
     try {
       await updateInquiryStatus(id, decision);
@@ -88,22 +88,35 @@ export default function StudioInquiriesBrowser({
           <p className="text-sm leading-7 text-ink-soft">&ldquo;{selected.message}&rdquo;</p>
 
           <div className="mt-5 flex gap-3">
-            <button
-              type="button"
-              disabled={pending === selected.id}
-              onClick={() => respond(selected.id, "accepted")}
-              className={buttonClasses("primary", "sm")}
-            >
-              수락 의사 전달
-            </button>
-            <button
-              type="button"
-              disabled={pending === selected.id}
-              onClick={() => respond(selected.id, "declined")}
-              className={buttonClasses("ghost", "sm")}
-            >
-              거절
-            </button>
+            {selected.status === "accepted" || selected.status === "declined" ? (
+              <button
+                type="button"
+                disabled={pending === selected.id}
+                onClick={() => respond(selected.id, "reviewing")}
+                className={buttonClasses("ghost", "sm")}
+              >
+                되돌리기
+              </button>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled={pending === selected.id}
+                  onClick={() => respond(selected.id, "accepted")}
+                  className={buttonClasses("primary", "sm")}
+                >
+                  수락 의사 전달
+                </button>
+                <button
+                  type="button"
+                  disabled={pending === selected.id}
+                  onClick={() => respond(selected.id, "declined")}
+                  className={buttonClasses("ghost", "sm")}
+                >
+                  거절
+                </button>
+              </>
+            )}
           </div>
 
           <p className="mt-4 text-xs text-ink-faint">

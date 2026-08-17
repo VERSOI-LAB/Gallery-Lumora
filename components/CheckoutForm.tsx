@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
-import { purchaseArtwork } from "@/lib/queries";
+import { getMyProfile, purchaseArtwork } from "@/lib/queries";
 import type { Artist, Artwork } from "@/lib/types";
 
 export default function CheckoutForm({
@@ -25,6 +25,17 @@ export default function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
+
+  useEffect(() => {
+    getMyProfile()
+      .then((profile) => {
+        if (!profile) return;
+        setName(profile.name);
+        setEmail(profile.email);
+        setPhone(profile.phone);
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
