@@ -41,14 +41,13 @@ export default async function HomePage() {
             Gallery Lumora
           </p>
           <h1 className="font-editorial mb-4 max-w-xl text-3xl leading-tight md:text-5xl">
-            세상에 없던 한 점을,
-            <br />
-            내가 고른 작가와 함께 만들어가다
+            나만을 위해 시작되는, 세상에 없던 단 하나의 예술
           </h1>
           <p className="mb-8 max-w-md text-sm text-ink-soft md:text-base">
-            이미 완성된 순간을 소장하거나,
+            마음에 닿은 완성작을 소장하거나, 당신의 스토리를 담아 세상에 없던 온기를 작가에게 1:1로
+            의뢰해보세요.
             <br />
-            아직 태어나지 않은 한 점을 함께 기다려보세요.
+            한 점의 예술이 당신의 삶에 물드는 모든 순간을 함께합니다.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <Link href="/works" className={buttonClasses("ghost")}>

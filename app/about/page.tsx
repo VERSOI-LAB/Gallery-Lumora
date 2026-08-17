@@ -53,15 +53,12 @@ export default async function AboutPage() {
             <p>예술은 단순히 벽을 장식하는 유행이 아닙니다.</p>
             <p>
               과거 르네상스 시절, <strong className="text-paper font-semibold">메디치 가문</strong>의
-              위대한 의뢰가 거장들의 천재성을 세상에 끌어내고
-              <br />
-              인류의 유산을 만들어냈듯, 예술은 시대를 뛰어넘어 인간의 영혼과 공간을 변화시키는 가장
-              강력한 힘입니다.
+              위대한 의뢰가 거장들의 천재성을 세상에 끌어내고 인류의 유산을 만들어냈듯, 예술은 시대를
+              뛰어넘어 인간의 영혼과 공간을 변화시키는 가장 강력한 힘입니다.
             </p>
             <p>
               갤러리 루모라(Lumora)는 미술의 역사 속에 숨쉬는{" "}
               <strong className="text-paper font-semibold">변치 않는 가치</strong>를 믿습니다. 우리는
-              <br />
               시대를 조용히 탐구하며 자신만의 독창적인 세계를 구축해 나가는 작가들의 고유한 가치와
               가능성을 발굴합니다.
             </p>
@@ -70,9 +67,8 @@ export default async function AboutPage() {
               <strong className="text-paper font-semibold">무한한 미래의 가능성</strong>.
             </p>
             <p>
-              루모라는 작가의 진정한 가치를 재평가하고, 과거의 지혜와 현재의 감성,
-              <br />
-              그리고 미래의 유산을 잇는 든든한 다리가 되고자 합니다.
+              루모라는 작가의 진정한 가치를 재평가하고, 과거의 지혜와 현재의 감성, 그리고 미래의 유산을
+              잇는 든든한 다리가 되고자 합니다.
             </p>
           </div>
         </FadeInOnScroll>
