@@ -8,14 +8,14 @@ import type { JournalPost } from "@/lib/types";
 export default function ArticleCard({ post }: { post: JournalPost }) {
   return (
     <Link href={`/journal/${post.slug}`} className="group block">
-      <div className="relative aspect-[4/3] overflow-hidden">
+      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-paper-raised">
         {post.coverImageUrl ? (
           <Image
             src={post.coverImageUrl}
             alt={post.title}
             fill
             sizes="(max-width: 768px) 50vw, 400px"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-contain transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <PlaceholderArt

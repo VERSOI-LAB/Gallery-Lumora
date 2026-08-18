@@ -40,8 +40,16 @@ export default async function JournalDetailPage({
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
       {post.coverImageUrl ? (
-        <div className="relative mb-8 aspect-[3/1] w-full overflow-hidden">
-          <Image src={post.coverImageUrl} alt={post.title} fill sizes="100vw" className="object-cover" />
+        <div className="mb-8 flex w-full items-center justify-center overflow-hidden bg-paper-raised">
+          <Image
+            src={post.coverImageUrl}
+            alt={post.title}
+            width={1600}
+            height={1000}
+            sizes="100vw"
+            priority
+            className="max-h-[75vh] w-auto max-w-full object-contain"
+          />
         </div>
       ) : (
         <PlaceholderArt
