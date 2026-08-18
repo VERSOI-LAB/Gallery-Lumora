@@ -18,7 +18,7 @@ export default async function HomePage() {
     getMerchProducts(),
     getSiteAsset("home_hero_video"),
   ]);
-  const newWorks = artworks.slice(0, 4);
+  const newWorks = artworks.filter((a) => !a.sold).slice(0, 4);
   const latestPosts = journalPosts.slice(0, 3);
   const featuredProducts = merchProducts.slice(0, 4);
 

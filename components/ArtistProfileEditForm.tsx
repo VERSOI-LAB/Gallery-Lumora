@@ -13,11 +13,16 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
   const [nameEn, setNameEn] = useState(artist.nameEn);
   const [tagline, setTagline] = useState(artist.tagline);
   const [bio, setBio] = useState(artist.bio);
+  const [awards, setAwards] = useState(artist.awards);
+  const [career, setCareer] = useState(artist.career);
+  const [exhibitions, setExhibitions] = useState(artist.exhibitions);
   const [styleTags, setStyleTags] = useState(artist.styleTags.join(", "));
   const [commissionAccepting, setCommissionAccepting] = useState(artist.commission.accepting);
   const [commissionMedia, setCommissionMedia] = useState<string[]>(artist.commission.media);
   const [commissionLeadTime, setCommissionLeadTime] = useState(artist.commission.leadTime);
   const [commissionPriceRange, setCommissionPriceRange] = useState(artist.commission.priceRange);
+  const [bankName, setBankName] = useState(artist.bankName);
+  const [bankAccountNumber, setBankAccountNumber] = useState(artist.bankAccountNumber);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +56,13 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
       nameEn,
       tagline,
       bio,
+      awards,
+      career,
+      exhibitions,
       hue: artist.hue,
       artistSplitRate: artist.artistSplitRate,
+      bankName,
+      bankAccountNumber,
       avatarUrl,
       styleTags: styleTags
         .split(",")
@@ -135,6 +145,39 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
         />
       </Field>
 
+      <Field label="수상">
+        <textarea
+          rows={5}
+          placeholder={"예: 2024.01   OO공모전 동상"}
+          value={awards}
+          onChange={(e) => setAwards(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+        <p className="mt-1.5 text-[11px] text-ink-faint">한 줄에 하나씩, "연도   내용" 형식으로 입력해주세요.</p>
+      </Field>
+
+      <Field label="경력">
+        <textarea
+          rows={5}
+          placeholder={"예: 2020   OO대학 교수 역임"}
+          value={career}
+          onChange={(e) => setCareer(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+        <p className="mt-1.5 text-[11px] text-ink-faint">한 줄에 하나씩, "연도   내용" 형식으로 입력해주세요.</p>
+      </Field>
+
+      <Field label="전시">
+        <textarea
+          rows={5}
+          placeholder={"예: 2024.05   OO갤러리 개인전"}
+          value={exhibitions}
+          onChange={(e) => setExhibitions(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+        <p className="mt-1.5 text-[11px] text-ink-faint">한 줄에 하나씩, "연도   내용" 형식으로 입력해주세요.</p>
+      </Field>
+
       <Field label="화풍 태그 (쉼표로 구분)">
         <input
           type="text"
@@ -151,6 +194,31 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
           작가 {Math.round(artist.artistSplitRate * 100)}% / 갤러리 {Math.round((1 - artist.artistSplitRate) * 100)}%
         </p>
         <p className="mt-1 text-xs text-ink-faint">운영팀이 설정하는 값으로, 작품 판매 정산에 적용됩니다.</p>
+      </div>
+
+      <div className="border-t border-line pt-5">
+        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">정산계좌</p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Field label="은행">
+            <input
+              type="text"
+              placeholder="예: 국민은행"
+              value={bankName}
+              onChange={(e) => setBankName(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="계좌번호">
+            <input
+              type="text"
+              placeholder="예: 123456-78-901234"
+              value={bankAccountNumber}
+              onChange={(e) => setBankAccountNumber(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+        </div>
+        <p className="mt-2 text-xs text-ink-faint">작품 판매 정산금이 입금될 계좌입니다.</p>
       </div>
 
       <div className="border-t border-line pt-5">
@@ -203,6 +271,9 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               onChange={(e) => setCommissionPriceRange(e.target.value)}
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
+            <span className="mt-1.5 block text-[11px] text-ink-faint">
+              책정 기준 : 최저가(1호 기준), 최고가(100호 기준)
+            </span>
           </Field>
         </div>
       </div>

@@ -25,6 +25,8 @@ export default function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
+  const [profileAddress, setProfileAddress] = useState("");
+  const [useProfileAddress, setUseProfileAddress] = useState(false);
 
   useEffect(() => {
     getMyProfile()
@@ -33,9 +35,18 @@ export default function CheckoutForm({
         setName(profile.name);
         setEmail(profile.email);
         setPhone(profile.phone);
+        setProfileAddress(profile.address);
       })
       .catch(() => {});
   }, []);
+
+  function toggleUseProfileAddress() {
+    setUseProfileAddress((prev) => {
+      const next = !prev;
+      setShippingAddress(next ? profileAddress : "");
+      return next;
+    });
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -104,12 +115,24 @@ export default function CheckoutForm({
             />
           </Field>
           <Field label="배송지">
+            {profileAddress && (
+              <label className="mb-2 flex cursor-pointer items-center gap-2 text-xs text-ink-soft">
+                <input
+                  type="checkbox"
+                  checked={useProfileAddress}
+                  onChange={toggleUseProfileAddress}
+                  className="accent-patina"
+                />
+                등록된 주소와 동일
+              </label>
+            )}
             <textarea
               required
+              disabled={useProfileAddress}
               value={shippingAddress}
               onChange={(e) => setShippingAddress(e.target.value)}
               placeholder="받으실 주소를 입력해주세요"
-              className="h-20 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm outline-patina"
+              className="h-20 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm outline-patina disabled:text-ink-faint"
             />
           </Field>
           <Field label="연락처">

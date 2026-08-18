@@ -20,6 +20,7 @@ export default function SignupForm() {
   const [role, setRole] = useState<Role>("individual");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -72,7 +73,7 @@ export default function SignupForm() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role, name, phone, username: username.trim() } },
+      options: { data: { role, name, phone, address, username: username.trim() } },
     });
     setSubmitting(false);
 
@@ -91,6 +92,15 @@ export default function SignupForm() {
     } else {
       setNeedsConfirmation(true);
     }
+  }
+
+  async function handleOAuthSignup(provider: "kakao" | "google") {
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
+    });
+    if (error) setError("소셜 회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
   }
 
   if (needsConfirmation) {
@@ -112,6 +122,30 @@ export default function SignupForm() {
     <div className="mx-auto max-w-sm px-5 py-16 md:px-0">
       <h1 className="mb-2 font-display text-2xl">회원가입</h1>
       <p className="mb-8 text-sm text-ink-faint">Gallery Lumora의 새 계정을 만드세요.</p>
+
+      <p className="mb-3 text-[11px] tracking-wide text-ink-soft uppercase">간편 회원가입</p>
+      <div className="mb-8 space-y-2">
+        <button
+          type="button"
+          onClick={() => handleOAuthSignup("kakao")}
+          className="flex h-10 w-full items-center justify-center gap-2 bg-[#FEE500] text-sm font-medium text-[#191600]"
+        >
+          카카오로 시작하기
+        </button>
+        <button
+          type="button"
+          onClick={() => handleOAuthSignup("google")}
+          className="flex h-10 w-full items-center justify-center gap-2 border border-line-strong bg-paper text-sm text-ink"
+        >
+          Google로 시작하기
+        </button>
+      </div>
+
+      <div className="mb-8 flex items-center gap-3 text-[11px] text-ink-faint">
+        <span className="h-px flex-1 bg-line" />
+        또는 이메일로 가입
+        <span className="h-px flex-1 bg-line" />
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <Field label="회원 구분">
@@ -154,6 +188,16 @@ export default function SignupForm() {
             placeholder="010-0000-0000"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <Field label="주소">
+          <input
+            required
+            type="text"
+            placeholder="배송지로 사용할 주소를 입력해주세요"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
             className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
           />
         </Field>

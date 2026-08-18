@@ -25,6 +25,9 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
   const [nameEn, setNameEn] = useState(artist?.nameEn ?? "");
   const [tagline, setTagline] = useState(artist?.tagline ?? "");
   const [bio, setBio] = useState(artist?.bio ?? "");
+  const [awards, setAwards] = useState(artist?.awards ?? "");
+  const [career, setCareer] = useState(artist?.career ?? "");
+  const [exhibitions, setExhibitions] = useState(artist?.exhibitions ?? "");
   const [hue, setHue] = useState(artist?.hue ?? 90);
   const [styleTags, setStyleTags] = useState(artist?.styleTags.join(", ") ?? "");
   const [commissionAccepting, setCommissionAccepting] = useState(
@@ -53,6 +56,9 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
       nameEn,
       tagline,
       bio,
+      awards,
+      career,
+      exhibitions,
       hue,
       avatarUrl: artist?.avatarUrl ?? null,
       styleTags: styleTags
@@ -60,6 +66,8 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
         .map((t) => t.trim())
         .filter(Boolean),
       artistSplitRate,
+      bankName: artist?.bankName ?? "",
+      bankAccountNumber: artist?.bankAccountNumber ?? "",
       commissionAccepting,
       commissionMedia,
       commissionLeadTime,
@@ -136,6 +144,33 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
           rows={5}
           value={bio}
           onChange={(e) => setBio(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+      </Field>
+
+      <Field label="수상">
+        <textarea
+          rows={5}
+          value={awards}
+          onChange={(e) => setAwards(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+      </Field>
+
+      <Field label="경력">
+        <textarea
+          rows={5}
+          value={career}
+          onChange={(e) => setCareer(e.target.value)}
+          className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
+        />
+      </Field>
+
+      <Field label="전시">
+        <textarea
+          rows={5}
+          value={exhibitions}
+          onChange={(e) => setExhibitions(e.target.value)}
           className="w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm leading-relaxed outline-patina"
         />
       </Field>

@@ -70,10 +70,15 @@ export function toArtist(row: ArtistRow): Artist {
     nameEn: row.name_en,
     tagline: row.tagline,
     bio: row.bio,
+    awards: row.awards,
+    career: row.career,
+    exhibitions: row.exhibitions,
     hue: row.hue,
     avatarUrl: row.avatar_url,
     styleTags: row.style_tags,
     artistSplitRate: row.artist_split_rate,
+    bankName: row.bank_name,
+    bankAccountNumber: row.bank_account_number,
     commission: {
       accepting: row.commission_accepting,
       media: row.commission_media,
@@ -97,6 +102,8 @@ export function toArtwork(row: ArtworkWithArtistRow): Artwork {
     price: row.price,
     sold: row.sold,
     merchEnabled: row.merch_enabled,
+    editionType: row.edition_type === "print" ? "print" : "original",
+    editionInfo: row.edition_info,
     hue: row.hue,
     variant: row.variant,
     imageUrls: row.image_urls,
@@ -186,6 +193,7 @@ function toProfile(row: ProfileRow): Profile {
     phone: row.phone,
     email: row.email,
     username: row.username,
+    address: row.address,
     artistId: row.artist_id,
   };
 }
@@ -232,6 +240,8 @@ function toShippingInfo(row: {
   courier_name: string | null;
   courier_phone: string | null;
   vehicle_number: string | null;
+  expected_ship_date: string | null;
+  delay_reason: string;
 }): ShippingInfo {
   return {
     shippingMethod: row.shipping_method as ShippingInfo["shippingMethod"],
@@ -240,6 +250,8 @@ function toShippingInfo(row: {
     courierName: row.courier_name,
     courierPhone: row.courier_phone,
     vehicleNumber: row.vehicle_number,
+    expectedShipDate: row.expected_ship_date,
+    delayReason: row.delay_reason,
   };
 }
 
@@ -343,6 +355,8 @@ function toMerchOrder(row: MerchOrderByPhoneRow): MerchOrder {
     courierName: null,
     courierPhone: null,
     vehicleNumber: null,
+    expectedShipDate: null,
+    delayReason: "",
   };
 }
 
@@ -372,6 +386,8 @@ function toArtworkOrderByPhone(row: ArtworkOrderByPhoneRow): ArtworkOrder {
     courierName: row.courier_name,
     courierPhone: row.courier_phone,
     vehicleNumber: row.vehicle_number,
+    expectedShipDate: null,
+    delayReason: "",
   };
 }
 
@@ -429,10 +445,15 @@ export interface ArtistInput {
   nameEn: string;
   tagline: string;
   bio: string;
+  awards: string;
+  career: string;
+  exhibitions: string;
   hue: number;
   avatarUrl: string | null;
   styleTags: string[];
   artistSplitRate: number;
+  bankName: string;
+  bankAccountNumber: string;
   commissionAccepting: boolean;
   commissionMedia: string[];
   commissionLeadTime: string;
@@ -466,10 +487,15 @@ export async function createArtist(
       name_en: input.nameEn,
       tagline: input.tagline,
       bio: input.bio,
+      awards: input.awards,
+      career: input.career,
+      exhibitions: input.exhibitions,
       hue: input.hue,
       avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
       artist_split_rate: input.artistSplitRate,
+      bank_name: input.bankName,
+      bank_account_number: input.bankAccountNumber,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -494,10 +520,15 @@ export async function updateArtist(
       name_en: input.nameEn,
       tagline: input.tagline,
       bio: input.bio,
+      awards: input.awards,
+      career: input.career,
+      exhibitions: input.exhibitions,
       hue: input.hue,
       avatar_url: input.avatarUrl,
       style_tags: input.styleTags,
       artist_split_rate: input.artistSplitRate,
+      bank_name: input.bankName,
+      bank_account_number: input.bankAccountNumber,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -750,6 +781,8 @@ export interface NewArtworkInput {
   price: number;
   hue: number;
   imageUrls: string[];
+  editionType: "original" | "print";
+  editionInfo: string;
 }
 
 export async function createArtwork(input: NewArtworkInput): Promise<string> {
@@ -767,6 +800,8 @@ export async function createArtwork(input: NewArtworkInput): Promise<string> {
       hue: input.hue,
       variant: Math.floor(Math.random() * 3),
       image_urls: input.imageUrls,
+      edition_type: input.editionType,
+      edition_info: input.editionType === "print" ? input.editionInfo : "",
     })
     .select("id")
     .single();
@@ -785,6 +820,8 @@ export interface ArtworkUpdateInput {
   hue: number;
   variant: number;
   imageUrls: string[];
+  editionType: "original" | "print";
+  editionInfo: string;
 }
 
 export async function updateArtwork(
@@ -805,6 +842,8 @@ export async function updateArtwork(
       hue: input.hue,
       variant: input.variant,
       image_urls: input.imageUrls,
+      edition_type: input.editionType,
+      edition_info: input.editionType === "print" ? input.editionInfo : "",
     })
     .eq("id", id);
   if (error) throw error;
@@ -1236,14 +1275,14 @@ export async function getMyProfile(): Promise<Profile | null> {
   return data ? toProfile(data) : null;
 }
 
-export async function updateMyProfile(input: { name: string; phone: string }): Promise<void> {
+export async function updateMyProfile(input: { name: string; phone: string; address: string }): Promise<void> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("로그인이 필요합니다.");
   const { error } = await supabase
     .from("profiles")
-    .update({ name: input.name, phone: input.phone })
+    .update({ name: input.name, phone: input.phone, address: input.address })
     .eq("id", user.id);
   if (error) throw error;
 }
@@ -1437,6 +1476,8 @@ export interface ShippingUpdateInput {
   courierName?: string;
   courierPhone?: string;
   vehicleNumber?: string;
+  expectedShipDate?: string;
+  delayReason?: string;
 }
 
 /** Called by the logged-in artist from the studio sales dashboard. Backed by
@@ -1456,6 +1497,8 @@ export async function updateOrderShippingStatus(kind: "artwork" | "merch", id: s
     p_courier_name: input.courierName,
     p_courier_phone: input.courierPhone,
     p_vehicle_number: input.vehicleNumber,
+    p_expected_ship_date: input.expectedShipDate,
+    p_delay_reason: input.delayReason,
   });
   if (error) throw error;
 }

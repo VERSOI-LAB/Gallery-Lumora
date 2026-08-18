@@ -22,7 +22,7 @@ export default function StudioNav({
   return (
     <>
       <aside className="hidden w-48 flex-none border-r border-line py-8 pr-6 md:block">
-        <p className="mb-4 text-xs tracking-wide text-ink-faint uppercase">{artistName} 스튜디오</p>
+        <p className="mb-4 text-xs tracking-wide text-ink-faint uppercase break-words">{artistName} 스튜디오</p>
         <nav className="space-y-1">
           {ITEMS.map((item) => {
             const active = pathname.startsWith(item.href);

@@ -19,6 +19,8 @@ export default function EditArtworkForm({ artwork, artistId }: { artwork: Artwor
   const [year, setYear] = useState(artwork.year);
   const [price, setPrice] = useState(artwork.price);
   const [sold, setSold] = useState(artwork.sold);
+  const [editionType, setEditionType] = useState<"original" | "print">(artwork.editionType);
+  const [editionInfo, setEditionInfo] = useState(artwork.editionInfo);
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +68,8 @@ export default function EditArtworkForm({ artwork, artistId }: { artwork: Artwor
         hue: artwork.hue,
         variant: artwork.variant,
         imageUrls: [...existingImages, ...uploadedUrls],
+        editionType,
+        editionInfo,
       });
       router.push("/studio/works");
       router.refresh();
@@ -222,6 +226,29 @@ export default function EditArtworkForm({ artwork, artistId }: { artwork: Artwor
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
+          <Field label="작품 유형">
+            <select
+              required
+              value={editionType}
+              onChange={(e) => setEditionType(e.target.value as "original" | "print")}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            >
+              <option value="original">원화</option>
+              <option value="print">판화</option>
+            </select>
+          </Field>
+          {editionType === "print" && (
+            <Field label="에디션 번호/총 발행수">
+              <input
+                required
+                type="text"
+                placeholder="예: 3/50"
+                value={editionInfo}
+                onChange={(e) => setEditionInfo(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+              />
+            </Field>
+          )}
         </div>
 
         <label className="flex items-center gap-2 text-sm text-ink-soft">

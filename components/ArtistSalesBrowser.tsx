@@ -12,6 +12,13 @@ import {
 import type { ArtworkOrder, MerchOrder, OrderStatus } from "@/lib/types";
 
 const EDITABLE_STATUSES: OrderStatus[] = ["preparing", "shipped", "delivered", "cancelled"];
+const OVERDUE_DAYS = 7;
+
+function isOverdue(order: ArtworkOrder | MerchOrder): boolean {
+  if (order.status === "shipped" || order.status === "delivered" || order.status === "cancelled") return false;
+  const daysSinceOrder = (Date.now() - new Date(order.createdAt).getTime()) / (1000 * 60 * 60 * 24);
+  return daysSinceOrder > OVERDUE_DAYS;
+}
 
 function OrderStatusEditor({
   order,
@@ -30,8 +37,12 @@ function OrderStatusEditor({
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber ?? "");
   const [courierPhone, setCourierPhone] = useState(order.courierPhone ?? "");
   const [vehicleNumber, setVehicleNumber] = useState(order.vehicleNumber ?? "");
+  const [expectedShipDate, setExpectedShipDate] = useState(order.expectedShipDate ?? "");
+  const [delayReason, setDelayReason] = useState(order.delayReason ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const overdue = isOverdue(order);
 
   async function handleConfirm() {
     setSubmitting(true);
@@ -43,6 +54,8 @@ function OrderStatusEditor({
         trackingNumber: nextStatus === "shipped" && shippingMethod === "parcel" ? trackingNumber : undefined,
         courierPhone: nextStatus === "shipped" && shippingMethod === "freight" ? courierPhone : undefined,
         vehicleNumber: nextStatus === "shipped" && shippingMethod === "freight" ? vehicleNumber : undefined,
+        expectedShipDate: expectedShipDate || undefined,
+        delayReason: overdue ? delayReason : undefined,
       });
       onUpdated({
         ...order,
@@ -51,6 +64,8 @@ function OrderStatusEditor({
         trackingNumber: nextStatus === "shipped" && shippingMethod === "parcel" ? trackingNumber : order.trackingNumber,
         courierPhone: nextStatus === "shipped" && shippingMethod === "freight" ? courierPhone : order.courierPhone,
         vehicleNumber: nextStatus === "shipped" && shippingMethod === "freight" ? vehicleNumber : order.vehicleNumber,
+        expectedShipDate: expectedShipDate || order.expectedShipDate,
+        delayReason: overdue ? delayReason : order.delayReason,
       });
       setEditing(false);
     } catch {
@@ -62,13 +77,20 @@ function OrderStatusEditor({
 
   if (!editing) {
     return (
-      <button
-        type="button"
-        onClick={() => setEditing(true)}
-        className={`border px-2 py-1 text-[11px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}
-      >
-        {ORDER_STATUS_LABEL[order.status]}
-      </button>
+      <span className="flex items-center gap-1.5">
+        <button
+          type="button"
+          onClick={() => setEditing(true)}
+          className={`border px-2 py-1 text-[11px] ${ORDER_STATUS_BADGE_STYLE[order.status]}`}
+        >
+          {ORDER_STATUS_LABEL[order.status]}
+        </button>
+        {overdue && (
+          <span className="border border-red-600 px-1.5 py-1 text-[11px] font-semibold text-red-600">
+            배송 지연
+          </span>
+        )}
+      </span>
     );
   }
 
@@ -141,6 +163,32 @@ function OrderStatusEditor({
               />
             </div>
           )}
+        </div>
+      )}
+
+      <div className="mb-2">
+        <label className="mb-1 block text-[11px] text-ink-soft">납기 (예상 발송일)</label>
+        <input
+          type="date"
+          value={expectedShipDate}
+          onChange={(e) => setExpectedShipDate(e.target.value)}
+          className="h-8 border border-line-strong bg-paper px-2 text-xs outline-patina"
+        />
+      </div>
+
+      {overdue && (
+        <div className="mb-2 border border-red-600 bg-red-50 p-2">
+          <p className="mb-1.5 text-[11px] font-semibold text-red-600">
+            주문 후 {OVERDUE_DAYS}일이 지났습니다. 배송 지연 사유를 작성해주세요.
+          </p>
+          <textarea
+            required
+            rows={2}
+            placeholder="배송 지연 사유"
+            value={delayReason}
+            onChange={(e) => setDelayReason(e.target.value)}
+            className="w-full border border-line-strong bg-paper px-2 py-1.5 text-xs outline-patina"
+          />
         </div>
       )}
 
@@ -260,7 +308,11 @@ export default function ArtistSalesBrowser() {
                 <div className="mt-1 text-xs text-ink-faint">
                   주문번호 {order.orderNumber} · {formatDate(order.createdAt)}
                   {order.artistPayoutAmount != null && ` · 실수령 예정 ${formatKRW(order.artistPayoutAmount)}`}
+                  {order.expectedShipDate && ` · 납기 ${order.expectedShipDate}`}
                 </div>
+                {order.delayReason && (
+                  <div className="mt-1 text-xs text-red-600">지연 사유: {order.delayReason}</div>
+                )}
               </div>
             ))}
           </div>
@@ -289,7 +341,11 @@ export default function ArtistSalesBrowser() {
               </div>
               <div className="mt-1 text-xs text-ink-faint">
                 수량 {order.quantity} · 주문번호 {order.orderNumber} · {formatDate(order.createdAt)}
+                {order.expectedShipDate && ` · 납기 ${order.expectedShipDate}`}
               </div>
+              {order.delayReason && (
+                <div className="mt-1 text-xs text-red-600">지연 사유: {order.delayReason}</div>
+              )}
             </div>
           ))}
         </div>

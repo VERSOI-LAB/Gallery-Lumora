@@ -25,6 +25,8 @@ export default function NewArtworkForm({
   const [size, setSize] = useState("");
   const [year, setYear] = useState(new Date().getFullYear());
   const [price, setPrice] = useState(0);
+  const [editionType, setEditionType] = useState<"original" | "print">("original");
+  const [editionInfo, setEditionInfo] = useState("");
   const [posted, setPosted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState("");
@@ -74,6 +76,8 @@ export default function NewArtworkForm({
         price,
         hue: artistHue,
         imageUrls,
+        editionType,
+        editionInfo,
       });
       setPosted(true);
       setTitle("");
@@ -81,6 +85,8 @@ export default function NewArtworkForm({
       setMediumTypeCode("");
       setSize("");
       setPrice(0);
+      setEditionType("original");
+      setEditionInfo("");
       setFiles([]);
     } catch {
       setError("작품 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
@@ -246,6 +252,29 @@ export default function NewArtworkForm({
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
+          <Field label="작품 유형">
+            <select
+              required
+              value={editionType}
+              onChange={(e) => setEditionType(e.target.value as "original" | "print")}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            >
+              <option value="original">원화</option>
+              <option value="print">판화</option>
+            </select>
+          </Field>
+          {editionType === "print" && (
+            <Field label="에디션 번호/총 발행수">
+              <input
+                required
+                type="text"
+                placeholder="예: 3/50"
+                value={editionInfo}
+                onChange={(e) => setEditionInfo(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+              />
+            </Field>
+          )}
         </div>
 
         <button type="submit" disabled={submitting} className={buttonClasses("primary")}>

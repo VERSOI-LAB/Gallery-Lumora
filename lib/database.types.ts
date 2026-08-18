@@ -108,12 +108,17 @@ export type Database = {
         Row: {
           artist_split_rate: number
           avatar_url: string | null
+          awards: string
+          bank_account_number: string
+          bank_name: string
           bio: string
+          career: string
           commission_accepting: boolean
           commission_lead_time: string
           commission_media: string[]
           commission_price_range: string
           created_at: string
+          exhibitions: string
           hue: number
           id: string
           name: string
@@ -125,12 +130,17 @@ export type Database = {
         Insert: {
           artist_split_rate?: number
           avatar_url?: string | null
+          awards?: string
+          bank_account_number?: string
+          bank_name?: string
           bio?: string
+          career?: string
           commission_accepting?: boolean
           commission_lead_time?: string
           commission_media?: string[]
           commission_price_range?: string
           created_at?: string
+          exhibitions?: string
           hue?: number
           id?: string
           name: string
@@ -142,12 +152,17 @@ export type Database = {
         Update: {
           artist_split_rate?: number
           avatar_url?: string | null
+          awards?: string
+          bank_account_number?: string
+          bank_name?: string
           bio?: string
+          career?: string
           commission_accepting?: boolean
           commission_lead_time?: string
           commission_media?: string[]
           commission_price_range?: string
           created_at?: string
+          exhibitions?: string
           hue?: number
           id?: string
           name?: string
@@ -163,6 +178,8 @@ export type Database = {
           artist_id: string
           created_at: string
           description: string
+          edition_info: string
+          edition_type: string
           exhibition_featured_at: string | null
           hue: number
           id: string
@@ -182,6 +199,8 @@ export type Database = {
           artist_id: string
           created_at?: string
           description?: string
+          edition_info?: string
+          edition_type?: string
           exhibition_featured_at?: string | null
           hue?: number
           id?: string
@@ -201,6 +220,8 @@ export type Database = {
           artist_id?: string
           created_at?: string
           description?: string
+          edition_info?: string
+          edition_type?: string
           exhibition_featured_at?: string | null
           hue?: number
           id?: string
@@ -498,9 +519,11 @@ export type Database = {
           courier_name: string | null
           courier_phone: string | null
           created_at: string
+          delay_reason: string
           design_image_url: string | null
           edition_number: number | null
           email: string
+          expected_ship_date: string | null
           id: string
           name: string
           order_number: string
@@ -527,9 +550,11 @@ export type Database = {
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          delay_reason?: string
           design_image_url?: string | null
           edition_number?: number | null
           email?: string
+          expected_ship_date?: string | null
           id?: string
           name?: string
           order_number: string
@@ -556,9 +581,11 @@ export type Database = {
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          delay_reason?: string
           design_image_url?: string | null
           edition_number?: number | null
           email?: string
+          expected_ship_date?: string | null
           id?: string
           name?: string
           order_number?: string
@@ -718,7 +745,9 @@ export type Database = {
           courier_name: string | null
           courier_phone: string | null
           created_at: string
+          delay_reason: string
           email: string
+          expected_ship_date: string | null
           id: string
           insured: boolean
           name: string
@@ -742,7 +771,9 @@ export type Database = {
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          delay_reason?: string
           email?: string
+          expected_ship_date?: string | null
           id?: string
           insured?: boolean
           name?: string
@@ -766,7 +797,9 @@ export type Database = {
           courier_name?: string | null
           courier_phone?: string | null
           created_at?: string
+          delay_reason?: string
           email?: string
+          expected_ship_date?: string | null
           id?: string
           insured?: boolean
           name?: string
@@ -795,6 +828,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string
           artist_id: string | null
           created_at: string
           email: string
@@ -805,6 +839,7 @@ export type Database = {
           username: string
         }
         Insert: {
+          address?: string
           artist_id?: string | null
           created_at?: string
           email?: string
@@ -815,6 +850,7 @@ export type Database = {
           username?: string
         }
         Update: {
+          address?: string
           artist_id?: string | null
           created_at?: string
           email?: string
@@ -1063,6 +1099,8 @@ export type Database = {
         Args: {
           p_courier_name?: string
           p_courier_phone?: string
+          p_delay_reason?: string
+          p_expected_ship_date?: string
           p_kind: string
           p_order_id: string
           p_shipping_method?: string

@@ -17,6 +17,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ProfileFields({ profile }: { profile: Profile }) {
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
+  const [address, setAddress] = useState(profile.address);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -27,7 +28,7 @@ function ProfileFields({ profile }: { profile: Profile }) {
     setError(null);
     setSaved(false);
     try {
-      await updateMyProfile({ name, phone });
+      await updateMyProfile({ name, phone, address });
       setSaved(true);
     } catch {
       setError("저장하지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -52,6 +53,15 @@ function ProfileFields({ profile }: { profile: Profile }) {
           type="tel"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
+          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
+      </Field>
+      <Field label="주소">
+        <input
+          required
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="배송지로 사용할 주소를 입력해주세요"
           className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
       </Field>

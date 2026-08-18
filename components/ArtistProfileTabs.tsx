@@ -7,7 +7,7 @@ import { buttonClasses, tabClasses } from "@/lib/ui";
 import { MEDIUM_CATEGORIES, getMediumType, getMediumTypeLabel } from "@/lib/mediumTaxonomy";
 import type { Artist, Artwork } from "@/lib/types";
 
-const TABS = ["작품", "소개", "커미션 조건"] as const;
+const TABS = ["작품", "소개", "수상", "경력", "전시", "커미션 조건"] as const;
 type Tab = (typeof TABS)[number];
 
 const CATEGORY_ORDER = Object.fromEntries(MEDIUM_CATEGORIES.map((c, i) => [c.code, i]));
@@ -56,6 +56,27 @@ export default function ArtistProfileTabs({
       {tab === "소개" && (
         <p className="max-w-2xl text-sm leading-7 text-ink-soft">{artist.bio}</p>
       )}
+
+      {tab === "수상" &&
+        (artist.awards ? (
+          <p className="max-w-2xl text-sm leading-7 whitespace-pre-line text-ink-soft">{artist.awards}</p>
+        ) : (
+          <p className="text-sm text-ink-faint">등록된 수상 내역이 없습니다.</p>
+        ))}
+
+      {tab === "경력" &&
+        (artist.career ? (
+          <p className="max-w-2xl text-sm leading-7 whitespace-pre-line text-ink-soft">{artist.career}</p>
+        ) : (
+          <p className="text-sm text-ink-faint">등록된 경력이 없습니다.</p>
+        ))}
+
+      {tab === "전시" &&
+        (artist.exhibitions ? (
+          <p className="max-w-2xl text-sm leading-7 whitespace-pre-line text-ink-soft">{artist.exhibitions}</p>
+        ) : (
+          <p className="text-sm text-ink-faint">등록된 전시 이력이 없습니다.</p>
+        ))}
 
       {tab === "커미션 조건" && (
         <div>

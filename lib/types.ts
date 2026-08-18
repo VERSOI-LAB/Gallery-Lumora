@@ -5,10 +5,15 @@ export interface Artist {
   nameEn: string;
   tagline: string;
   bio: string;
+  awards: string;
+  career: string;
+  exhibitions: string;
   hue: number;
   avatarUrl: string | null;
   styleTags: string[];
   artistSplitRate: number;
+  bankName: string;
+  bankAccountNumber: string;
   commission: {
     accepting: boolean;
     media: string[];
@@ -30,6 +35,8 @@ export interface Artwork {
   price: number;
   sold: boolean;
   merchEnabled: boolean;
+  editionType: "original" | "print";
+  editionInfo: string;
   hue: number;
   variant: number;
   imageUrls: string[];
@@ -99,6 +106,8 @@ export interface ShippingInfo {
   courierName: string | null;
   courierPhone: string | null;
   vehicleNumber: string | null;
+  expectedShipDate: string | null;
+  delayReason: string;
 }
 
 export interface MerchOrder extends ShippingInfo {
@@ -136,6 +145,7 @@ export interface Profile {
   phone: string;
   email: string;
   username: string;
+  address: string;
   artistId: string | null;
 }
 

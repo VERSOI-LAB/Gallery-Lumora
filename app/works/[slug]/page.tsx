@@ -67,7 +67,16 @@ export default async function WorkDetailPage({
 
         <div>
           <div className="flex items-start justify-between gap-3">
-            <h1 className="font-editorial mb-1 text-2xl italic">{artwork.title}</h1>
+            <h1 className="font-editorial mb-1 text-2xl italic">
+              {artwork.title}
+              <span className="ml-2 text-base not-italic text-ink-soft">
+                (
+                {artwork.editionType === "print"
+                  ? `판화${artwork.editionInfo ? ` · ${artwork.editionInfo}` : ""}`
+                  : "원화"}
+                )
+              </span>
+            </h1>
             <WishlistButton kind="artwork" itemId={artwork.id} />
           </div>
           <Link href={`/artists/${artist.slug}`} className="text-sm text-patina hover:underline">

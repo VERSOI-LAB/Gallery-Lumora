@@ -210,6 +210,9 @@ const MerchCanvasEditor = forwardRef<
       <p className="mt-2 text-center text-[11px] text-ink-faint">
         오브젝트를 드래그해 위치를 옮기고, 모서리를 끌어 크기·회전을 조절할 수 있습니다.
       </p>
+      <p className="mt-1 text-center text-[11px] text-red-600 italic">
+        모든 이미지의 저작권은 작가에게 있으며, 무단 복제 및 타사 굿즈 주문 제작 시 저작권법(제136조)에 따라 법적 처벌을 받을 수 있습니다.
+      </p>
     </div>
   );
 });

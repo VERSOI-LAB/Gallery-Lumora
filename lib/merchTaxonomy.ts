@@ -10,7 +10,6 @@ export const MERCH_CATEGORIES: MerchCategory[] = [
   { code: "notebook", nameKo: "노트" },
   { code: "eco-bag", nameKo: "에코백" },
   { code: "mug", nameKo: "머그컵" },
-  { code: "tumbler", nameKo: "텀블러" },
   { code: "scarf", nameKo: "스카프" },
 ];
 
