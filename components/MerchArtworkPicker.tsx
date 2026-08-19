@@ -98,12 +98,13 @@ export default function MerchArtworkPicker({
             <li key={artwork.id}>
               <button
                 type="button"
+                disabled={!artwork.merchEnabled}
                 onClick={() => {
                   onSelect(artwork);
                   setQuery("");
                   setResults([]);
                 }}
-                className="flex w-full items-center gap-3 p-3 text-left hover:bg-paper-raised"
+                className="flex w-full items-center gap-3 p-3 text-left hover:bg-paper-raised disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
               >
                 <div className="relative h-12 w-12 shrink-0 overflow-hidden">
                   <ArtworkThumbnail
@@ -114,10 +115,13 @@ export default function MerchArtworkPicker({
                     className="h-full w-full"
                   />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">{artwork.title}</p>
                   <p className="text-xs text-ink-soft">{artwork.artistName}</p>
                 </div>
+                {!artwork.merchEnabled && (
+                  <span className="shrink-0 text-[11px] font-medium text-red-600">굿즈제작불가</span>
+                )}
               </button>
             </li>
           ))}

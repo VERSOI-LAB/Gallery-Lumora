@@ -686,6 +686,11 @@ export async function updateArtworkMerchEnabled(id: string, merchEnabled: boolea
   if (error) throw error;
 }
 
+export async function updateArtworksMerchEnabled(ids: string[], merchEnabled: boolean): Promise<void> {
+  const { error } = await supabase.from("artworks").update({ merch_enabled: merchEnabled }).in("id", ids);
+  if (error) throw error;
+}
+
 export async function updateArtworkTaxStatus(
   id: string,
   taxStatus: "taxable" | "exempt"

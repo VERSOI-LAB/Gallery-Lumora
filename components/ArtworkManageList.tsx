@@ -5,11 +5,20 @@ import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import { formatKRW } from "@/lib/format";
 import { getMediumType } from "@/lib/mediumTaxonomy";
-import { updateArtworkMerchEnabled, updateArtworkTaxStatus, updateArtworksTaxStatus } from "@/lib/queries";
+import {
+  updateArtworkMerchEnabled,
+  updateArtworksMerchEnabled,
+  updateArtworkTaxStatus,
+  updateArtworksTaxStatus,
+} from "@/lib/queries";
 import type { Artwork } from "@/lib/types";
 
+function sortUnsoldFirst(artworks: Artwork[]): Artwork[] {
+  return [...artworks].sort((a, b) => Number(a.sold) - Number(b.sold));
+}
+
 export default function ArtworkManageList({ artworks: initial }: { artworks: Artwork[] }) {
-  const [artworks, setArtworks] = useState(initial);
+  const [artworks, setArtworks] = useState(() => sortUnsoldFirst(initial));
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [errorId, setErrorId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -70,6 +79,22 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
     }
   }
 
+  async function applyBulkMerchEnabled(next: boolean) {
+    if (selectedIds.length === 0) return;
+    const prevArtworks = artworks;
+    setBulkPending(true);
+    setBulkError(false);
+    setArtworks((prev) => prev.map((a) => (selectedIds.includes(a.id) ? { ...a, merchEnabled: next } : a)));
+    try {
+      await updateArtworksMerchEnabled(selectedIds, next);
+    } catch {
+      setArtworks(prevArtworks);
+      setBulkError(true);
+    } finally {
+      setBulkPending(false);
+    }
+  }
+
   if (artworks.length === 0) {
     return <p className="text-sm text-ink-faint">아직 등록한 작품이 없습니다.</p>;
   }
@@ -87,7 +112,23 @@ export default function ArtworkManageList({ artworks: initial }: { artworks: Art
           전체 선택
         </label>
         <span className="text-ink-faint">{selectedIds.length}개 선택됨</span>
-        <div className="ml-auto flex gap-2">
+        <div className="ml-auto flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            disabled={selectedIds.length === 0 || bulkPending}
+            onClick={() => applyBulkMerchEnabled(true)}
+            className="border border-line-strong px-3 py-1.5 text-ink-soft hover:text-ink disabled:opacity-40"
+          >
+            선택 항목 굿즈 허용
+          </button>
+          <button
+            type="button"
+            disabled={selectedIds.length === 0 || bulkPending}
+            onClick={() => applyBulkMerchEnabled(false)}
+            className="border border-line-strong px-3 py-1.5 text-ink-soft hover:text-ink disabled:opacity-40"
+          >
+            선택 항목 굿즈 비허용
+          </button>
           <button
             type="button"
             disabled={selectedIds.length === 0 || bulkPending}

@@ -339,7 +339,9 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
       </div>
 
       <div className="border-t border-line pt-5">
-        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">커미션 설정</p>
+        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+          커미션 설정 (1:1 주문 제작 의뢰 가능 여부)
+        </p>
 
         <label className="mb-4 flex cursor-pointer items-center gap-2 text-sm text-ink-soft">
           <input
