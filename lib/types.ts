@@ -16,6 +16,10 @@ export interface Artist {
   bankAccountNumber: string;
   businessName: string;
   businessRegNumber: string;
+  businessRegCertUrl: string;
+  businessOwnerName: string;
+  businessAddress: string;
+  businessPhone: string;
   commission: {
     accepting: boolean;
     media: string[];

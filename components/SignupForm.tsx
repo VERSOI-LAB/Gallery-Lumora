@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
-import { isUsernameAvailable, uploadMedia } from "@/lib/queries";
+import { isUsernameAvailable } from "@/lib/queries";
 import { getRequiredTermsForRole, type LegalDocument } from "@/lib/legalTerms";
 
 type Role = "individual" | "company" | "artist";
@@ -26,16 +26,7 @@ export default function SignupForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [businessRegCertFile, setBusinessRegCertFile] = useState<File | null>(null);
-  const [businessName, setBusinessName] = useState("");
-  const [businessOwnerName, setBusinessOwnerName] = useState("");
-  const [businessRegNumber, setBusinessRegNumber] = useState("");
-  const [businessAddress, setBusinessAddress] = useState("");
-  const [businessPhone, setBusinessPhone] = useState("");
-  const [settlementBankName, setSettlementBankName] = useState("");
-  const [settlementAccountNumber, setSettlementAccountNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState("");
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "available" | "taken">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -74,22 +65,6 @@ export default function SignupForm() {
       return;
     }
 
-    if (role === "artist") {
-      if (
-        !businessRegCertFile ||
-        !businessName.trim() ||
-        !businessOwnerName.trim() ||
-        !businessRegNumber.trim() ||
-        !businessAddress.trim() ||
-        !businessPhone.trim() ||
-        !settlementBankName.trim() ||
-        !settlementAccountNumber.trim()
-      ) {
-        setError("작가 회원가입은 사업자 정보와 정산계좌 입력이 모두 필수입니다.");
-        return;
-      }
-    }
-
     if (requiredTerms.some((doc) => !agreedTerms.has(doc.key))) {
       setError("회원가입을 진행하려면 모든 약관에 동의해야 합니다.");
       return;
@@ -105,44 +80,11 @@ export default function SignupForm() {
       return;
     }
 
-    let businessRegCertUrl = "";
-    if (role === "artist" && businessRegCertFile) {
-      try {
-        setUploadStatus("사업자등록증 업로드 중...");
-        const ext = businessRegCertFile.name.split(".").pop() || "jpg";
-        const path = `business-docs/${crypto.randomUUID()}.${ext}`;
-        businessRegCertUrl = await uploadMedia(path, businessRegCertFile);
-      } catch {
-        setSubmitting(false);
-        setUploadStatus("");
-        setError("사업자등록증 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
-        return;
-      }
-      setUploadStatus("");
-    }
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data:
-          role === "artist"
-            ? {
-                role,
-                name,
-                phone,
-                address,
-                username: username.trim(),
-                businessRegCertUrl,
-                businessName: businessName.trim(),
-                businessOwnerName: businessOwnerName.trim(),
-                businessRegNumber: businessRegNumber.trim(),
-                businessAddress: businessAddress.trim(),
-                businessPhone: businessPhone.trim(),
-                settlementBankName: settlementBankName.trim(),
-                settlementAccountNumber: settlementAccountNumber.trim(),
-              }
-            : { role, name, phone, address, username: username.trim() },
+        data: { role, name, phone, address, username: username.trim() },
       },
     });
     setSubmitting(false);
@@ -204,133 +146,12 @@ export default function SignupForm() {
           </div>
           {role === "artist" && (
             <p className="mt-2 text-xs text-ink-faint">
-              작가로 가입하면 Contact 페이지에서 작가/작품 등록을 신청할 수 있습니다.
+              작가로 가입하면 Contact 페이지에서 작가/작품 등록을 신청할 수 있습니다. 승인 후
+              스튜디오 프로필에서 사업자 정보(*필수)를 등록해주세요.
             </p>
           )}
         </Field>
 
-        {role === "artist" && (
-          <div className="space-y-5 border border-line-strong bg-paper-raised p-4">
-            <p className="text-[11px] tracking-wide text-ink-faint uppercase">
-              사업자 정보 (작가 회원 필수)
-            </p>
-            <Field label="사업자등록증">
-              <label className="flex h-24 cursor-pointer flex-col items-center justify-center border border-dashed border-line-strong text-center text-sm text-ink-faint">
-                <input
-                  type="file"
-                  accept="image/*,application/pdf"
-                  className="hidden"
-                  onChange={(e) => setBusinessRegCertFile(e.target.files?.[0] ?? null)}
-                />
-                {businessRegCertFile ? businessRegCertFile.name : "사업자등록증 파일을 클릭하여 업로드"}
-              </label>
-            </Field>
-            <Field label="사업자명">
-              <input
-                required
-                type="text"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="대표자명">
-              <input
-                required
-                type="text"
-                value={businessOwnerName}
-                onChange={(e) => setBusinessOwnerName(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="사업자등록번호">
-              <input
-                required
-                type="text"
-                placeholder="000-00-00000"
-                value={businessRegNumber}
-                onChange={(e) => setBusinessRegNumber(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="사업장 주소">
-              <input
-                required
-                type="text"
-                value={businessAddress}
-                onChange={(e) => setBusinessAddress(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="사업자 연락처">
-              <input
-                required
-                type="tel"
-                placeholder="010-0000-0000"
-                value={businessPhone}
-                onChange={(e) => setBusinessPhone(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="정산계좌 은행명">
-              <input
-                required
-                type="text"
-                value={settlementBankName}
-                onChange={(e) => setSettlementBankName(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-            <Field label="정산계좌 계좌번호">
-              <input
-                required
-                type="text"
-                value={settlementAccountNumber}
-                onChange={(e) => setSettlementAccountNumber(e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
-              />
-            </Field>
-          </div>
-        )}
-
-        <Field label={role === "company" ? "기업명 / 담당자명" : "이름"}>
-          <input
-            required
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
-        <Field label="연락처">
-          <input
-            required
-            type="tel"
-            placeholder="010-0000-0000"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
-        <Field label="주소">
-          <input
-            required
-            type="text"
-            placeholder="배송지로 사용할 주소를 입력해주세요"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
-        <Field label="이메일">
-          <input
-            required
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
         <Field label="아이디">
           <input
             required
@@ -372,6 +193,45 @@ export default function SignupForm() {
           />
         </Field>
 
+        <Field label={role === "company" ? "기업명 / 담당자명" : "이름"}>
+          <input
+            required
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <Field label="연락처">
+          <input
+            required
+            type="tel"
+            placeholder="010-0000-0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <Field label="주소">
+          <input
+            required
+            type="text"
+            placeholder="배송지로 사용할 주소를 입력해주세요"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+        <Field label="이메일">
+          <input
+            required
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          />
+        </Field>
+
         <div className="space-y-2 border border-line-strong bg-paper-raised p-4">
           <p className="mb-1 text-[11px] tracking-wide text-ink-faint uppercase">약관 동의 (필수)</p>
           {requiredTerms.map((doc) => (
@@ -404,7 +264,7 @@ export default function SignupForm() {
         </div>
 
         <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
-          {uploadStatus || (submitting ? "가입 처리 중..." : "회원가입")}
+          {submitting ? "가입 처리 중..." : "회원가입"}
         </button>
         {error && <p className="text-xs text-red-600">{error}</p>}
       </form>

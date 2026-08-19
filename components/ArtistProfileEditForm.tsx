@@ -25,6 +25,11 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
   const [bankAccountNumber, setBankAccountNumber] = useState(artist.bankAccountNumber);
   const [businessName, setBusinessName] = useState(artist.businessName);
   const [businessRegNumber, setBusinessRegNumber] = useState(artist.businessRegNumber);
+  const [businessRegCertUrl, setBusinessRegCertUrl] = useState(artist.businessRegCertUrl);
+  const [businessRegCertUploading, setBusinessRegCertUploading] = useState(false);
+  const [businessOwnerName, setBusinessOwnerName] = useState(artist.businessOwnerName);
+  const [businessAddress, setBusinessAddress] = useState(artist.businessAddress);
+  const [businessPhone, setBusinessPhone] = useState(artist.businessPhone);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,11 +52,40 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
     }
   }
 
+  async function handleBusinessRegCertUpload(file: File) {
+    setBusinessRegCertUploading(true);
+    setError(null);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const url = await uploadMedia(`business-docs/${artist.id}/${crypto.randomUUID()}.${ext}`, file);
+      setBusinessRegCertUrl(url);
+    } catch {
+      setError("사업자등록증 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setBusinessRegCertUploading(false);
+    }
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setSaved(false);
     setError(null);
+
+    if (
+      !businessRegCertUrl ||
+      !businessName.trim() ||
+      !businessOwnerName.trim() ||
+      !businessRegNumber.trim() ||
+      !businessAddress.trim() ||
+      !businessPhone.trim() ||
+      !bankName.trim() ||
+      !bankAccountNumber.trim()
+    ) {
+      setError("사업자정보(*필수) 항목을 모두 입력해야 저장할 수 있습니다.");
+      return;
+    }
+
+    setSubmitting(true);
     const input: ArtistInput = {
       slug: artist.slug,
       name: artist.name,
@@ -67,6 +101,10 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
       bankAccountNumber,
       businessName,
       businessRegNumber,
+      businessRegCertUrl,
+      businessOwnerName,
+      businessAddress,
+      businessPhone,
       avatarUrl,
       styleTags: styleTags
         .split(",")
@@ -202,14 +240,47 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
 
       <div className="border-t border-line pt-5">
         <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
-          사업자 정보 (판매자 표기에 사용)
+          사업자정보 (*필수)
         </p>
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="사업자명 (미입력 시 작가명으로 표기)">
+        <p className="mb-4 text-xs text-ink-faint">
+          작품 상세 페이지, 결제창, 영수증에 판매자 정보로 표시되며 정산에 사용됩니다. 모두
+          입력해야 프로필이 저장됩니다.
+        </p>
+
+        <Field label="사업자등록증">
+          <label className="flex h-24 cursor-pointer flex-col items-center justify-center border border-dashed border-line-strong text-center text-sm text-ink-faint">
+            <input
+              type="file"
+              accept="image/*,application/pdf"
+              className="hidden"
+              disabled={businessRegCertUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleBusinessRegCertUpload(file);
+              }}
+            />
+            {businessRegCertUploading
+              ? "업로드 중..."
+              : businessRegCertUrl
+                ? "사업자등록증 업로드됨 (변경하려면 클릭)"
+                : "사업자등록증 파일을 클릭하여 업로드"}
+          </label>
+        </Field>
+
+        <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Field label="사업자명">
             <input
               type="text"
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="대표자명">
+            <input
+              type="text"
+              value={businessOwnerName}
+              onChange={(e) => setBusinessOwnerName(e.target.value)}
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
@@ -222,14 +293,28 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
+          <Field label="사업장 주소">
+            <input
+              type="text"
+              value={businessAddress}
+              onChange={(e) => setBusinessAddress(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="사업자 연락처">
+            <input
+              type="tel"
+              placeholder="010-0000-0000"
+              value={businessPhone}
+              onChange={(e) => setBusinessPhone(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
         </div>
-        <p className="mt-2 text-xs text-ink-faint">
-          작품 상세 페이지, 결제창, 영수증에 판매자 정보로 표시됩니다.
-        </p>
-      </div>
 
-      <div className="border-t border-line pt-5">
-        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">정산계좌</p>
+        <p className="mt-5 mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+          정산계좌
+        </p>
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Field label="은행">
             <input

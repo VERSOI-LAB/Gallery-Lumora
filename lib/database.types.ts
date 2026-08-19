@@ -112,7 +112,11 @@ export type Database = {
           bank_account_number: string
           bank_name: string
           bio: string
+          business_address: string
           business_name: string
+          business_owner_name: string
+          business_phone: string
+          business_reg_cert_url: string
           business_reg_number: string
           career: string
           commission_accepting: boolean
@@ -141,7 +145,11 @@ export type Database = {
           bank_account_number?: string
           bank_name?: string
           bio?: string
+          business_address?: string
           business_name?: string
+          business_owner_name?: string
+          business_phone?: string
+          business_reg_cert_url?: string
           business_reg_number?: string
           career?: string
           commission_accepting?: boolean
@@ -170,7 +178,11 @@ export type Database = {
           bank_account_number?: string
           bank_name?: string
           bio?: string
+          business_address?: string
           business_name?: string
+          business_owner_name?: string
+          business_phone?: string
+          business_reg_cert_url?: string
           business_reg_number?: string
           career?: string
           commission_accepting?: boolean

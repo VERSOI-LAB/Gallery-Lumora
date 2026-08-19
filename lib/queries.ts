@@ -88,6 +88,10 @@ export function toArtist(row: ArtistRow): Artist {
     bankAccountNumber: row.bank_account_number,
     businessName: row.business_name,
     businessRegNumber: row.business_reg_number,
+    businessRegCertUrl: row.business_reg_cert_url,
+    businessOwnerName: row.business_owner_name,
+    businessAddress: row.business_address,
+    businessPhone: row.business_phone,
     commission: {
       accepting: row.commission_accepting,
       media: row.commission_media,
@@ -481,6 +485,10 @@ export interface ArtistInput {
   bankAccountNumber: string;
   businessName: string;
   businessRegNumber: string;
+  businessRegCertUrl: string;
+  businessOwnerName: string;
+  businessAddress: string;
+  businessPhone: string;
   commissionAccepting: boolean;
   commissionMedia: string[];
   commissionLeadTime: string;
@@ -540,6 +548,10 @@ export async function createArtist(
       bank_account_number: input.bankAccountNumber,
       business_name: input.businessName,
       business_reg_number: input.businessRegNumber,
+      business_reg_cert_url: input.businessRegCertUrl,
+      business_owner_name: input.businessOwnerName,
+      business_address: input.businessAddress,
+      business_phone: input.businessPhone,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -575,6 +587,10 @@ export async function updateArtist(
       bank_account_number: input.bankAccountNumber,
       business_name: input.businessName,
       business_reg_number: input.businessRegNumber,
+      business_reg_cert_url: input.businessRegCertUrl,
+      business_owner_name: input.businessOwnerName,
+      business_address: input.businessAddress,
+      business_phone: input.businessPhone,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
