@@ -90,17 +90,27 @@ export default function ArtistProfileTabs({
               { label: "가능 매체", value: artist.commission.media.map(getMediumTypeLabel).join(" · ") },
               { label: "평균 제작 기간", value: artist.commission.leadTime },
               { label: "커미션 가격대", value: artist.commission.priceRange },
-            ].map((row, i) => (
-              <div
-                key={row.label}
-                className={`flex flex-col gap-1 py-3 sm:flex-row sm:gap-6 ${i > 0 ? "border-t border-line" : ""}`}
-              >
-                <dt className="w-full flex-none text-xs tracking-wide text-ink-faint uppercase sm:w-36">
-                  {row.label}
-                </dt>
-                <dd className="text-sm font-semibold">{row.value}</dd>
-              </div>
-            ))}
+              { label: "수정 횟수 (시안에 대해 요청할 수 있는 수정 횟수)", value: artist.commission.revisionCount },
+              { label: "시안 (최종 작업 전 작가가 보여주는 초안/디자인)", value: artist.commission.draftProcess },
+              { label: "최종 납품 형태 (완성작을 전달받는 방식)", value: artist.commission.deliveryFormat },
+              { label: "저작권 이용범위 (완성작을 사용할 수 있는 범위)", value: artist.commission.copyrightScope },
+              {
+                label: "청약철회 제한 여부 (주문 후 법적으로 취소가 제한될 수 있는지)",
+                value: artist.commission.withdrawalPolicy,
+              },
+            ]
+              .filter((row) => row.value)
+              .map((row, i) => (
+                <div
+                  key={row.label}
+                  className={`flex flex-col gap-1 py-3 sm:flex-row sm:gap-6 ${i > 0 ? "border-t border-line" : ""}`}
+                >
+                  <dt className="w-full flex-none text-xs tracking-wide text-ink-faint uppercase sm:w-36">
+                    {row.label}
+                  </dt>
+                  <dd className="text-sm font-semibold">{row.value}</dd>
+                </div>
+              ))}
           </dl>
           <Link href={`/artists/${artist.slug}/commission`} className={buttonClasses("primary")}>
             {artist.commission.accepting ? "커미션 의뢰하기" : "대기 등록하기"}

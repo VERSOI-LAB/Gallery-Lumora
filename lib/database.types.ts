@@ -112,11 +112,18 @@ export type Database = {
           bank_account_number: string
           bank_name: string
           bio: string
+          business_name: string
+          business_reg_number: string
           career: string
           commission_accepting: boolean
+          commission_copyright_scope: string
+          commission_delivery_format: string
+          commission_draft_process: string
           commission_lead_time: string
           commission_media: string[]
           commission_price_range: string
+          commission_revision_count: string
+          commission_withdrawal_policy: string
           created_at: string
           exhibitions: string
           hue: number
@@ -134,11 +141,18 @@ export type Database = {
           bank_account_number?: string
           bank_name?: string
           bio?: string
+          business_name?: string
+          business_reg_number?: string
           career?: string
           commission_accepting?: boolean
+          commission_copyright_scope?: string
+          commission_delivery_format?: string
+          commission_draft_process?: string
           commission_lead_time?: string
           commission_media?: string[]
           commission_price_range?: string
+          commission_revision_count?: string
+          commission_withdrawal_policy?: string
           created_at?: string
           exhibitions?: string
           hue?: number
@@ -156,11 +170,18 @@ export type Database = {
           bank_account_number?: string
           bank_name?: string
           bio?: string
+          business_name?: string
+          business_reg_number?: string
           career?: string
           commission_accepting?: boolean
+          commission_copyright_scope?: string
+          commission_delivery_format?: string
+          commission_draft_process?: string
           commission_lead_time?: string
           commission_media?: string[]
           commission_price_range?: string
+          commission_revision_count?: string
+          commission_withdrawal_policy?: string
           created_at?: string
           exhibitions?: string
           hue?: number
@@ -190,6 +211,7 @@ export type Database = {
           size: string
           slug: string
           sold: boolean
+          tax_status: string
           title: string
           variant: number
           view_count: number
@@ -211,6 +233,7 @@ export type Database = {
           size: string
           slug: string
           sold?: boolean
+          tax_status?: string
           title: string
           variant?: number
           view_count?: number
@@ -232,6 +255,7 @@ export type Database = {
           size?: string
           slug?: string
           sold?: boolean
+          tax_status?: string
           title?: string
           variant?: number
           view_count?: number
@@ -830,34 +854,58 @@ export type Database = {
         Row: {
           address: string
           artist_id: string | null
+          business_address: string
+          business_name: string
+          business_owner_name: string
+          business_phone: string
+          business_reg_cert_url: string
+          business_reg_number: string
           created_at: string
           email: string
           id: string
           name: string
           phone: string
           role: string
+          settlement_account_number: string
+          settlement_bank_name: string
           username: string
         }
         Insert: {
           address?: string
           artist_id?: string | null
+          business_address?: string
+          business_name?: string
+          business_owner_name?: string
+          business_phone?: string
+          business_reg_cert_url?: string
+          business_reg_number?: string
           created_at?: string
           email?: string
           id: string
           name?: string
           phone?: string
           role?: string
+          settlement_account_number?: string
+          settlement_bank_name?: string
           username?: string
         }
         Update: {
           address?: string
           artist_id?: string | null
+          business_address?: string
+          business_name?: string
+          business_owner_name?: string
+          business_phone?: string
+          business_reg_cert_url?: string
+          business_reg_number?: string
           created_at?: string
           email?: string
           id?: string
           name?: string
           phone?: string
           role?: string
+          settlement_account_number?: string
+          settlement_bank_name?: string
           username?: string
         }
         Relationships: [
@@ -1007,6 +1055,7 @@ export type Database = {
           shipping_address: string
           shipping_method: string
           status: string
+          tax_status: string
           tracking_carrier: string
           tracking_number: string
           variant: number

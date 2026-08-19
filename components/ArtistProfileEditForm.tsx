@@ -23,6 +23,8 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
   const [commissionPriceRange, setCommissionPriceRange] = useState(artist.commission.priceRange);
   const [bankName, setBankName] = useState(artist.bankName);
   const [bankAccountNumber, setBankAccountNumber] = useState(artist.bankAccountNumber);
+  const [businessName, setBusinessName] = useState(artist.businessName);
+  const [businessRegNumber, setBusinessRegNumber] = useState(artist.businessRegNumber);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,6 +65,8 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
       artistSplitRate: artist.artistSplitRate,
       bankName,
       bankAccountNumber,
+      businessName,
+      businessRegNumber,
       avatarUrl,
       styleTags: styleTags
         .split(",")
@@ -194,6 +198,34 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
           작가 {Math.round(artist.artistSplitRate * 100)}% / 갤러리 {Math.round((1 - artist.artistSplitRate) * 100)}%
         </p>
         <p className="mt-1 text-xs text-ink-faint">운영팀이 설정하는 값으로, 작품 판매 정산에 적용됩니다.</p>
+      </div>
+
+      <div className="border-t border-line pt-5">
+        <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
+          사업자 정보 (판매자 표기에 사용)
+        </p>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+          <Field label="사업자명 (미입력 시 작가명으로 표기)">
+            <input
+              type="text"
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+          <Field label="사업자등록번호">
+            <input
+              type="text"
+              placeholder="000-00-00000"
+              value={businessRegNumber}
+              onChange={(e) => setBusinessRegNumber(e.target.value)}
+              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            />
+          </Field>
+        </div>
+        <p className="mt-2 text-xs text-ink-faint">
+          작품 상세 페이지, 결제창, 영수증에 판매자 정보로 표시됩니다.
+        </p>
       </div>
 
       <div className="border-t border-line pt-5">

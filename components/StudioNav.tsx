@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 const ITEMS = [
   { href: "/studio/works", label: "작품 관리" },
-  { href: "/studio/inquiries", label: "커미션 요청함", badgeKey: "inquiries" as const },
+  { href: "/studio/inquiries", label: "커미션 관리", badgeKey: "inquiries" as const },
   { href: "/studio/sales", label: "매출·정산" },
   { href: "/studio/profile", label: "프로필" },
 ];

@@ -11,7 +11,7 @@ export default async function StudioInquiriesPage() {
 
   return (
     <div>
-      <h1 className="mb-6 font-display text-2xl">커미션 요청함</h1>
+      <h1 className="mb-6 font-display text-2xl">커미션 관리</h1>
       <CommissionAvailabilityForm artist={artist} />
       <StudioInquiriesBrowser inquiries={inquiries} />
     </div>

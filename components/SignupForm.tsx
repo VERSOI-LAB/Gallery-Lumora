@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
-import { isUsernameAvailable } from "@/lib/queries";
+import { isUsernameAvailable, uploadMedia } from "@/lib/queries";
+import { getRequiredTermsForRole, type LegalDocument } from "@/lib/legalTerms";
 
 type Role = "individual" | "company" | "artist";
 
@@ -25,11 +26,24 @@ export default function SignupForm() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [businessRegCertFile, setBusinessRegCertFile] = useState<File | null>(null);
+  const [businessName, setBusinessName] = useState("");
+  const [businessOwnerName, setBusinessOwnerName] = useState("");
+  const [businessRegNumber, setBusinessRegNumber] = useState("");
+  const [businessAddress, setBusinessAddress] = useState("");
+  const [businessPhone, setBusinessPhone] = useState("");
+  const [settlementBankName, setSettlementBankName] = useState("");
+  const [settlementAccountNumber, setSettlementAccountNumber] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState("");
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "available" | "taken">("idle");
   const [error, setError] = useState<string | null>(null);
   const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const [agreedTerms, setAgreedTerms] = useState<Set<string>>(new Set());
+  const [openTermsKey, setOpenTermsKey] = useState<string | null>(null);
+
+  const requiredTerms = getRequiredTermsForRole(role);
 
   async function handleUsernameBlur() {
     if (!username.trim()) {
@@ -60,6 +74,27 @@ export default function SignupForm() {
       return;
     }
 
+    if (role === "artist") {
+      if (
+        !businessRegCertFile ||
+        !businessName.trim() ||
+        !businessOwnerName.trim() ||
+        !businessRegNumber.trim() ||
+        !businessAddress.trim() ||
+        !businessPhone.trim() ||
+        !settlementBankName.trim() ||
+        !settlementAccountNumber.trim()
+      ) {
+        setError("작가 회원가입은 사업자 정보와 정산계좌 입력이 모두 필수입니다.");
+        return;
+      }
+    }
+
+    if (requiredTerms.some((doc) => !agreedTerms.has(doc.key))) {
+      setError("회원가입을 진행하려면 모든 약관에 동의해야 합니다.");
+      return;
+    }
+
     setSubmitting(true);
 
     const available = await isUsernameAvailable(username.trim()).catch(() => true);
@@ -70,10 +105,45 @@ export default function SignupForm() {
       return;
     }
 
+    let businessRegCertUrl = "";
+    if (role === "artist" && businessRegCertFile) {
+      try {
+        setUploadStatus("사업자등록증 업로드 중...");
+        const ext = businessRegCertFile.name.split(".").pop() || "jpg";
+        const path = `business-docs/${crypto.randomUUID()}.${ext}`;
+        businessRegCertUrl = await uploadMedia(path, businessRegCertFile);
+      } catch {
+        setSubmitting(false);
+        setUploadStatus("");
+        setError("사업자등록증 업로드에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+      setUploadStatus("");
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { role, name, phone, address, username: username.trim() } },
+      options: {
+        data:
+          role === "artist"
+            ? {
+                role,
+                name,
+                phone,
+                address,
+                username: username.trim(),
+                businessRegCertUrl,
+                businessName: businessName.trim(),
+                businessOwnerName: businessOwnerName.trim(),
+                businessRegNumber: businessRegNumber.trim(),
+                businessAddress: businessAddress.trim(),
+                businessPhone: businessPhone.trim(),
+                settlementBankName: settlementBankName.trim(),
+                settlementAccountNumber: settlementAccountNumber.trim(),
+              }
+            : { role, name, phone, address, username: username.trim() },
+      },
     });
     setSubmitting(false);
 
@@ -92,15 +162,6 @@ export default function SignupForm() {
     } else {
       setNeedsConfirmation(true);
     }
-  }
-
-  async function handleOAuthSignup(provider: "kakao" | "google") {
-    setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setError("소셜 회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
   }
 
   if (needsConfirmation) {
@@ -122,30 +183,6 @@ export default function SignupForm() {
     <div className="mx-auto max-w-sm px-5 py-16 md:px-0">
       <h1 className="mb-2 font-display text-2xl">회원가입</h1>
       <p className="mb-8 text-sm text-ink-faint">Gallery Lumora의 새 계정을 만드세요.</p>
-
-      <p className="mb-3 text-[11px] tracking-wide text-ink-soft uppercase">간편 회원가입</p>
-      <div className="mb-8 space-y-2">
-        <button
-          type="button"
-          onClick={() => handleOAuthSignup("kakao")}
-          className="flex h-10 w-full items-center justify-center gap-2 bg-[#FEE500] text-sm font-medium text-[#191600]"
-        >
-          카카오로 시작하기
-        </button>
-        <button
-          type="button"
-          onClick={() => handleOAuthSignup("google")}
-          className="flex h-10 w-full items-center justify-center gap-2 border border-line-strong bg-paper text-sm text-ink"
-        >
-          Google로 시작하기
-        </button>
-      </div>
-
-      <div className="mb-8 flex items-center gap-3 text-[11px] text-ink-faint">
-        <span className="h-px flex-1 bg-line" />
-        또는 이메일로 가입
-        <span className="h-px flex-1 bg-line" />
-      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <Field label="회원 구분">
@@ -171,6 +208,90 @@ export default function SignupForm() {
             </p>
           )}
         </Field>
+
+        {role === "artist" && (
+          <div className="space-y-5 border border-line-strong bg-paper-raised p-4">
+            <p className="text-[11px] tracking-wide text-ink-faint uppercase">
+              사업자 정보 (작가 회원 필수)
+            </p>
+            <Field label="사업자등록증">
+              <label className="flex h-24 cursor-pointer flex-col items-center justify-center border border-dashed border-line-strong text-center text-sm text-ink-faint">
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  className="hidden"
+                  onChange={(e) => setBusinessRegCertFile(e.target.files?.[0] ?? null)}
+                />
+                {businessRegCertFile ? businessRegCertFile.name : "사업자등록증 파일을 클릭하여 업로드"}
+              </label>
+            </Field>
+            <Field label="사업자명">
+              <input
+                required
+                type="text"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="대표자명">
+              <input
+                required
+                type="text"
+                value={businessOwnerName}
+                onChange={(e) => setBusinessOwnerName(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="사업자등록번호">
+              <input
+                required
+                type="text"
+                placeholder="000-00-00000"
+                value={businessRegNumber}
+                onChange={(e) => setBusinessRegNumber(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="사업장 주소">
+              <input
+                required
+                type="text"
+                value={businessAddress}
+                onChange={(e) => setBusinessAddress(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="사업자 연락처">
+              <input
+                required
+                type="tel"
+                placeholder="010-0000-0000"
+                value={businessPhone}
+                onChange={(e) => setBusinessPhone(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="정산계좌 은행명">
+              <input
+                required
+                type="text"
+                value={settlementBankName}
+                onChange={(e) => setSettlementBankName(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="정산계좌 계좌번호">
+              <input
+                required
+                type="text"
+                value={settlementAccountNumber}
+                onChange={(e) => setSettlementAccountNumber(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper px-3 text-sm outline-patina"
+              />
+            </Field>
+          </div>
+        )}
 
         <Field label={role === "company" ? "기업명 / 담당자명" : "이름"}>
           <input
@@ -251,11 +372,53 @@ export default function SignupForm() {
           />
         </Field>
 
+        <div className="space-y-2 border border-line-strong bg-paper-raised p-4">
+          <p className="mb-1 text-[11px] tracking-wide text-ink-faint uppercase">약관 동의 (필수)</p>
+          {requiredTerms.map((doc) => (
+            <div key={doc.key} className="flex items-center gap-2 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={agreedTerms.has(doc.key)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setOpenTermsKey(doc.key);
+                }}
+                readOnly
+                className="accent-patina"
+              />
+              <button
+                type="button"
+                onClick={() => setOpenTermsKey(doc.key)}
+                className="flex-1 text-left hover:underline"
+              >
+                [필수] {doc.title}
+              </button>
+              <span className="text-xs text-ink-faint">
+                {agreedTerms.has(doc.key) ? "동의완료" : "약관보기"}
+              </span>
+            </div>
+          ))}
+          <p className="pt-1 text-[11px] text-ink-faint">
+            각 약관을 끝까지 읽고 확인 버튼을 눌러야 동의로 처리됩니다.
+          </p>
+        </div>
+
         <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
-          {submitting ? "가입 처리 중..." : "회원가입"}
+          {uploadStatus || (submitting ? "가입 처리 중..." : "회원가입")}
         </button>
         {error && <p className="text-xs text-red-600">{error}</p>}
       </form>
+
+      {openTermsKey && (
+        <TermsModal
+          doc={requiredTerms.find((d) => d.key === openTermsKey)!}
+          onConfirm={() => {
+            setAgreedTerms((prev) => new Set(prev).add(openTermsKey));
+            setOpenTermsKey(null);
+          }}
+          onClose={() => setOpenTermsKey(null)}
+        />
+      )}
 
       <p className="mt-6 text-center text-xs text-ink-faint">
         이미 계정이 있으신가요?{" "}
@@ -273,5 +436,83 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
       <span className="mb-2 block text-[11px] tracking-wide text-ink-soft uppercase">{label}</span>
       {children}
     </label>
+  );
+}
+
+function TermsModal({
+  doc,
+  onConfirm,
+  onClose,
+}: {
+  doc: LegalDocument;
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const [scrolledToBottom, setScrolledToBottom] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = contentRef.current;
+    if (el && el.scrollHeight <= el.clientHeight + 8) {
+      setScrolledToBottom(true);
+    }
+  }, []);
+
+  function handleScroll() {
+    const el = contentRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 8) {
+      setScrolledToBottom(true);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+      <div className="flex max-h-[85vh] w-full max-w-lg flex-col bg-paper">
+        <div className="flex items-center justify-between border-b border-line px-5 py-4">
+          <h2 className="font-display text-lg">{doc.title}</h2>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="닫기"
+            className="text-ink-faint hover:text-ink"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div
+          ref={contentRef}
+          onScroll={handleScroll}
+          className="flex-1 overflow-y-auto px-5 py-4 text-sm leading-6 text-ink-soft"
+        >
+          <p className="mb-4 text-xs text-ink-faint">{doc.subtitle}</p>
+          {doc.intro && <p className="mb-4 whitespace-pre-line">{doc.intro}</p>}
+          {doc.articles.map((article) => (
+            <div key={article.heading} className="mb-4">
+              <p className="mb-1 font-semibold text-ink">{article.heading}</p>
+              <p className="whitespace-pre-line">{article.body}</p>
+            </div>
+          ))}
+          <p className="pt-2 text-center text-xs text-ink-faint">— 끝 —</p>
+        </div>
+
+        <div className="border-t border-line px-5 py-4">
+          {!scrolledToBottom && (
+            <p className="mb-2 text-xs text-ink-faint">
+              약관을 끝까지 스크롤하면 확인 버튼을 누를 수 있습니다.
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={!scrolledToBottom}
+            onClick={onConfirm}
+            className={`w-full ${buttonClasses("primary")} disabled:opacity-40`}
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

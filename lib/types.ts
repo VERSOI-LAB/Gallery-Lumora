@@ -14,11 +14,18 @@ export interface Artist {
   artistSplitRate: number;
   bankName: string;
   bankAccountNumber: string;
+  businessName: string;
+  businessRegNumber: string;
   commission: {
     accepting: boolean;
     media: string[];
     leadTime: string;
     priceRange: string;
+    revisionCount: string;
+    draftProcess: string;
+    deliveryFormat: string;
+    copyrightScope: string;
+    withdrawalPolicy: string;
   };
 }
 
@@ -42,6 +49,7 @@ export interface Artwork {
   imageUrls: string[];
   viewCount: number;
   exhibitionFeaturedAt: string | null;
+  taxStatus: "taxable" | "exempt";
 }
 
 export interface JournalPost {
@@ -147,6 +155,14 @@ export interface Profile {
   username: string;
   address: string;
   artistId: string | null;
+  businessRegCertUrl: string;
+  businessName: string;
+  businessOwnerName: string;
+  businessRegNumber: string;
+  businessAddress: string;
+  businessPhone: string;
+  settlementBankName: string;
+  settlementAccountNumber: string;
 }
 
 export interface CommissionInquiry {
@@ -225,6 +241,7 @@ export interface ArtworkOrder extends ShippingInfo {
   artistPayoutAmount: number | null;
   status: OrderStatus;
   createdAt: string;
+  taxStatus: "taxable" | "exempt";
 }
 
 export interface Customer {

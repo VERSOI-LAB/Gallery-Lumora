@@ -68,6 +68,8 @@ export default function AdminArtistForm({ artist }: { artist?: Artist }) {
       artistSplitRate,
       bankName: artist?.bankName ?? "",
       bankAccountNumber: artist?.bankAccountNumber ?? "",
+      businessName: artist?.businessName ?? "",
+      businessRegNumber: artist?.businessRegNumber ?? "",
       commissionAccepting,
       commissionMedia,
       commissionLeadTime,

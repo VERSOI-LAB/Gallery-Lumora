@@ -42,7 +42,14 @@ export type MerchProductWithRelationsRow = MerchProductRow & {
   artists: { slug: string; name: string } | null;
 };
 type OrderWithArtworkRow = OrderRow & {
-  artworks: { title: string; image_urls: string[]; hue: number; variant: number; artists: { name: string } | null } | null;
+  artworks: {
+    title: string;
+    image_urls: string[];
+    hue: number;
+    variant: number;
+    tax_status: string;
+    artists: { name: string } | null;
+  } | null;
 };
 type MerchOrderWithProductRow = MerchOrderRow & {
   merch_products: {
@@ -79,11 +86,18 @@ export function toArtist(row: ArtistRow): Artist {
     artistSplitRate: row.artist_split_rate,
     bankName: row.bank_name,
     bankAccountNumber: row.bank_account_number,
+    businessName: row.business_name,
+    businessRegNumber: row.business_reg_number,
     commission: {
       accepting: row.commission_accepting,
       media: row.commission_media,
       leadTime: row.commission_lead_time,
       priceRange: row.commission_price_range,
+      revisionCount: row.commission_revision_count,
+      draftProcess: row.commission_draft_process,
+      deliveryFormat: row.commission_delivery_format,
+      copyrightScope: row.commission_copyright_scope,
+      withdrawalPolicy: row.commission_withdrawal_policy,
     },
   };
 }
@@ -109,6 +123,7 @@ export function toArtwork(row: ArtworkWithArtistRow): Artwork {
     imageUrls: row.image_urls,
     viewCount: row.view_count,
     exhibitionFeaturedAt: row.exhibition_featured_at,
+    taxStatus: row.tax_status === "exempt" ? "exempt" : "taxable",
   };
 }
 
@@ -195,6 +210,14 @@ function toProfile(row: ProfileRow): Profile {
     username: row.username,
     address: row.address,
     artistId: row.artist_id,
+    businessRegCertUrl: row.business_reg_cert_url,
+    businessName: row.business_name,
+    businessOwnerName: row.business_owner_name,
+    businessRegNumber: row.business_reg_number,
+    businessAddress: row.business_address,
+    businessPhone: row.business_phone,
+    settlementBankName: row.settlement_bank_name,
+    settlementAccountNumber: row.settlement_account_number,
   };
 }
 
@@ -275,6 +298,7 @@ function toArtworkOrder(row: OrderWithArtworkRow): ArtworkOrder {
     artistPayoutAmount: row.artist_payout_amount,
     status: row.status as ArtworkOrder["status"],
     createdAt: row.created_at,
+    taxStatus: row.artworks?.tax_status === "exempt" ? "exempt" : "taxable",
     ...toShippingInfo(row),
   };
 }
@@ -388,6 +412,7 @@ function toArtworkOrderByPhone(row: ArtworkOrderByPhoneRow): ArtworkOrder {
     vehicleNumber: row.vehicle_number,
     expectedShipDate: null,
     delayReason: "",
+    taxStatus: row.tax_status === "exempt" ? "exempt" : "taxable",
   };
 }
 
@@ -454,6 +479,8 @@ export interface ArtistInput {
   artistSplitRate: number;
   bankName: string;
   bankAccountNumber: string;
+  businessName: string;
+  businessRegNumber: string;
   commissionAccepting: boolean;
   commissionMedia: string[];
   commissionLeadTime: string;
@@ -462,7 +489,16 @@ export interface ArtistInput {
 
 export async function updateArtistCommissionSettings(
   id: string,
-  input: { commissionAccepting: boolean; commissionPriceRange: string },
+  input: {
+    commissionAccepting: boolean;
+    commissionPriceRange: string;
+    commissionLeadTime: string;
+    commissionRevisionCount: string;
+    commissionDraftProcess: string;
+    commissionDeliveryFormat: string;
+    commissionCopyrightScope: string;
+    commissionWithdrawalPolicy: string;
+  },
   client: SupabaseClient<Database> = supabase
 ): Promise<void> {
   const { error } = await client
@@ -470,6 +506,12 @@ export async function updateArtistCommissionSettings(
     .update({
       commission_accepting: input.commissionAccepting,
       commission_price_range: input.commissionPriceRange,
+      commission_lead_time: input.commissionLeadTime,
+      commission_revision_count: input.commissionRevisionCount,
+      commission_draft_process: input.commissionDraftProcess,
+      commission_delivery_format: input.commissionDeliveryFormat,
+      commission_copyright_scope: input.commissionCopyrightScope,
+      commission_withdrawal_policy: input.commissionWithdrawalPolicy,
     })
     .eq("id", id);
   if (error) throw error;
@@ -496,6 +538,8 @@ export async function createArtist(
       artist_split_rate: input.artistSplitRate,
       bank_name: input.bankName,
       bank_account_number: input.bankAccountNumber,
+      business_name: input.businessName,
+      business_reg_number: input.businessRegNumber,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -529,6 +573,8 @@ export async function updateArtist(
       artist_split_rate: input.artistSplitRate,
       bank_name: input.bankName,
       bank_account_number: input.bankAccountNumber,
+      business_name: input.businessName,
+      business_reg_number: input.businessRegNumber,
       commission_accepting: input.commissionAccepting,
       commission_media: input.commissionMedia,
       commission_lead_time: input.commissionLeadTime,
@@ -621,6 +667,22 @@ export async function getArtworksByArtistId(artistId: string): Promise<Artwork[]
 
 export async function updateArtworkMerchEnabled(id: string, merchEnabled: boolean): Promise<void> {
   const { error } = await supabase.from("artworks").update({ merch_enabled: merchEnabled }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateArtworkTaxStatus(
+  id: string,
+  taxStatus: "taxable" | "exempt"
+): Promise<void> {
+  const { error } = await supabase.from("artworks").update({ tax_status: taxStatus }).eq("id", id);
+  if (error) throw error;
+}
+
+export async function updateArtworksTaxStatus(
+  ids: string[],
+  taxStatus: "taxable" | "exempt"
+): Promise<void> {
+  const { error } = await supabase.from("artworks").update({ tax_status: taxStatus }).in("id", ids);
   if (error) throw error;
 }
 
@@ -1412,7 +1474,8 @@ export async function updateGeneralInquiryStatus(
   if (error) throw error;
 }
 
-const ORDER_WITH_ARTWORK_SELECT = "*, artworks ( title, image_urls, hue, variant, artists ( name ) )";
+const ORDER_WITH_ARTWORK_SELECT =
+  "*, artworks ( title, image_urls, hue, variant, tax_status, artists ( name ) )";
 const MERCH_ORDER_WITH_PRODUCT_SELECT =
   "*, merch_products ( slug, title, category, cover_hue, cover_variant, image_urls ), merch_variants ( label ), artworks ( title, image_urls, hue, variant, artists ( name ) )";
 

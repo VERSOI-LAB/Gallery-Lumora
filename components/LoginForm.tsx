@@ -27,15 +27,6 @@ export default function LoginForm() {
     router.refresh();
   }
 
-  async function handleOAuthLogin(provider: "kakao" | "google") {
-    setError(null);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
-    });
-    if (error) setError("소셜 로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
-  }
-
   return (
     <div className="mx-auto max-w-sm px-5 py-16 md:px-0">
       <h1 className="mb-2 font-display text-2xl">로그인</h1>
@@ -72,29 +63,6 @@ export default function LoginForm() {
         </button>
         {error && <p className="text-xs text-red-600">{error}</p>}
       </form>
-
-      <div className="my-6 flex items-center gap-3 text-[11px] text-ink-faint">
-        <span className="h-px flex-1 bg-line" />
-        또는
-        <span className="h-px flex-1 bg-line" />
-      </div>
-
-      <div className="space-y-2">
-        <button
-          type="button"
-          onClick={() => handleOAuthLogin("kakao")}
-          className="flex h-10 w-full items-center justify-center gap-2 bg-[#FEE500] text-sm font-medium text-[#191600]"
-        >
-          카카오로 로그인
-        </button>
-        <button
-          type="button"
-          onClick={() => handleOAuthLogin("google")}
-          className="flex h-10 w-full items-center justify-center gap-2 border border-line-strong bg-paper text-sm text-ink"
-        >
-          Google로 로그인
-        </button>
-      </div>
 
       <p className="mt-6 text-center text-xs text-ink-faint">
         아직 계정이 없으신가요?{" "}

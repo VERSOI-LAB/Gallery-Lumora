@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
-import { formatKRW, formatDate } from "@/lib/format";
+import { computeVatBreakdown, formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import {
   cancelOrder,
@@ -15,9 +15,30 @@ import {
 } from "@/lib/queries";
 import { supabase } from "@/lib/supabase";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
-import type { ArtworkOrder, MerchOrder } from "@/lib/types";
+import type { ArtworkOrder, MerchOrder, OrderStatus } from "@/lib/types";
 
 const LAST_PHONE_KEY = "lumora:mypage:phone";
+
+function refundStatusLabel(status: OrderStatus): string {
+  return status === "cancelled" ? "환불완료" : "해당없음";
+}
+
+function OrderDetailGrid({
+  rows,
+}: {
+  rows: { label: string; value: string }[];
+}) {
+  return (
+    <dl className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 border-t border-line pt-2 text-xs text-ink-soft sm:grid-cols-3">
+      {rows.map((row) => (
+        <div key={row.label} className="flex justify-between gap-2 sm:justify-start">
+          <dt className="text-ink-faint">{row.label}</dt>
+          <dd className="text-right text-ink sm:text-left">{row.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
 
 function CancelOrderButton({
   status,
@@ -117,6 +138,26 @@ function MerchOrderRow({
             <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
             <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
           </div>
+
+          {(() => {
+            const vat = computeVatBreakdown(order.amount, "taxable");
+            return (
+              <OrderDetailGrid
+                rows={[
+                  { label: "판매자", value: order.selectedArtistName || "Gallery Lumora" },
+                  { label: "상품", value: order.productTitle },
+                  { label: "상품가격", value: formatKRW(vat.productPrice) },
+                  { label: "VAT", value: formatKRW(vat.vat) },
+                  { label: "배송비", value: "무료" },
+                  { label: "결제금액", value: formatKRW(order.amount) },
+                  { label: "주문일", value: formatDate(order.createdAt) },
+                  { label: "배송상태", value: ORDER_STATUS_LABEL[order.status] },
+                  { label: "환불상태", value: refundStatusLabel(order.status) },
+                ]}
+              />
+            );
+          })()}
+
           {onCancel && (
             <div className="mt-2 text-right">
               <CancelOrderButton status={order.status} pending={!!cancelPending} onCancel={onCancel} />
@@ -166,6 +207,26 @@ function ArtworkOrderRow({
         <span className="text-xs text-ink-faint">주문번호 {order.orderNumber}</span>
         <span className="text-sm font-semibold text-ink">{formatKRW(order.amount)}</span>
       </div>
+
+      {(() => {
+        const vat = computeVatBreakdown(order.amount, order.taxStatus);
+        return (
+          <OrderDetailGrid
+            rows={[
+              { label: "판매자", value: order.artistName || "Gallery Lumora" },
+              { label: "상품", value: order.artworkTitle },
+              { label: "상품가격", value: formatKRW(vat.productPrice) },
+              { label: "VAT", value: vat.vat > 0 ? formatKRW(vat.vat) : "면세" },
+              { label: "배송비", value: "무료" },
+              { label: "결제금액", value: formatKRW(order.amount) },
+              { label: "주문일", value: formatDate(order.createdAt) },
+              { label: "배송상태", value: ORDER_STATUS_LABEL[order.status] },
+              { label: "환불상태", value: refundStatusLabel(order.status) },
+            ]}
+          />
+        );
+      })()}
+
       {onCancel && (
         <div className="mt-2 text-right">
           <CancelOrderButton status={order.status} pending={!!cancelPending} onCancel={onCancel} />

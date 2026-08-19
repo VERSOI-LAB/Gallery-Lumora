@@ -5,7 +5,7 @@ import ArtworkThumbnail from "@/components/ArtworkThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
 import WishlistButton from "@/components/WishlistButton";
 import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
-import { formatKRW } from "@/lib/format";
+import { formatKRW, getTaxStatusLabel } from "@/lib/format";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { decodeSlugParam } from "@/lib/params";
@@ -98,9 +98,22 @@ export default async function WorkDetailPage({
               <dt className="text-ink-soft">제작연도</dt>
               <dd>{artwork.year}</dd>
             </div>
+            <div className="flex justify-between py-2.5">
+              <dt className="text-ink-soft">판매자</dt>
+              <dd>{artist.businessName || artist.name}</dd>
+            </div>
+            <div className="flex justify-between py-2.5">
+              <dt className="text-ink-soft">사업자등록번호</dt>
+              <dd>{artist.businessRegNumber || "정보 없음"}</dd>
+            </div>
+            <div className="flex justify-between py-2.5">
+              <dt className="text-ink-soft">통신판매중개자</dt>
+              <dd>Gallery Lumora</dd>
+            </div>
           </dl>
 
-          <p className="mt-6 mb-4 text-2xl font-semibold">{formatKRW(artwork.price)}</p>
+          <p className="mt-6 mb-1 text-2xl font-semibold">{formatKRW(artwork.price)}</p>
+          <p className="mb-4 text-xs text-ink-faint">{getTaxStatusLabel(artwork.taxStatus)}</p>
 
           {artwork.sold ? (
             <p className="border border-line px-4 py-3 text-center text-sm text-ink-faint">
