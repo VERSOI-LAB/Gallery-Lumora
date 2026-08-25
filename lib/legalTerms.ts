@@ -14,7 +14,7 @@ export interface LegalDocument {
 export const BUYER_TERMS: LegalDocument = {
   key: "buyer",
   title: "구매자 이용약관",
-  subtitle: "갤러리 루모라 일반회원 및 구매자 이용약관 (시행일: 2026년 9월 10일)",
+  subtitle: "갤러리 루모라 일반회원 및 구매자 이용약관 (작성일: 2026년 9월 10일 / 시행일: 2026년 9월 10일)",
   articles: [
     {
       heading: "제1조(목적)",
@@ -98,7 +98,7 @@ export const BUYER_TERMS: LegalDocument = {
 export const ARTIST_TERMS: LegalDocument = {
   key: "artist",
   title: "작가 파트너십 및 입점 이용약관",
-  subtitle: "갤러리 루모라 작가 파트너십 및 입점 이용약관 (시행일: 2026년 9월 10일)",
+  subtitle: "갤러리 루모라 작가 파트너십 및 입점 이용약관 (작성일: 2026년 9월 10일 / 시행일: 2026년 9월 10일)",
   articles: [
     {
       heading: "제1조(목적)",
@@ -182,7 +182,7 @@ export const ARTIST_TERMS: LegalDocument = {
 export const COMMISSION_TERMS: LegalDocument = {
   key: "commission",
   title: "1:1 커미션 거래 특약",
-  subtitle: "갤러리 루모라 1:1 커미션 거래 특약 (시행일: 2026년 9월 10일)",
+  subtitle: "갤러리 루모라 1:1 커미션 거래 특약 (작성일: 2026년 9월 10일 / 시행일: 2026년 9월 10일)",
   articles: [
     {
       heading: "제1조(목적)",
@@ -238,7 +238,7 @@ export const COMMISSION_TERMS: LegalDocument = {
 export const PRIVACY_POLICY: LegalDocument = {
   key: "privacy",
   title: "개인정보처리방침",
-  subtitle: "갤러리 루모라 개인정보처리방침 (시행일: 2026년 9월 10일)",
+  subtitle: "갤러리 루모라 개인정보처리방침 (작성일: 2026년 9월 10일 / 시행일: 2026년 9월 10일)",
   intro:
     '갤러리 루모라(이하 "회사")는 개인정보 보호법 등 관계 법령을 준수하고 이용자의 개인정보를 적법하고 안전하게 처리합니다. 개인정보 보호법은 개인정보의 처리 및 보호에 관한 기본적인 사항을 규정하고 있으며, 개인정보 처리업무를 위탁하는 경우에도 위탁업무의 목적·범위 및 안전성 확보 등에 관한 사항을 관리하도록 하고 있습니다.',
   articles: [
