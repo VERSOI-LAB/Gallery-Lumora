@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   },
   description:
     "작가의 화풍을 살펴보고 완성작을 소장하거나, 그 작가에게 나만의 작품을 1:1로 의뢰하세요.",
+  verification: {
+    google: "16ccd57b5a39aeff",
+  },
   other: {
     "naver-site-verification": "bab89e6310096289972cb482acfdcf3d",
   },
