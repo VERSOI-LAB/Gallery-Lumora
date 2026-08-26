@@ -4,6 +4,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { CartProvider } from "@/components/CartContext";
+import { SITE_URL } from "@/lib/site";
 
 const notoSansKR = Noto_Sans_KR({
   subsets: ["latin"],
@@ -11,20 +12,17 @@ const notoSansKR = Noto_Sans_KR({
   variable: "--font-sans-kr",
 });
 
-const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
-  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Gallery Lumora - 당신의 스토리가 작품이 되어 삶에 물드는 한 점의 예술",
     template: "%s · Gallery Lumora",
   },
   description:
     "작가의 화풍을 살펴보고 완성작을 소장하거나, 그 작가에게 나만의 작품을 1:1로 의뢰하세요.",
+  other: {
+    "naver-site-verification": "bab89e6310096289972cb482acfdcf3d",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
