@@ -1,5 +1,7 @@
 import CartBrowser from "@/components/CartBrowser";
 
+export const dynamic = "force-dynamic";
+
 export default function CartPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-10 md:px-8">
