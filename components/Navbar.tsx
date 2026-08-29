@@ -17,6 +17,43 @@ const LINKS = [
   { href: "/commission", label: "Contact" },
 ];
 
+const SOCIAL_LINKS = [
+  {
+    href: "https://youtube.com/channel/UC3e7gGAdudn59fMqE6Ju33w?si=i798e5zktdmqZ5qz",
+    label: "YouTube",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="2.5" y="6" width="19" height="12" rx="3" />
+        <path d="M10.5 9.5l5 2.5-5 2.5z" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    href: "https://www.instagram.com/gallery_lumora/",
+    label: "Instagram",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <rect x="3" y="3" width="18" height="18" rx="5" />
+        <circle cx="12" cy="12" r="4.2" />
+        <circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    href: "https://www.facebook.com/share/1djPqRT6br/",
+    label: "Facebook",
+    icon: (
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path
+          d="M14 21v-8h2.7l.4-3.1H14V8c0-.9.2-1.5 1.6-1.5H17V3.7C16.7 3.7 15.7 3.5 14.6 3.5c-2.3 0-3.9 1.4-3.9 4v2.4H8v3.1h2.7V21z"
+          fill="currentColor"
+          stroke="none"
+        />
+      </svg>
+    ),
+  },
+];
+
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<Session | null>(null);
@@ -72,6 +109,20 @@ export default function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-4 md:flex">
+          <div className="flex items-center gap-3 border-r border-board-line pr-4">
+            {SOCIAL_LINKS.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={s.label}
+                className="text-board-ink-soft hover:text-board-ink"
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
           <Link href="/search" aria-label="검색" className="text-board-ink-soft hover:text-board-ink">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
               <circle cx="11" cy="11" r="7" />
@@ -130,6 +181,20 @@ export default function Navbar() {
 
       {open && (
         <div className="flex flex-col gap-1 border-t border-board-line px-5 py-4 md:hidden">
+          <div className="flex items-center gap-4 px-1 py-2.5">
+            {SOCIAL_LINKS.map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={s.label}
+                className="text-board-ink-soft hover:text-board-ink"
+              >
+                {s.icon}
+              </a>
+            ))}
+          </div>
           <Link
             href="/search"
             onClick={() => setOpen(false)}
