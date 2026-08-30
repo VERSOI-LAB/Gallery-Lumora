@@ -52,20 +52,6 @@ const SOCIAL_LINKS = [
       </svg>
     ),
   },
-  {
-    href: "https://m.blog.naver.com/PostList.naver?blogId=gallerylumora&tab=1",
-    label: "네이버 블로그",
-    icon: (
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="2.5" y="2.5" width="19" height="19" rx="4" />
-        <path
-          d="M8.2 7.3v9.4h2.9v-5l3.7 5h2.9V7.3h-2.9v5l-3.7-5z"
-          fill="currentColor"
-          stroke="none"
-        />
-      </svg>
-    ),
-  },
 ];
 
 export default function Navbar() {

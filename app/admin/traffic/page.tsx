@@ -6,7 +6,6 @@ const SOURCE_LABEL: Record<ReferralSource, string> = {
   youtube: "유튜브",
   instagram: "인스타그램",
   facebook: "페이스북",
-  naver_blog: "네이버 블로그",
   other: "기타",
 };
 
@@ -21,8 +20,8 @@ export default async function AdminTrafficPage() {
     <div>
       <h1 className="mb-2 font-display text-2xl">유입경로</h1>
       <p className="mb-6 text-sm text-ink-soft">
-        헤더의 유튜브·인스타그램·페이스북·네이버 블로그 링크를 통해 방문자가 유입되면, 브라우저의
-        리퍼러 정보를 기준으로 최초 방문 1건이 기록됩니다.
+        헤더의 유튜브·인스타그램·페이스북 링크를 통해 방문자가 유입되면, 브라우저의 리퍼러 정보를
+        기준으로 최초 방문 1건이 기록됩니다.
       </p>
 
       <div>

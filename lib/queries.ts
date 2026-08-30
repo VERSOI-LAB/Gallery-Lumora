@@ -2031,7 +2031,7 @@ export async function getAdminDashboardStats(
 // landing by <ReferralTracker /> from document.referrer.
 // ---------------------------------------------------------------------------
 
-export type ReferralSource = "youtube" | "instagram" | "facebook" | "naver_blog" | "other";
+export type ReferralSource = "youtube" | "instagram" | "facebook" | "other";
 
 export interface ReferralVisitInput {
   source: ReferralSource;
@@ -2078,7 +2078,7 @@ export async function getReferralStats(
     const source = row.source as ReferralSource;
     counts.set(source, (counts.get(source) ?? 0) + 1);
   }
-  const bySource = (["youtube", "instagram", "facebook", "naver_blog", "other"] as ReferralSource[])
+  const bySource = (["youtube", "instagram", "facebook", "other"] as ReferralSource[])
     .map((source) => ({ source, count: counts.get(source) ?? 0 }))
     .sort((a, b) => b.count - a.count);
 
