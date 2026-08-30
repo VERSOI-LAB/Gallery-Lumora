@@ -3,6 +3,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ReferralTracker from "@/components/ReferralTracker";
 import { CartProvider } from "@/components/CartContext";
 import { SITE_URL } from "@/lib/site";
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="ko" className={`h-full antialiased ${notoSansKR.variable}`}>
       <body className="flex min-h-full flex-col font-sans">
         <CartProvider>
+          <ReferralTracker />
           <Navbar />
           <main className="flex-1">{children}</main>
           <Footer />

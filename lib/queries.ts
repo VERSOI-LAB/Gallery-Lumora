@@ -2025,6 +2025,91 @@ export async function getAdminDashboardStats(
   };
 }
 
+// ---------------------------------------------------------------------------
+// Referral tracking — records which external site (YouTube/Instagram/
+// Facebook/네이버 블로그) sent a visitor to the site, captured once per
+// landing by <ReferralTracker /> from document.referrer.
+// ---------------------------------------------------------------------------
+
+export type ReferralSource = "youtube" | "instagram" | "facebook" | "naver_blog" | "other";
+
+export interface ReferralVisitInput {
+  source: ReferralSource;
+  referrerUrl: string;
+  landingPath: string;
+}
+
+export async function submitReferralVisit(input: ReferralVisitInput): Promise<void> {
+  const { error } = await supabase.from("referral_visits").insert({
+    source: input.source,
+    referrer_url: input.referrerUrl,
+    landing_path: input.landingPath,
+  });
+  if (error) throw error;
+}
+
+export interface ReferralVisit {
+  id: string;
+  source: ReferralSource;
+  referrerUrl: string;
+  landingPath: string;
+  createdAt: string;
+}
+
+export interface ReferralStats {
+  bySource: { source: ReferralSource; count: number }[];
+  total: number;
+}
+
+export async function getReferralStats(
+  client: SupabaseClient<Database> = supabase,
+  days = 30
+): Promise<ReferralStats> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  const { data, error } = await client
+    .from("referral_visits")
+    .select("source")
+    .gte("created_at", since.toISOString());
+  if (error) throw error;
+
+  const counts = new Map<ReferralSource, number>();
+  for (const row of data) {
+    const source = row.source as ReferralSource;
+    counts.set(source, (counts.get(source) ?? 0) + 1);
+  }
+  const bySource = (["youtube", "instagram", "facebook", "naver_blog", "other"] as ReferralSource[])
+    .map((source) => ({ source, count: counts.get(source) ?? 0 }))
+    .sort((a, b) => b.count - a.count);
+
+  return { bySource, total: data.length };
+}
+
+export interface ReferralVisitPageOptions {
+  offset?: number;
+  limit?: number;
+}
+
+export async function getReferralVisits(
+  client: SupabaseClient<Database> = supabase,
+  options: ReferralVisitPageOptions = {}
+): Promise<ReferralVisit[]> {
+  const { offset = 0, limit = 50 } = options;
+  const { data, error } = await client
+    .from("referral_visits")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return data.map((row) => ({
+    id: row.id,
+    source: row.source as ReferralSource,
+    referrerUrl: row.referrer_url,
+    landingPath: row.landing_path,
+    createdAt: row.created_at,
+  }));
+}
+
 type CustomerRow = Database["public"]["Tables"]["customers"]["Row"];
 type CustomerNotificationRow = Database["public"]["Tables"]["customer_notifications"]["Row"];
 type OrderPhoneAggRow = {

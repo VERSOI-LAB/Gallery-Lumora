@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.15"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -930,6 +930,30 @@ export type Database = {
           },
         ]
       }
+      referral_visits: {
+        Row: {
+          created_at: string
+          id: string
+          landing_path: string
+          referrer_url: string
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          landing_path?: string
+          referrer_url?: string
+          source: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          landing_path?: string
+          referrer_url?: string
+          source?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           artwork_id: string | null
@@ -1040,6 +1064,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_dashboard_pending_counts: {
+        Args: never
+        Returns: {
+          artist_applications_new: number
+          commission_inquiries_new: number
+          general_inquiries_new: number
+          merch_orders_paid: number
+          orders_paid: number
+        }[]
+      }
+      admin_dashboard_revenue_summary: {
+        Args: never
+        Returns: {
+          month_amount: number
+          month_count: number
+          today_amount: number
+          today_count: number
+          total_amount: number
+          total_count: number
+          week_amount: number
+          week_count: number
+        }[]
+      }
       cancel_order: {
         Args: { p_kind: string; p_order_id: string; p_phone?: string }
         Returns: undefined
