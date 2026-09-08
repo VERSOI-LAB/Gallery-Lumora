@@ -2,14 +2,29 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
-import { useCart } from "./CartContext";
+import { useCart, type CartLineItem } from "./CartContext";
 import { getMerchProductsByIds, getMyProfile, purchaseMerch } from "@/lib/queries";
+import { TOSS_CLIENT_KEY } from "@/lib/toss";
 import type { MerchProduct } from "@/lib/types";
 
 const MADE_TO_ORDER_MAX_QUANTITY = 10;
+
+interface PendingCartCheckout {
+  items: CartLineItem[];
+  shippingAddress: string;
+  phone: string;
+  name: string;
+  email: string;
+  paymentMethod: string;
+}
+
+function pendingKey(orderId: string) {
+  return `toss-pending-cart-${orderId}`;
+}
 
 export default function CartBrowser() {
   const { items, updateQuantity, removeItem, clear } = useCart();
@@ -24,6 +39,10 @@ export default function CartBrowser() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [receipts, setReceipts] = useState<{ orderNumber: string; amount: number }[] | null>(null);
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i) => i.productId)));
@@ -58,30 +77,108 @@ export default function CartBrowser() {
     return product ? sum + product.price * i.quantity : sum;
   }, 0);
 
+  // Returning from the Toss Payments redirect (successUrl/failUrl both point
+  // back at this same page) — confirm the payment server-side, then finalize
+  // each cart line with the checkout details we stashed before leaving the page.
+  useEffect(() => {
+    const failCode = searchParams.get("code");
+    if (failCode) {
+      // Reacting to Toss's redirect query params, not to local render state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(`결제가 취소되었거나 실패했습니다. (${searchParams.get("message") ?? failCode})`);
+      router.replace(pathname);
+      return;
+    }
+
+    const paymentKey = searchParams.get("paymentKey");
+    const orderId = searchParams.get("orderId");
+    const amount = searchParams.get("amount");
+    if (!paymentKey || !orderId || !amount) return;
+
+    const raw = sessionStorage.getItem(pendingKey(orderId));
+    if (!raw) {
+      setError("결제 정보를 확인할 수 없습니다. 다시 시도해 주세요.");
+      router.replace(pathname);
+      return;
+    }
+
+    const pending = JSON.parse(raw) as PendingCartCheckout;
+    setSubmitting(true);
+    (async () => {
+      try {
+        const confirmRes = await fetch("/api/payments/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) }),
+        });
+        if (!confirmRes.ok) throw new Error("confirm_failed");
+
+        const results: { orderNumber: string; amount: number }[] = [];
+        for (const item of pending.items) {
+          const result = await purchaseMerch({
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: item.quantity,
+            shippingAddress: pending.shippingAddress,
+            phone: pending.phone,
+            name: pending.name,
+            email: pending.email,
+            paymentMethod: pending.paymentMethod,
+          });
+          results.push(result);
+        }
+        sessionStorage.removeItem(pendingKey(orderId));
+        setReceipts(results);
+        clear();
+      } catch {
+        setError("결제 승인 또는 주문 처리에 실패했습니다. 품절되었거나 일시적인 오류일 수 있습니다.");
+      } finally {
+        setSubmitting(false);
+        router.replace(pathname);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    const orderId = crypto.randomUUID();
+    const pending: PendingCartCheckout = {
+      items,
+      shippingAddress,
+      phone,
+      name,
+      email,
+      paymentMethod,
+    };
+    const firstTitle = products[items[0]?.productId]?.title ?? "상품";
+    const orderName = items.length > 1 ? `${firstTitle} 외 ${items.length - 1}건` : firstTitle;
+
     try {
-      const results: { orderNumber: string; amount: number }[] = [];
-      for (const item of items) {
-        const result = await purchaseMerch({
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          shippingAddress,
-          phone,
-          name,
-          email,
-          paymentMethod,
-        });
-        results.push(result);
-      }
-      setReceipts(results);
-      clear();
+      sessionStorage.setItem(pendingKey(orderId), JSON.stringify(pending));
+      const { loadTossPayments, ANONYMOUS } = await import("@tosspayments/tosspayments-sdk");
+      const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
+      const payment = tossPayments.payment({ customerKey: ANONYMOUS });
+      const returnUrl = `${window.location.origin}${pathname}`;
+      // Redirects the browser to Toss's hosted card payment window; on
+      // success/failure Toss sends the browser back to returnUrl, where the
+      // effect above picks the flow back up and finalizes the order.
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: total },
+        orderId,
+        orderName,
+        customerName: name,
+        customerEmail: email,
+        successUrl: returnUrl,
+        failUrl: returnUrl,
+      });
     } catch {
-      setError("결제 중 일부 상품 처리에 실패했습니다. 품절되었거나 일시적인 오류일 수 있습니다.");
-    } finally {
+      sessionStorage.removeItem(pendingKey(orderId));
+      setError("결제가 취소되었거나 결제창을 여는 중 오류가 발생했습니다. 다시 시도해 주세요.");
       setSubmitting(false);
     }
   }

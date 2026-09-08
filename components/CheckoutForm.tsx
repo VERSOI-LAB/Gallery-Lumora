@@ -2,13 +2,19 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import { buttonClasses } from "@/lib/ui";
 import { computeVatBreakdown, formatDate, formatKRW } from "@/lib/format";
-import { getMyProfile, purchaseArtwork } from "@/lib/queries";
+import { getMyProfile, purchaseArtwork, type PurchaseInput } from "@/lib/queries";
+import { TOSS_CLIENT_KEY } from "@/lib/toss";
 import type { Artist, Artwork } from "@/lib/types";
 
 const SELLER_INTERMEDIARY = "Gallery Lumora";
+
+function pendingKey(orderId: string) {
+  return `toss-pending-artwork-${orderId}`;
+}
 
 export default function CheckoutForm({
   artwork,
@@ -31,6 +37,10 @@ export default function CheckoutForm({
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const [docView, setDocView] = useState<"receipt" | "confirmation" | null>(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const vat = computeVatBreakdown(artwork.price, artwork.taxStatus);
 
   useEffect(() => {
@@ -45,6 +55,54 @@ export default function CheckoutForm({
       .catch(() => {});
   }, []);
 
+  // Returning from the Toss Payments redirect (successUrl/failUrl both point
+  // back at this same page) — confirm the payment server-side, then finalize
+  // the order with the checkout details we stashed before leaving the page.
+  useEffect(() => {
+    const failCode = searchParams.get("code");
+    if (failCode) {
+      // Reacting to Toss's redirect query params, not to local render state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setError(`결제가 취소되었거나 실패했습니다. (${searchParams.get("message") ?? failCode})`);
+      router.replace(pathname);
+      return;
+    }
+
+    const paymentKey = searchParams.get("paymentKey");
+    const orderId = searchParams.get("orderId");
+    const amount = searchParams.get("amount");
+    if (!paymentKey || !orderId || !amount) return;
+
+    const raw = sessionStorage.getItem(pendingKey(orderId));
+    if (!raw) {
+      setError("결제 정보를 확인할 수 없습니다. 다시 시도해 주세요.");
+      router.replace(pathname);
+      return;
+    }
+
+    const payload = JSON.parse(raw) as PurchaseInput;
+    setSubmitting(true);
+    (async () => {
+      try {
+        const confirmRes = await fetch("/api/payments/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) }),
+        });
+        if (!confirmRes.ok) throw new Error("confirm_failed");
+        const result = await purchaseArtwork(payload);
+        sessionStorage.removeItem(pendingKey(orderId));
+        setReceipt(result);
+      } catch {
+        setError("결제 승인에 실패했습니다. 이미 판매된 작품이거나 일시적인 오류일 수 있습니다.");
+      } finally {
+        setSubmitting(false);
+        router.replace(pathname);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   function toggleUseProfileAddress() {
     setUseProfileAddress((prev) => {
       const next = !prev;
@@ -57,21 +115,41 @@ export default function CheckoutForm({
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+
+    const orderId = crypto.randomUUID();
+    const payload: PurchaseInput = {
+      artworkId: artwork.id,
+      shippingAddress,
+      phone,
+      name,
+      email,
+      paymentMethod,
+      insured,
+      marketingOptIn,
+    };
+
     try {
-      const result = await purchaseArtwork({
-        artworkId: artwork.id,
-        shippingAddress,
-        phone,
-        name,
-        email,
-        paymentMethod,
-        insured,
-        marketingOptIn,
+      sessionStorage.setItem(pendingKey(orderId), JSON.stringify(payload));
+      const { loadTossPayments, ANONYMOUS } = await import("@tosspayments/tosspayments-sdk");
+      const tossPayments = await loadTossPayments(TOSS_CLIENT_KEY);
+      const payment = tossPayments.payment({ customerKey: ANONYMOUS });
+      const returnUrl = `${window.location.origin}${pathname}`;
+      // Redirects the browser to Toss's hosted card payment window; on
+      // success/failure Toss sends the browser back to returnUrl, where the
+      // effect above picks the flow back up and finalizes the order.
+      await payment.requestPayment({
+        method: "CARD",
+        amount: { currency: "KRW", value: artwork.price },
+        orderId,
+        orderName: artwork.title,
+        customerName: name,
+        customerEmail: email,
+        successUrl: returnUrl,
+        failUrl: returnUrl,
       });
-      setReceipt(result);
     } catch {
-      setError("결제에 실패했습니다. 이미 판매된 작품이거나 일시적인 오류일 수 있습니다.");
-    } finally {
+      sessionStorage.removeItem(pendingKey(orderId));
+      setError("결제가 취소되었거나 결제창을 여는 중 오류가 발생했습니다. 다시 시도해 주세요.");
       setSubmitting(false);
     }
   }

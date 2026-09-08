@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/commission", label: "Contact" },
+  { href: "/policy/shipping-refund", label: "배송·환불 정책" },
 ];
 
 export default function Footer() {
@@ -31,6 +32,12 @@ export default function Footer() {
           </p>
           <p>
             사업장 주소: 경기도 성남시 수정구 창업로 18, 876호 · 이메일:{" "}
+            <a href="mailto:Versoi.labs@gmail.com" className="hover:text-ink hover:underline">
+              Versoi.labs@gmail.com
+            </a>
+          </p>
+          <p>
+            개인정보관리책임자: 이재희 ·{" "}
             <a href="mailto:Versoi.labs@gmail.com" className="hover:text-ink hover:underline">
               Versoi.labs@gmail.com
             </a>
