@@ -3,6 +3,8 @@ import AdminJournalList from "@/components/AdminJournalList";
 import { buttonClasses } from "@/lib/ui";
 import { getJournalPosts } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminJournalPage() {
   const posts = await getJournalPosts();
 

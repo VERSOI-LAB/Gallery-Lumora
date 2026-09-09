@@ -2,6 +2,8 @@ import AdminOrdersBrowser from "@/components/AdminOrdersBrowser";
 import { getAllArtworkOrders, getAllMerchOrders } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminOrdersPage() {
   const [artworkOrders, merchOrders] = await Promise.all([
     getAllArtworkOrders(supabaseService),

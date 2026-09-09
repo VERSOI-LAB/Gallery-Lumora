@@ -1,6 +1,8 @@
 import AdminSiteMediaForm from "@/components/AdminSiteMediaForm";
 import { getSiteAssets } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminMediaPage() {
   const assets = await getSiteAssets();
 

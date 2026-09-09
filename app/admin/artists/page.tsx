@@ -3,6 +3,8 @@ import AdminArtistList from "@/components/AdminArtistList";
 import { buttonClasses } from "@/lib/ui";
 import { getArtists } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminArtistsPage() {
   const artists = await getArtists();
 

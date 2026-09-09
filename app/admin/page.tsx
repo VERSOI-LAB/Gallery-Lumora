@@ -22,6 +22,8 @@ const STAT_CARDS: {
   { key: "merchProducts", label: "굿즈 상품", href: "/admin/merch" },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboardPage() {
   const [stats, applications, inquiries, analytics] = await Promise.all([
     getAdminDashboardStats(supabaseService),

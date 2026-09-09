@@ -2,6 +2,8 @@ import AdminActivityLog from "@/components/AdminActivityLog";
 import { getAdminActivityLog } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminActivityPage() {
   const entries = await getAdminActivityLog(supabaseService, { limit: 50 });
 

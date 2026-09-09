@@ -2,6 +2,8 @@ import AdminSettlementsBrowser from "@/components/AdminSettlementsBrowser";
 import { getAdminSettlementOrders } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminSettlementsPage() {
   const orders = await getAdminSettlementOrders(supabaseService);
 

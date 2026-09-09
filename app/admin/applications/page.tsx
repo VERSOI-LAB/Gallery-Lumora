@@ -2,6 +2,8 @@ import AdminApplicationsBrowser from "@/components/AdminApplicationsBrowser";
 import { getArtistApplications } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminApplicationsPage() {
   const applications = await getArtistApplications(supabaseService);
 

@@ -2,6 +2,8 @@ import AdminCustomerList from "@/components/AdminCustomerList";
 import { getCustomers, getArtworks } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminCustomersPage() {
   const [customers, artworks] = await Promise.all([getCustomers(supabaseService), getArtworks()]);
   const notifiableArtworks = artworks.filter((a) => !a.sold);
