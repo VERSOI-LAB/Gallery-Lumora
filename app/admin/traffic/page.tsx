@@ -9,6 +9,8 @@ const SOURCE_LABEL: Record<ReferralSource, string> = {
   other: "기타",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminTrafficPage() {
   const [stats, visits] = await Promise.all([
     getReferralStats(supabaseService, 30),

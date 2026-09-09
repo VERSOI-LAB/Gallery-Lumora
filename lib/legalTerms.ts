@@ -272,7 +272,7 @@ export const PRIVACY_POLICY: LegalDocument = {
     },
     {
       heading: "8. 개인정보 보호책임자",
-      body: "성명: 이재희\n직책: 개인정보 보호책임자\n이메일: Versoi.labs@gmail.com\n전화번호: 미공개",
+      body: "성명: 이재희\n직책: 개인정보 보호책임자\n이메일: versoi.labs@gmail.com\n전화번호: 미공개",
     },
     {
       heading: "9. 개인정보의 안전성 확보조치",

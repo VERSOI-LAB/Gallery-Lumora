@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/commission", label: "Contact" },
+  { href: "/refund-policy", label: "환불정책" },
 ];
 
 export default function Footer() {
@@ -31,10 +32,11 @@ export default function Footer() {
           </p>
           <p>
             사업장 주소: 경기도 성남시 수정구 창업로 18, 876호 · 이메일:{" "}
-            <a href="mailto:Versoi.labs@gmail.com" className="hover:text-ink hover:underline">
-              Versoi.labs@gmail.com
+            <a href="mailto:versoi.labs@gmail.com" className="hover:text-ink hover:underline">
+              versoi.labs@gmail.com
             </a>
           </p>
+          <p>고객센터: 이메일 문의로 운영 중이며 별도 유선전화는 운영하지 않습니다.</p>
           <p>
             본 사이트에서 판매되는 상품의 판매자는 각 상품의 입점 작가이며, 갤러리 루모라는
             통신판매중개자입니다.

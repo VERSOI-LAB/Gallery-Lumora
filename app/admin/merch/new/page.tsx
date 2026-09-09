@@ -1,6 +1,8 @@
 import AdminMerchForm from "@/components/AdminMerchForm";
 import { getArtworks } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminNewMerchPage() {
   const artworks = await getArtworks();
   const merchEnabledArtworks = artworks.filter((a) => a.merchEnabled);

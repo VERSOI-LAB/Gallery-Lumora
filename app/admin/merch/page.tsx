@@ -4,6 +4,8 @@ import { buttonClasses } from "@/lib/ui";
 import { getAllMerchProductsAdmin, getMerchEditionsRemainingMap } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminMerchPage() {
   const products = await getAllMerchProductsAdmin(supabaseService);
   const editionProductIds = products.filter((p) => p.fulfillment === "edition").map((p) => p.id);

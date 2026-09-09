@@ -1,6 +1,8 @@
 import AdminArtworkList from "@/components/AdminArtworkList";
 import { getArtworks } from "@/lib/queries";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminArtworksPage() {
   const artworks = await getArtworks();
 
