@@ -37,8 +37,8 @@ export default function RefundPolicyPage() {
         </p>
         <p>
           환불·반품 문의: 갤러리 루모라 고객센터 ·{" "}
-          <a href="mailto:Versoi.labs@gmail.com" className="hover:text-ink hover:underline">
-            Versoi.labs@gmail.com
+          <a href="mailto:versoi.labs@gmail.com" className="hover:text-ink hover:underline">
+            versoi.labs@gmail.com
           </a>
         </p>
       </div>

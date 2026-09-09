@@ -32,8 +32,8 @@ export default function Footer() {
           </p>
           <p>
             사업장 주소: 경기도 성남시 수정구 창업로 18, 876호 · 이메일:{" "}
-            <a href="mailto:Versoi.labs@gmail.com" className="hover:text-ink hover:underline">
-              Versoi.labs@gmail.com
+            <a href="mailto:versoi.labs@gmail.com" className="hover:text-ink hover:underline">
+              versoi.labs@gmail.com
             </a>
           </p>
           <p>고객센터: 이메일 문의로 운영 중이며 별도 유선전화는 운영하지 않습니다.</p>
