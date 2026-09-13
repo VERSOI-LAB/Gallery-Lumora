@@ -36,7 +36,13 @@ export default function Footer() {
               versoi.labs@gmail.com
             </a>
           </p>
-          <p>고객센터: 이메일 문의로 운영 중이며 별도 유선전화는 운영하지 않습니다.</p>
+          <p>
+            고객센터:{" "}
+            <a href="tel:010-5616-8835" className="hover:text-ink hover:underline">
+              010-5616-8835
+            </a>{" "}
+            (전화 문의 가능)
+          </p>
           <p>
             본 사이트에서 판매되는 상품의 판매자는 각 상품의 입점 작가이며, 갤러리 루모라는
             통신판매중개자입니다.

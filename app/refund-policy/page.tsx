@@ -37,6 +37,10 @@ export default function RefundPolicyPage() {
         </p>
         <p>
           환불·반품 문의: 갤러리 루모라 고객센터 ·{" "}
+          <a href="tel:010-5616-8835" className="hover:text-ink hover:underline">
+            010-5616-8835
+          </a>{" "}
+          ·{" "}
           <a href="mailto:versoi.labs@gmail.com" className="hover:text-ink hover:underline">
             versoi.labs@gmail.com
           </a>

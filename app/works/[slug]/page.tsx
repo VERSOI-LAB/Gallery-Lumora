@@ -5,7 +5,7 @@ import ArtworkThumbnail from "@/components/ArtworkThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
 import WishlistButton from "@/components/WishlistButton";
 import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
-import { formatKRW, getTaxStatusLabel } from "@/lib/format";
+import { formatArtworkPrice, getTaxStatusLabel, isHighValueArtwork } from "@/lib/format";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { decodeSlugParam } from "@/lib/params";
@@ -112,13 +112,19 @@ export default async function WorkDetailPage({
             </div>
           </dl>
 
-          <p className="mt-6 mb-1 text-2xl font-semibold">{formatKRW(artwork.price)}</p>
-          <p className="mb-4 text-xs text-ink-faint">{getTaxStatusLabel(artwork.taxStatus)}</p>
+          <p className="mt-6 mb-1 text-2xl font-semibold">{formatArtworkPrice(artwork.price)}</p>
+          {!isHighValueArtwork(artwork.price) && (
+            <p className="mb-4 text-xs text-ink-faint">{getTaxStatusLabel(artwork.taxStatus)}</p>
+          )}
 
           {artwork.sold ? (
             <p className="border border-line px-4 py-3 text-center text-sm text-ink-faint">
               이 작품은 판매완료되었습니다
             </p>
+          ) : isHighValueArtwork(artwork.price) ? (
+            <Link href="/commission" className={`w-full ${buttonClasses("primary")}`}>
+              가격 문의하기
+            </Link>
           ) : (
             <Link
               href={`/works/${artwork.slug}/checkout`}
@@ -127,9 +133,15 @@ export default async function WorkDetailPage({
               구매하기
             </Link>
           )}
-          <p className="mt-2 text-xs text-ink-faint">
-            무료 배송 · 보험 포함 · 디지털 진품 인증서 발급
-          </p>
+          {isHighValueArtwork(artwork.price) ? (
+            <p className="mt-2 text-xs text-ink-faint">
+              고가 작품은 카드 결제 대신 별도 문의를 통해 안내해 드립니다.
+            </p>
+          ) : (
+            <p className="mt-2 text-xs text-ink-faint">
+              무료 배송 · 보험 포함 · 디지털 진품 인증서 발급
+            </p>
+          )}
 
           <div className="mt-8 border border-patina p-5">
             <p className="mb-2 text-xs font-semibold tracking-wide text-patina uppercase">
