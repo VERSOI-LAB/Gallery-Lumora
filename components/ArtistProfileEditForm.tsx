@@ -72,16 +72,13 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
     setError(null);
 
     if (
-      !businessRegCertUrl ||
-      !businessName.trim() ||
       !businessOwnerName.trim() ||
-      !businessRegNumber.trim() ||
       !businessAddress.trim() ||
       !businessPhone.trim() ||
       !bankName.trim() ||
       !bankAccountNumber.trim()
     ) {
-      setError("사업자정보(*필수) 항목을 모두 입력해야 저장할 수 있습니다.");
+      setError("판매자 정보(*필수) 항목을 모두 입력해야 저장할 수 있습니다.");
       return;
     }
 
@@ -240,14 +237,15 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
 
       <div className="border-t border-line pt-5">
         <p className="mb-4 text-[11px] font-semibold tracking-wide text-ink-faint uppercase">
-          사업자정보 (*필수)
+          판매자 정보 (*필수)
         </p>
         <p className="mb-4 text-xs text-ink-faint">
-          작품 상세 페이지, 결제창, 영수증에 판매자 정보로 표시되며 정산에 사용됩니다. 모두
-          입력해야 프로필이 저장됩니다.
+          작품 상세 페이지, 결제창, 영수증에 판매자 정보로 표시되며 정산에 사용됩니다. 성명·주소·
+          연락처·정산계좌는 필수이며, 사업자등록을 보유한 경우에만 사업자등록증·사업자명·사업자등록번호를
+          함께 입력해 주세요.
         </p>
 
-        <Field label="사업자등록증">
+        <Field label="사업자등록증 (사업자등록 보유 시)">
           <label className="flex h-24 cursor-pointer flex-col items-center justify-center border border-dashed border-line-strong text-center text-sm text-ink-faint">
             <input
               type="file"
@@ -268,7 +266,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
         </Field>
 
         <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field label="사업자명">
+          <Field label="사업자명 (사업자등록 보유 시)">
             <input
               type="text"
               value={businessName}
@@ -276,7 +274,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
-          <Field label="대표자명">
+          <Field label="성명 (사업자의 경우 대표자명)">
             <input
               type="text"
               value={businessOwnerName}
@@ -284,7 +282,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
-          <Field label="사업자등록번호">
+          <Field label="사업자등록번호 (사업자등록 보유 시)">
             <input
               type="text"
               placeholder="000-00-00000"
@@ -293,7 +291,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
-          <Field label="사업장 주소">
+          <Field label="주소 (사업자의 경우 사업장 주소)">
             <input
               type="text"
               value={businessAddress}
@@ -301,7 +299,7 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
-          <Field label="사업자 연락처">
+          <Field label="연락처">
             <input
               type="tel"
               placeholder="010-0000-0000"
