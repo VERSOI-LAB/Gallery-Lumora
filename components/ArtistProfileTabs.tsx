@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import ArtworkCard from "./ArtworkCard";
+import ShippingNotice from "./ShippingNotice";
 import { buttonClasses, tabClasses } from "@/lib/ui";
 import { MEDIUM_CATEGORIES, getMediumType, getMediumTypeLabel } from "@/lib/mediumTaxonomy";
 import type { Artist, Artwork } from "@/lib/types";
@@ -112,6 +113,7 @@ export default function ArtistProfileTabs({
                 </div>
               ))}
           </dl>
+          <ShippingNotice kind="commission" className="mb-6" />
           <Link href={`/artists/${artist.slug}/commission`} className={buttonClasses("primary")}>
             {artist.commission.accepting ? "커미션 의뢰하기" : "대기 등록하기"}
           </Link>

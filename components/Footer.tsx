@@ -7,7 +7,7 @@ const LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/journal", label: "Journal" },
   { href: "/commission", label: "Contact" },
-  { href: "/refund-policy", label: "환불정책" },
+  { href: "/refund-policy", label: "배송·환불정책" },
 ];
 
 export default function Footer() {
@@ -42,6 +42,10 @@ export default function Footer() {
               010-5616-8835
             </a>{" "}
             (전화 문의 가능)
+          </p>
+          <p>
+            배송기간: 일반 등록 작품 · 굿즈 상품 결제 완료 후 2주 이내 / 1:1 커미션 작품 최대 6주 ·
+            배송비 무료
           </p>
           <p>
             본 사이트에서 판매되는 상품의 판매자는 각 상품의 입점 작가이며, 갤러리 루모라는
