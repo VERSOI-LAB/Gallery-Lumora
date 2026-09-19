@@ -5,7 +5,7 @@ import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import { buttonClasses } from "@/lib/ui";
 import type { Artwork } from "@/lib/types";
 
-type Sort = "new" | "priceAsc" | "priceDesc";
+type Sort = "random" | "recommended" | "new" | "priceAsc" | "priceDesc";
 
 export default function WorksFilterPanel({
   artworks,
@@ -129,6 +129,8 @@ export default function WorksFilterPanel({
                   onChange={(e) => onSortChange(e.target.value as Sort)}
                   className="border border-board-line bg-board-raised px-2 py-1.5 text-xs"
                 >
+                  <option value="random">랜덤</option>
+                  <option value="recommended">추천순</option>
                   <option value="new">신작순</option>
                   <option value="priceAsc">낮은 가격순</option>
                   <option value="priceDesc">높은 가격순</option>
