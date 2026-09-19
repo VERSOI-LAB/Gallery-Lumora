@@ -104,10 +104,12 @@ export default async function WorkDetailPage({
               <dt className="text-ink-soft">판매자</dt>
               <dd>{artist.businessName || artist.name}</dd>
             </div>
-            <div className="flex justify-between py-2.5">
-              <dt className="text-ink-soft">사업자등록번호</dt>
-              <dd>{artist.businessRegNumber || "정보 없음"}</dd>
-            </div>
+            {artist.businessRegNumber && (
+              <div className="flex justify-between py-2.5">
+                <dt className="text-ink-soft">사업자등록번호</dt>
+                <dd>{artist.businessRegNumber}</dd>
+              </div>
+            )}
             <div className="flex justify-between py-2.5">
               <dt className="text-ink-soft">통신판매중개자</dt>
               <dd>Gallery Lumora</dd>

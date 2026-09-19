@@ -147,7 +147,7 @@ export default function SignupForm() {
           {role === "artist" && (
             <p className="mt-2 text-xs text-ink-faint">
               작가로 가입하면 Contact 페이지에서 작가/작품 등록을 신청할 수 있습니다. 승인 후
-              스튜디오 프로필에서 사업자 정보(*필수)를 등록해주세요.
+              스튜디오 프로필에서 판매자 정보(*필수)를 등록해주세요. 사업자등록을 보유한 경우 사업자 정보도 함께 등록할 수 있습니다.
             </p>
           )}
         </Field>
