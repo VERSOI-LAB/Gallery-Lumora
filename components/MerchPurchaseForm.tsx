@@ -6,6 +6,7 @@ import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { getMyProfile, purchaseMerch } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
+import ShippingNotice from "@/components/ShippingNotice";
 import type { MerchProduct, MerchVariant } from "@/lib/types";
 
 export default function MerchPurchaseForm({
@@ -249,6 +250,8 @@ export default function MerchPurchaseForm({
         />
         신작 소식 등 마케팅 이메일 수신에 동의합니다
       </label>
+
+      <ShippingNotice kind="standard" />
 
       <div className="flex gap-3">
         {cartEligible && (

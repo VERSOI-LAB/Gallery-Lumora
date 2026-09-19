@@ -62,7 +62,7 @@ export default function CommissionAvailabilityForm({ artist }: { artist: Artist 
             거래 조건 (고객이 의뢰 전에 확인하는 내용이니 미리 정해두면 문의 단계에서 오해를 줄일 수 있어요)
           </p>
           <TermField
-            label="제작기간 (주문 후 작품을 완성하는 데 걸리는 기간)"
+            label="제작기간 (주문 후 작품을 완성하는 데 걸리는 기간 · 갤러리 루모라 기준 최대 6주 이내)"
             placeholder="예: 결제 후 14일 이내 제작"
             value={leadTime}
             onChange={setLeadTime}

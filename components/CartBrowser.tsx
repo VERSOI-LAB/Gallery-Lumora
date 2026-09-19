@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
+import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
@@ -226,6 +227,7 @@ export default function CartBrowser() {
               <option>간편결제</option>
             </select>
           </Field>
+          <ShippingNotice kind="standard" />
           <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
             {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
           </button>

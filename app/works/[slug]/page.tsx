@@ -3,9 +3,11 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import ArtworkThumbnail from "@/components/ArtworkThumbnail";
 import ReviewsSection from "@/components/ReviewsSection";
+import ShippingNotice from "@/components/ShippingNotice";
 import WishlistButton from "@/components/WishlistButton";
 import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
 import { formatArtworkPrice, getTaxStatusLabel, isHighValueArtwork } from "@/lib/format";
+import { SHIPPING_PERIOD_COMMISSION, SHIPPING_PERIOD_STANDARD } from "@/lib/shipping";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
 import { decodeSlugParam } from "@/lib/params";
@@ -110,6 +112,10 @@ export default async function WorkDetailPage({
               <dt className="text-ink-soft">통신판매중개자</dt>
               <dd>Gallery Lumora</dd>
             </div>
+            <div className="flex justify-between py-2.5">
+              <dt className="text-ink-soft">배송기간</dt>
+              <dd>{SHIPPING_PERIOD_STANDARD} 발송</dd>
+            </div>
           </dl>
 
           <p className="mt-6 mb-1 text-2xl font-semibold">{formatArtworkPrice(artwork.price)}</p>
@@ -142,6 +148,9 @@ export default async function WorkDetailPage({
               무료 배송 · 보험 포함 · 디지털 진품 인증서 발급
             </p>
           )}
+          {!isHighValueArtwork(artwork.price) && !artwork.sold && (
+            <ShippingNotice kind="standard" className="mt-4" />
+          )}
 
           <div className="mt-8 border border-patina p-5">
             <p className="mb-2 text-xs font-semibold tracking-wide text-patina uppercase">
@@ -149,7 +158,7 @@ export default async function WorkDetailPage({
             </p>
             <p className="mb-4 text-sm text-ink-soft">
               {artist.name} 작가의 화풍으로 원하는 사이즈·주제의 작품을 1:1로 주문 제작할 수
-              있습니다.
+              있습니다. (제작·배송 기간 {SHIPPING_PERIOD_COMMISSION})
             </p>
             <Link
               href={`/artists/${artist.slug}/commission`}

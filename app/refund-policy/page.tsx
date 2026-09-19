@@ -1,3 +1,4 @@
+import ShippingNotice from "@/components/ShippingNotice";
 import { BUYER_TERMS } from "@/lib/legalTerms";
 
 export const metadata = {
@@ -20,6 +21,8 @@ export default function RefundPolicyPage() {
       <p className="mb-2 text-xs font-semibold tracking-wide text-patina uppercase">Policy</p>
       <h1 className="mb-3 font-display text-2xl">환불정책 (배송·청약철회·환불 및 반품)</h1>
       <p className="mb-10 text-xs text-ink-faint">{BUYER_TERMS.subtitle}</p>
+
+      <ShippingNotice className="mb-10" />
 
       <div className="space-y-8 text-sm leading-7 text-ink-soft">
         {articles.map((article) => (

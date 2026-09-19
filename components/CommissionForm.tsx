@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
+import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { createCommissionInquiry } from "@/lib/queries";
@@ -177,8 +178,7 @@ export default function CommissionForm({ artist }: { artist: Artist }) {
               >
                 <option value="">선택해주세요</option>
                 <option value="4주 이내">4주 이내</option>
-                <option value="4-8주">4–8주</option>
-                <option value="8-12주">8–12주</option>
+                <option value="4-6주">4–6주 (최대)</option>
                 <option value="기한 협의">기한 협의</option>
               </select>
             </Field>
@@ -241,6 +241,8 @@ export default function CommissionForm({ artist }: { artist: Artist }) {
             </div>
 
             {error && <p className="text-xs text-red-600">{error}</p>}
+
+            <ShippingNotice kind="commission" />
 
             <p className="border border-patina bg-patina-soft px-4 py-3 text-xs leading-6 text-ink">
               문의가 접수되면 Lumora 운영팀이 {artist.name} 작가와 일정·견적을 조율해 1~3영업일

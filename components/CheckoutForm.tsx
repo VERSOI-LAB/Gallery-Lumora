@@ -2,9 +2,11 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import ArtworkThumbnail from "./ArtworkThumbnail";
+import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
 import { computeVatBreakdown, formatKRW } from "@/lib/format";
 import { getMyProfile } from "@/lib/queries";
+import { SHIPPING_PERIOD_STANDARD } from "@/lib/shipping";
 import { TOSS_WIDGET_CLIENT_KEY } from "@/lib/tosspayments";
 import type { Artist, Artwork } from "@/lib/types";
 import type { PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk";
@@ -188,6 +190,8 @@ export default function CheckoutForm({
             신작 소식 등 마케팅 이메일 수신에 동의합니다
           </label>
 
+          <ShippingNotice kind="standard" />
+
           <button type="submit" disabled={submitting || !widgetReady} className={`w-full ${buttonClasses("primary")}`}>
             {submitting ? "결제 처리 중..." : `${formatKRW(artwork.price)} 결제하기`}
           </button>
@@ -217,6 +221,7 @@ export default function CheckoutForm({
             <SumLine label="상품가격" value={formatKRW(vat.productPrice)} />
             <SumLine label="부가세(VAT)" value={vat.vat > 0 ? formatKRW(vat.vat) : "면세"} />
             <SumLine label="배송·보험" value={insured ? "무료" : "₩0"} />
+            <SumLine label="배송기간" value={`${SHIPPING_PERIOD_STANDARD} 발송`} />
             <SumLine label="총 결제금액" value={formatKRW(artwork.price)} total />
           </div>
           <div className="mt-4 space-y-0.5 border-t border-line pt-3 text-xs text-ink-faint">
