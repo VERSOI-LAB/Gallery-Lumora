@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import CheckoutForm from "@/components/CheckoutForm";
 import { getArtistById, getArtwork } from "@/lib/queries";
 import { decodeSlugParam } from "@/lib/params";
-import { isHighValueArtwork } from "@/lib/format";
+import { isHighValuePrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +26,7 @@ export default async function CheckoutPage({
     );
   }
 
-  if (isHighValueArtwork(artwork.price)) {
+  if (isHighValuePrice(artwork.price)) {
     return (
       <div className="mx-auto max-w-lg px-5 py-16 text-center md:px-0">
         <p className="mb-4 font-display text-xl">가격 문의가 필요한 작품입니다</p>

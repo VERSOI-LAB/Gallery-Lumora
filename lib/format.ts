@@ -6,16 +6,17 @@ export function formatKRW(amount: number): string {
   }).format(amount);
 }
 
-/** PG사(토스페이먼츠) 규정상 1,000만원 이상 고가 미술품은 카드 결제 위젯으로 판매할 수 없어
- * 가격을 노출하지 않고 "별도 문의"로 안내한다. */
-export const HIGH_VALUE_ARTWORK_THRESHOLD = 10_000_000;
+/** PG사(토스페이먼츠) 계약상 1회 결제 단가 상한은 8,000,000원(이하)이다. 이를 초과하는
+ * 작품·굿즈는 카드 결제 위젯으로 판매할 수 없어 가격을 노출하지 않고 "별도 문의"로
+ * 안내한다. */
+export const HIGH_VALUE_PRODUCT_THRESHOLD = 8_000_000;
 
-export function isHighValueArtwork(price: number): boolean {
-  return price >= HIGH_VALUE_ARTWORK_THRESHOLD;
+export function isHighValuePrice(price: number): boolean {
+  return price > HIGH_VALUE_PRODUCT_THRESHOLD;
 }
 
-export function formatArtworkPrice(price: number): string {
-  return isHighValueArtwork(price) ? "별도 문의" : formatKRW(price);
+export function formatProductPrice(price: number): string {
+  return isHighValuePrice(price) ? "별도 문의" : formatKRW(price);
 }
 
 export function formatDate(iso: string): string {

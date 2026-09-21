@@ -6,7 +6,7 @@ import ReviewsSection from "@/components/ReviewsSection";
 import ShippingNotice from "@/components/ShippingNotice";
 import WishlistButton from "@/components/WishlistButton";
 import { getArtistById, getArtwork, incrementArtworkView } from "@/lib/queries";
-import { formatArtworkPrice, getTaxStatusLabel, isHighValueArtwork } from "@/lib/format";
+import { formatProductPrice, getTaxStatusLabel, isHighValuePrice } from "@/lib/format";
 import { SHIPPING_PERIOD_COMMISSION, SHIPPING_PERIOD_STANDARD } from "@/lib/shipping";
 import { buttonClasses } from "@/lib/ui";
 import { getMediumType } from "@/lib/mediumTaxonomy";
@@ -120,8 +120,8 @@ export default async function WorkDetailPage({
             </div>
           </dl>
 
-          <p className="mt-6 mb-1 text-2xl font-semibold">{formatArtworkPrice(artwork.price)}</p>
-          {!isHighValueArtwork(artwork.price) && (
+          <p className="mt-6 mb-1 text-2xl font-semibold">{formatProductPrice(artwork.price)}</p>
+          {!isHighValuePrice(artwork.price) && (
             <p className="mb-4 text-xs text-ink-faint">{getTaxStatusLabel(artwork.taxStatus)}</p>
           )}
 
@@ -129,7 +129,7 @@ export default async function WorkDetailPage({
             <p className="border border-line px-4 py-3 text-center text-sm text-ink-faint">
               이 작품은 판매완료되었습니다
             </p>
-          ) : isHighValueArtwork(artwork.price) ? (
+          ) : isHighValuePrice(artwork.price) ? (
             <Link href="/commission" className={`w-full ${buttonClasses("primary")}`}>
               가격 문의하기
             </Link>
@@ -141,7 +141,7 @@ export default async function WorkDetailPage({
               구매하기
             </Link>
           )}
-          {isHighValueArtwork(artwork.price) ? (
+          {isHighValuePrice(artwork.price) ? (
             <p className="mt-2 text-xs text-ink-faint">
               고가 작품은 카드 결제 대신 별도 문의를 통해 안내해 드립니다.
             </p>
@@ -150,7 +150,7 @@ export default async function WorkDetailPage({
               무료 배송 · 보험 포함 · 디지털 진품 인증서 발급
             </p>
           )}
-          {!isHighValueArtwork(artwork.price) && !artwork.sold && (
+          {!isHighValuePrice(artwork.price) && !artwork.sold && (
             <ShippingNotice kind="standard" className="mt-4" />
           )}
 

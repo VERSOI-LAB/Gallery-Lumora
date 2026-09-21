@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
-import { formatKRW } from "@/lib/format";
+import { formatKRW, isHighValuePrice } from "@/lib/format";
 import { getMyProfile, purchaseMerch } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
 import ShippingNotice from "@/components/ShippingNotice";
@@ -121,6 +121,17 @@ export default function MerchPurchaseForm({
         <p className="mb-5 text-sm text-ink-soft">{formatKRW(receipt.amount)} 결제가 완료되었습니다.</p>
         <Link href="/shop" className={buttonClasses("ghost", "sm")}>
           Shop으로 돌아가기
+        </Link>
+      </div>
+    );
+  }
+
+  if (isHighValuePrice(product.price)) {
+    return (
+      <div className="border border-line p-5 text-center text-sm text-ink-faint">
+        <p className="mb-3">고가 상품은 카드 결제 대신 별도 문의를 통해 안내해 드립니다.</p>
+        <Link href="/commission" className={buttonClasses("primary")}>
+          가격 문의하기
         </Link>
       </div>
     );

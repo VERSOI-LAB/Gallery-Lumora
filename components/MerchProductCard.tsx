@@ -1,7 +1,7 @@
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
 import WishlistButton from "./WishlistButton";
-import { formatKRW } from "@/lib/format";
+import { formatProductPrice } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import type { MerchProduct } from "@/lib/types";
 
@@ -31,7 +31,7 @@ export default function MerchProductCard({ product }: { product: MerchProduct })
         <div className="mt-0.5 text-xs text-ink-faint">
           {product.isTemplate ? "작품을 선택해 디자인" : `${product.artistName}의 «${product.artworkTitle}»`}
         </div>
-        <div className="mt-1 text-xs font-semibold text-ink">{formatKRW(product.price)}</div>
+        <div className="mt-1 text-xs font-semibold text-ink">{formatProductPrice(product.price)}</div>
       </div>
     </Link>
   );

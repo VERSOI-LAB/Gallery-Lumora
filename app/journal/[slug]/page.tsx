@@ -11,7 +11,7 @@ import {
   getJournalPost,
   getRelatedJournalPosts,
 } from "@/lib/queries";
-import { formatArtworkPrice, formatDate } from "@/lib/format";
+import { formatProductPrice, formatDate } from "@/lib/format";
 import { getJournalCategoryLabel } from "@/lib/journalTaxonomy";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import { decodeSlugParam } from "@/lib/params";
@@ -107,7 +107,7 @@ export default async function JournalDetailPage({
                     />
                   </div>
                   <div className="text-sm font-medium">{relatedArtwork.title}</div>
-                  <div className="text-xs text-ink-faint">{formatArtworkPrice(relatedArtwork.price)}</div>
+                  <div className="text-xs text-ink-faint">{formatProductPrice(relatedArtwork.price)}</div>
                 </Link>
               )}
               {relatedCategory && (
