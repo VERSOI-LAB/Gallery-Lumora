@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { adminCreateMerchProduct, adminUpdateMerchProduct } from "@/lib/adminActions";
-import { uploadMedia, type MerchProductInput } from "@/lib/queries";
+import { uploadAdminMedia, type MerchProductInput } from "@/lib/queries";
 import { MERCH_CATEGORIES } from "@/lib/merchTaxonomy";
 import MerchThumbnail from "./MerchThumbnail";
 import type { Artwork, MerchProduct } from "@/lib/types";
@@ -58,7 +58,7 @@ export default function AdminMerchForm({
       for (const file of Array.from(files)) {
         const ext = file.name.split(".").pop() || "jpg";
         const path = `merch/${artistId}/${crypto.randomUUID()}.${ext}`;
-        uploaded.push(await uploadMedia(path, file));
+        uploaded.push(await uploadAdminMedia(path, file));
       }
       setImageUrls((prev) => [...prev, ...uploaded]);
     } catch {

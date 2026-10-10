@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { adminUpdateArtwork } from "@/lib/adminActions";
-import { uploadMedia, type ArtworkUpdateInput } from "@/lib/queries";
+import { uploadAdminMedia, type ArtworkUpdateInput } from "@/lib/queries";
 import { MEDIUM_CATEGORIES } from "@/lib/mediumTaxonomy";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import type { Artwork } from "@/lib/types";
@@ -36,7 +36,7 @@ export default function AdminArtworkForm({ artwork }: { artwork: Artwork }) {
       for (const file of Array.from(files)) {
         const ext = file.name.split(".").pop() || "jpg";
         const path = `artworks/${artwork.artistId}/${crypto.randomUUID()}.${ext}`;
-        uploaded.push(await uploadMedia(path, file));
+        uploaded.push(await uploadAdminMedia(path, file));
       }
       setImageUrls((prev) => [...prev, ...uploaded]);
     } catch {

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { adminUpdateSiteAsset } from "@/lib/adminActions";
-import { uploadMedia } from "@/lib/queries";
+import { uploadAdminMedia } from "@/lib/queries";
 import type { SiteAssetKey } from "@/lib/types";
 
 const ASSETS: {
@@ -29,7 +29,7 @@ export default function AdminSiteMediaForm({
     setErrorKey(null);
     try {
       const ext = file.name.split(".").pop() || (file.type.startsWith("video") ? "mp4" : "jpg");
-      const url = await uploadMedia(`hero/${key}.${ext}`, file);
+      const url = await uploadAdminMedia(`hero/${key}.${ext}`, file);
       await adminUpdateSiteAsset(key, url);
       setAssets((prev) => ({ ...prev, [key]: url }));
     } catch {
