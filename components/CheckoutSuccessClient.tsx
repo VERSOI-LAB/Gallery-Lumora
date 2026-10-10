@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PurchaseSuccessCard } from "./OrderReceipt";
 import { buttonClasses } from "@/lib/ui";
-import { purchaseArtwork } from "@/lib/queries";
 import type { Artist, Artwork } from "@/lib/types";
 
 const TOSS_ORDER_STORAGE_PREFIX = "gl_toss_order_";
@@ -23,13 +22,18 @@ interface PendingOrder {
 type State =
   | { status: "confirming" }
   | { status: "error"; message: string }
-  | { status: "done"; orderNumber: string; amount: number; pending: PendingOrder };
+  | { status: "done"; orderNumber: string; amount: number; paymentMethod: string; pending: PendingOrder };
 
 export default function CheckoutSuccessClient({ artwork, artist }: { artwork: Artwork; artist: Artist }) {
   const searchParams = useSearchParams();
   const [state, setState] = useState<State>({ status: "confirming" });
 
+  // 같은 결제를 두 번 승인 요청하지 않도록(개발 모드 StrictMode의 effect 이중 실행 등) 1회만 실행합니다.
+  const startedRef = useRef(false);
+
   useEffect(() => {
+    if (startedRef.current) return;
+    startedRef.current = true;
     const paymentKey = searchParams.get("paymentKey");
     const orderId = searchParams.get("orderId");
     const amount = searchParams.get("amount");
@@ -47,36 +51,25 @@ export default function CheckoutSuccessClient({ artwork, artist }: { artwork: Ar
     const pending: PendingOrder = JSON.parse(raw);
 
     (async () => {
+      // 결제 승인과 주문 등록은 서버에서 함께 처리합니다(금액 검증 및 실패 시 자동취소 포함).
       const res = await fetch("/api/toss/confirm", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentKey, orderId, amount: Number(amount) }),
+        body: JSON.stringify({ paymentKey, orderId, amount: Number(amount), order: pending }),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setState({ status: "error", message: data.error || "결제 승인에 실패했습니다." });
         return;
       }
-
-      try {
-        const result = await purchaseArtwork({
-          artworkId: pending.artworkId,
-          shippingAddress: pending.shippingAddress,
-          phone: pending.phone,
-          name: pending.name,
-          email: pending.email,
-          paymentMethod: "TossPayments (신용/체크카드 등)",
-          insured: pending.insured,
-          marketingOptIn: pending.marketingOptIn,
-        });
-        sessionStorage.removeItem(`${TOSS_ORDER_STORAGE_PREFIX}${orderId}`);
-        setState({ status: "done", orderNumber: result.orderNumber, amount: result.amount, pending });
-      } catch {
-        setState({
-          status: "error",
-          message: "결제는 완료되었으나 주문 등록에 실패했습니다. 고객센터로 문의해주세요.",
-        });
-      }
+      sessionStorage.removeItem(`${TOSS_ORDER_STORAGE_PREFIX}${orderId}`);
+      setState({
+        status: "done",
+        orderNumber: data.orderNumber,
+        amount: data.amount,
+        paymentMethod: data.paymentMethod,
+        pending,
+      });
     })();
   }, [searchParams]);
 
@@ -109,7 +102,7 @@ export default function CheckoutSuccessClient({ artwork, artist }: { artwork: Ar
       buyerName={state.pending.name}
       buyerEmail={state.pending.email}
       shippingAddress={state.pending.shippingAddress}
-      paymentMethod="TossPayments (신용/체크카드 등)"
+      paymentMethod={state.paymentMethod}
     />
   );
 }
