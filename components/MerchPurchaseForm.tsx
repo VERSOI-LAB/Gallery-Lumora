@@ -6,6 +6,7 @@ import { formatKRW } from "@/lib/format";
 import { getMyProfile } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
 import ShippingNotice from "@/components/ShippingNotice";
+import AddressSearchField from "@/components/AddressSearchField";
 import { newTossOrderId, tossErrorMessage, useTossPaymentWidget } from "@/components/useTossPaymentWidget";
 import {
   MERCH_MAX_QUANTITY,
@@ -95,6 +96,10 @@ export default function MerchPurchaseForm({
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!shippingAddress.trim()) {
+      setError("주소 찾기로 배송지를 입력해주세요.");
+      return;
+    }
     const widget = toss.widgetRef.current;
     if (!widget) {
       setError("결제창이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
@@ -241,14 +246,15 @@ export default function MerchPurchaseForm({
             등록된 주소와 동일
           </label>
         )}
-        <textarea
-          required
-          disabled={useProfileAddress}
-          value={shippingAddress}
-          onChange={(e) => setShippingAddress(e.target.value)}
-          placeholder="받으실 주소를 입력해주세요"
-          className="h-20 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm outline-patina disabled:text-ink-faint"
-        />
+        {useProfileAddress ? (
+          <textarea
+            disabled
+            value={shippingAddress}
+            className="h-20 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm text-ink-faint"
+          />
+        ) : (
+          <AddressSearchField onChange={setShippingAddress} />
+        )}
       </Field>
       <Field label="연락처">
         <input

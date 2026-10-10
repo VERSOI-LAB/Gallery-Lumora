@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
 import ShippingNotice from "./ShippingNotice";
+import AddressSearchField from "./AddressSearchField";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
@@ -73,6 +74,10 @@ export default function CartBrowser() {
 
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
+    if (!shippingAddress.trim()) {
+      setError("주소 찾기로 배송지를 입력해주세요.");
+      return;
+    }
     const widget = toss.widgetRef.current;
     if (!widget) {
       setError("결제창이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
@@ -217,12 +222,7 @@ export default function CartBrowser() {
             />
           </Field>
           <Field label="배송지">
-            <textarea
-              required
-              value={shippingAddress}
-              onChange={(e) => setShippingAddress(e.target.value)}
-              className="h-20 w-full border border-line-strong bg-paper-raised px-3 py-2 text-sm outline-patina"
-            />
+            <AddressSearchField onChange={setShippingAddress} />
           </Field>
           <Field label="연락처">
             <input
