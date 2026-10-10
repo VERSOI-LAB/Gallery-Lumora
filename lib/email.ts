@@ -2,6 +2,7 @@ import "server-only";
 import { Resend } from "resend";
 import type { Artwork } from "./types";
 import { formatKRW } from "./format";
+import { SHIPPING_PERIOD_STANDARD } from "./shipping";
 
 const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
@@ -54,4 +55,84 @@ export async function sendNewArtworkEmail(to: string[], artwork: Artwork): Promi
       })
     )
   );
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export interface OrderConfirmationLine {
+  orderNumber: string;
+  title: string;
+  amount: number;
+}
+
+/** 결제 완료 후 구매자에게 보내는 주문 확인 메일. 비회원은 이 메일의 주문번호로 주문을 조회합니다.
+ * 호출하는 쪽에서 실패가 결제 흐름에 영향을 주지 않도록 처리해야 합니다(결제는 이미 완료된 상태). */
+export async function sendOrderConfirmationEmail({
+  to,
+  buyerName,
+  lines,
+  paymentMethod,
+  shippingAddress,
+}: {
+  to: string;
+  buyerName: string;
+  lines: OrderConfirmationLine[];
+  paymentMethod: string;
+  shippingAddress: string;
+}): Promise<void> {
+  const fromAddress = process.env.MAIL_FROM_ADDRESS;
+  if (!fromAddress) throw new Error("MAIL_FROM_ADDRESS가 설정되지 않았습니다.");
+  if (!to.trim() || lines.length === 0) return;
+
+  const total = lines.reduce((sum, line) => sum + line.amount, 0);
+  const rows = lines
+    .map(
+      (line) => `
+        <tr>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e5e5e5; font-size: 14px; color: #111111;">
+            ${escapeHtml(line.title)}
+            <div style="font-size: 12px; color: #8c8c8c; margin-top: 2px;">주문번호 <strong style="color: #111111;">${escapeHtml(line.orderNumber)}</strong></div>
+          </td>
+          <td style="padding: 10px 0; border-bottom: 1px solid #e5e5e5; font-size: 14px; color: #111111; text-align: right; white-space: nowrap;">${formatKRW(line.amount)}</td>
+        </tr>`
+    )
+    .join("");
+
+  const html = `
+    <div style="font-family: sans-serif; max-width: 520px; margin: 0 auto; color: #111111;">
+      <p style="font-size: 12px; letter-spacing: 0.1em; color: #8c8c8c; text-transform: uppercase;">GALLERY LUMORA · 주문 확인</p>
+      <h1 style="font-size: 20px; margin: 8px 0 16px;">${escapeHtml(buyerName)}님, 주문이 완료되었습니다</h1>
+      <table style="width: 100%; border-collapse: collapse;">${rows}
+        <tr>
+          <td style="padding: 12px 0; font-size: 14px; font-weight: bold;">총 결제금액</td>
+          <td style="padding: 12px 0; font-size: 14px; font-weight: bold; text-align: right;">${formatKRW(total)}</td>
+        </tr>
+      </table>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13px; color: #4d4d4d;">
+        <tr><td style="padding: 4px 0; width: 80px; color: #8c8c8c;">결제수단</td><td style="padding: 4px 0;">${escapeHtml(paymentMethod)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #8c8c8c;">배송지</td><td style="padding: 4px 0;">${escapeHtml(shippingAddress)}</td></tr>
+        <tr><td style="padding: 4px 0; color: #8c8c8c;">배송기간</td><td style="padding: 4px 0;">${SHIPPING_PERIOD_STANDARD} 발송</td></tr>
+      </table>
+      <p style="font-size: 13px; color: #4d4d4d; margin: 20px 0;">
+        비회원 주문은 주문 시 입력한 연락처와 위 주문번호로 주문내역·배송 현황을 조회할 수 있습니다.
+      </p>
+      <a href="${siteUrl}/mypage" style="display: inline-block; padding: 10px 20px; background: #111111; color: #ffffff; text-decoration: none; font-size: 13px;">주문내역 보기</a>
+    </div>
+  `;
+
+  const resend = getResendClient();
+  const { error } = await resend.emails.send({
+    from: fromAddress,
+    to,
+    subject: `[Gallery Lumora] 주문이 완료되었습니다 (${lines[0].orderNumber}${lines.length > 1 ? ` 외 ${lines.length - 1}건` : ""})`,
+    html,
+  });
+  if (error) throw new Error(error.message);
 }
