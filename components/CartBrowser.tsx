@@ -7,13 +7,18 @@ import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
-import { getMerchProductsByIds, getMyProfile, purchaseMerch } from "@/lib/queries";
+import { newTossOrderId, useTossPaymentWidget } from "./useTossPaymentWidget";
+import { getMerchProductsByIds, getMyProfile } from "@/lib/queries";
+import {
+  MERCH_MAX_QUANTITY,
+  TOSS_MERCH_ORDER_PREFIX,
+  TOSS_MERCH_ORDER_STORAGE_PREFIX,
+  type PendingMerchOrder,
+} from "@/lib/tosspayments";
 import type { MerchProduct } from "@/lib/types";
 
-const MADE_TO_ORDER_MAX_QUANTITY = 10;
-
 export default function CartBrowser() {
-  const { items, updateQuantity, removeItem, clear } = useCart();
+  const { items, updateQuantity, removeItem } = useCart();
   const [products, setProducts] = useState<Record<string, MerchProduct>>({});
   const [loaded, setLoaded] = useState(false);
 
@@ -21,10 +26,8 @@ export default function CartBrowser() {
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [receipts, setReceipts] = useState<{ orderNumber: string; amount: number }[] | null>(null);
 
   useEffect(() => {
     const ids = Array.from(new Set(items.map((i) => i.productId)));
@@ -59,48 +62,62 @@ export default function CartBrowser() {
     return product ? sum + product.price * i.quantity : sum;
   }, 0);
 
+  // 장바구니 상품 정보를 다 불러온 뒤에만 결제위젯을 그립니다(금액이 확정된 뒤).
+  const purchasableItems = items.filter((i) => products[i.productId]);
+  const toss = useTossPaymentWidget({
+    amount: total,
+    methodsId: "toss-cart-payment-methods",
+    agreementId: "toss-cart-agreement",
+    enabled: loaded && purchasableItems.length > 0,
+  });
+
   async function handleCheckout(e: FormEvent) {
     e.preventDefault();
+    const widget = toss.widgetRef.current;
+    if (!widget) {
+      setError("결제창이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
+
+    const orderId = newTossOrderId(TOSS_MERCH_ORDER_PREFIX);
+    const storageKey = `${TOSS_MERCH_ORDER_STORAGE_PREFIX}${orderId}`;
+    // TossPayments 결제창에는 orderId/orderName/고객정보만 넘어가므로, 나머지 주문 정보는
+    // 결제 완료 페이지에서 이어받을 수 있도록 세션에 잠시 보관합니다.
+    const pending: PendingMerchOrder = {
+      items: purchasableItems.map((i) => ({
+        productId: i.productId,
+        variantId: i.variantId,
+        quantity: i.quantity,
+        artworkId: null,
+        designImageUrl: null,
+      })),
+      shippingAddress,
+      phone,
+      name,
+      email,
+      marketingOptIn: true,
+      fromCart: true,
+    };
+    sessionStorage.setItem(storageKey, JSON.stringify(pending));
+
+    const firstTitle = products[purchasableItems[0].productId].title;
     try {
-      const results: { orderNumber: string; amount: number }[] = [];
-      for (const item of items) {
-        const result = await purchaseMerch({
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          shippingAddress,
-          phone,
-          name,
-          email,
-          paymentMethod,
-        });
-        results.push(result);
-      }
-      setReceipts(results);
-      clear();
+      await widget.requestPayment({
+        orderId,
+        orderName: purchasableItems.length > 1 ? `${firstTitle} 외 ${purchasableItems.length - 1}건` : firstTitle,
+        customerName: name,
+        customerEmail: email,
+        successUrl: `${window.location.origin}/shop/checkout/success`,
+        failUrl: `${window.location.origin}/shop/checkout/fail?from=${encodeURIComponent("/shop/cart")}`,
+      });
+      // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
     } catch {
-      setError("결제 중 일부 상품 처리에 실패했습니다. 품절되었거나 일시적인 오류일 수 있습니다.");
-    } finally {
+      sessionStorage.removeItem(storageKey);
+      setError("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }
-  }
-
-  if (receipts) {
-    const grandTotal = receipts.reduce((s, r) => s + r.amount, 0);
-    return (
-      <div className="mx-auto max-w-lg py-16 text-center">
-        <p className="mb-3 text-xs font-semibold tracking-wide text-patina uppercase">결제 완료</p>
-        <h1 className="mb-4 font-display text-2xl">주문이 완료되었습니다</h1>
-        <p className="mb-8 text-sm text-ink-soft">
-          {receipts.length}건 · {formatKRW(grandTotal)} 결제가 완료되었습니다.
-        </p>
-        <Link href="/shop" className={buttonClasses("ghost")}>
-          Shop으로 돌아가기
-        </Link>
-      </div>
-    );
   }
 
   if (!loaded) return <p className="text-sm text-ink-faint">불러오는 중...</p>;
@@ -153,7 +170,7 @@ export default function CartBrowser() {
                       updateQuantity(
                         item.productId,
                         item.variantId,
-                        Math.min(MADE_TO_ORDER_MAX_QUANTITY, item.quantity + 1)
+                        Math.min(MERCH_MAX_QUANTITY, item.quantity + 1)
                       )
                     }
                     className="h-8 w-8 border border-line-strong text-sm"
@@ -216,19 +233,18 @@ export default function CartBrowser() {
               className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
             />
           </Field>
-          <Field label="결제 수단">
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-            >
-              <option>신용/체크카드</option>
-              <option>계좌이체</option>
-              <option>간편결제</option>
-            </select>
+          <Field label="결제 수단 (TossPayments)">
+            <div id="toss-cart-payment-methods" />
+            <div id="toss-cart-agreement" className="mt-2" />
+            {!toss.ready && !toss.loadError && (
+              <p className="mt-2 text-xs text-ink-faint">결제창을 불러오는 중...</p>
+            )}
+            {toss.loadError && (
+              <p className="mt-2 text-xs text-red-600">결제창을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.</p>
+            )}
           </Field>
           <ShippingNotice kind="standard" />
-          <button type="submit" disabled={submitting} className={`w-full ${buttonClasses("primary")}`}>
+          <button type="submit" disabled={submitting || !toss.ready} className={`w-full ${buttonClasses("primary")}`}>
             {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
           </button>
           {error && <p className="text-xs text-red-600">{error}</p>}

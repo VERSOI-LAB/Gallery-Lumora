@@ -15,3 +15,29 @@ export const TOSS_WIDGET_CLIENT_KEY =
 export function tossOrderIdPrefix(artworkId: string): string {
   return `gl_${artworkId.slice(0, 8)}_`;
 }
+
+/** 굿즈 결제(단건·장바구니) orderId 접두사. */
+export const TOSS_MERCH_ORDER_PREFIX = "glm_";
+/** 굿즈 결제 전 주문 정보를 결제 완료 페이지로 넘기는 sessionStorage 키 접두사. */
+export const TOSS_MERCH_ORDER_STORAGE_PREFIX = "gl_toss_merch_";
+export const MERCH_MAX_QUANTITY = 10;
+
+export interface PendingMerchItem {
+  productId: string;
+  variantId: string | null;
+  quantity: number;
+  /** 템플릿 상품만 — 고객이 고른 작품과 캔버스 디자인 이미지. */
+  artworkId: string | null;
+  designImageUrl: string | null;
+}
+
+export interface PendingMerchOrder {
+  items: PendingMerchItem[];
+  shippingAddress: string;
+  phone: string;
+  name: string;
+  email: string;
+  marketingOptIn: boolean;
+  /** 장바구니 결제였다면 완료 후 장바구니를 비웁니다. */
+  fromCart: boolean;
+}

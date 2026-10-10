@@ -1215,48 +1215,6 @@ export async function addMerchEditions(
   if (sizeError) throw sizeError;
 }
 
-export interface MerchPurchaseInput {
-  productId: string;
-  variantId: string | null;
-  /** Required when purchasing a template product (MerchProduct.isTemplate) —
-   * the artwork the customer searched for and selected to print on it. */
-  artworkId?: string | null;
-  /** The rendered canvas design (see MerchCanvasEditor), uploaded to storage
-   * before calling this — template products only. */
-  designImageUrl?: string | null;
-  quantity: number;
-  shippingAddress: string;
-  phone: string;
-  name: string;
-  email: string;
-  paymentMethod: string;
-  marketingOptIn?: boolean;
-}
-
-export async function purchaseMerch(
-  input: MerchPurchaseInput
-): Promise<{ orderNumber: string; amount: number }> {
-  const { data, error } = await supabase.rpc("purchase_merch", {
-    p_product_id: input.productId,
-    // purchase_merch's SQL signature has no DEFAULT for p_variant_id, so the
-    // generated type is non-nullable even though the function body accepts
-    // (and expects) null for non-variant products.
-    p_variant_id: input.variantId as string,
-    p_artwork_id: input.artworkId ?? undefined,
-    p_design_image_url: input.designImageUrl ?? undefined,
-    p_quantity: input.quantity,
-    p_shipping_address: input.shippingAddress,
-    p_phone: input.phone,
-    p_name: input.name,
-    p_email: input.email,
-    p_payment_method: input.paymentMethod,
-    p_marketing_opt_in: input.marketingOptIn ?? true,
-  });
-  if (error) throw error;
-  const row = data[0];
-  return { orderNumber: row.order_number, amount: row.amount };
-}
-
 export async function getMerchOrdersByPhone(phone: string): Promise<MerchOrder[]> {
   const { data, error } = await supabase.rpc("get_merch_orders_by_phone", { p_phone: phone });
   if (error) throw error;
