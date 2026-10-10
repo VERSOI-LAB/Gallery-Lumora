@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
 
-export default function LoginForm() {
+export default function LoginForm({ next = "/" }: { next?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +23,7 @@ export default function LoginForm() {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");
       return;
     }
-    router.push("/");
+    router.push(next);
     router.refresh();
   }
 
