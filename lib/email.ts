@@ -11,7 +11,7 @@ const siteUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
     : "http://localhost:3000";
 
 function getResendClient(): Resend {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
   if (!apiKey) {
     throw new Error(
       "RESEND_API_KEY가 설정되지 않았습니다. .env.local에 RESEND_API_KEY와 MAIL_FROM_ADDRESS를 추가한 뒤 다시 시도해주세요."
@@ -23,7 +23,7 @@ function getResendClient(): Resend {
 /** Sends one email per recipient (not a single multi-recipient send, so each
  * customer's address stays out of the other recipients' "to" header). */
 export async function sendNewArtworkEmail(to: string[], artwork: Artwork): Promise<void> {
-  const fromAddress = process.env.MAIL_FROM_ADDRESS;
+  const fromAddress = process.env.MAIL_FROM_ADDRESS?.trim();
   if (!fromAddress) {
     throw new Error("MAIL_FROM_ADDRESS가 설정되지 않았습니다. .env.local에 발신 이메일 주소를 추가해주세요.");
   }
@@ -90,7 +90,7 @@ export async function sendOrderConfirmationEmail({
   /** 관리자 테스트 발송 — 제목에 [테스트]를 붙입니다. */
   test?: boolean;
 }): Promise<void> {
-  const fromAddress = process.env.MAIL_FROM_ADDRESS;
+  const fromAddress = process.env.MAIL_FROM_ADDRESS?.trim();
   if (!fromAddress) throw new Error("MAIL_FROM_ADDRESS가 설정되지 않았습니다.");
   if (!to.trim() || lines.length === 0) return;
 
@@ -140,10 +140,24 @@ export async function sendOrderConfirmationEmail({
   if (error) throw new Error(error.message);
 }
 
-/** 관리자 화면에 보여줄 메일 발송 설정 상태(API 키 값 자체는 노출하지 않음). */
-export function getEmailConfigStatus(): { hasApiKey: boolean; fromAddress: string | null } {
+/** 관리자 화면에 보여줄 메일 발송 설정 상태. 키 값은 노출하지 않고, 이름 오타 등을 찾을 수 있도록
+ * 실제로 읽히는 RESEND/MAIL 관련 환경변수의 "이름"과 현재 배포 정보만 함께 돌려줍니다. */
+export function getEmailConfigStatus(): {
+  hasApiKey: boolean;
+  fromAddress: string | null;
+  relatedEnvNames: string[];
+  deployment: { project: string | null; env: string | null; commit: string | null };
+} {
   return {
-    hasApiKey: Boolean(process.env.RESEND_API_KEY),
-    fromAddress: process.env.MAIL_FROM_ADDRESS || null,
+    hasApiKey: Boolean(process.env.RESEND_API_KEY?.trim()),
+    fromAddress: process.env.MAIL_FROM_ADDRESS?.trim() || null,
+    relatedEnvNames: Object.keys(process.env)
+      .filter((name) => /resend|mail/i.test(name))
+      .sort(),
+    deployment: {
+      project: process.env.VERCEL_PROJECT_PRODUCTION_URL ?? null,
+      env: process.env.VERCEL_ENV ?? null,
+      commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? null,
+    },
   };
 }
