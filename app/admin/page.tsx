@@ -151,14 +151,25 @@ export default async function AdminDashboardPage() {
 
       <section className="mt-10 border-t border-line pt-8">
         <h2 className="mb-3 text-sm font-semibold text-ink">메일 발송 설정 (주문 확인·신작 알림)</h2>
-        <dl className="mb-4 grid grid-cols-[120px_1fr] gap-y-1 text-xs">
+        {/* 라벨 길이에 맞춰 첫 칸 너비를 정해 MAIL_FROM_ADDRESS 라벨이 값과 겹치지 않게 합니다. */}
+        <dl className="mb-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
           <dt className="text-ink-faint">RESEND_API_KEY</dt>
-          <dd className={emailConfig.hasApiKey ? "text-patina" : "text-red-600"}>
+          <dd className={`break-all ${emailConfig.hasApiKey ? "text-patina" : "text-red-600"}`}>
             {emailConfig.hasApiKey ? "설정됨" : "설정되지 않음 — Vercel 환경변수에 추가 후 재배포하세요"}
           </dd>
           <dt className="text-ink-faint">MAIL_FROM_ADDRESS</dt>
-          <dd className={emailConfig.fromAddress ? "text-ink" : "text-red-600"}>
+          <dd className={`break-all ${emailConfig.fromAddress ? "text-ink" : "text-red-600"}`}>
             {emailConfig.fromAddress ?? "설정되지 않음 — 예: Gallery Lumora <order@gallerylumora.com>"}
+          </dd>
+          <dt className="text-ink-faint">읽힌 관련 변수</dt>
+          <dd className="break-all text-ink-soft">
+            {emailConfig.relatedEnvNames.length > 0 ? emailConfig.relatedEnvNames.join(", ") : "없음"}
+          </dd>
+          <dt className="text-ink-faint">현재 배포</dt>
+          <dd className="break-all text-ink-soft">
+            {[emailConfig.deployment.project, emailConfig.deployment.env, emailConfig.deployment.commit]
+              .filter(Boolean)
+              .join(" · ") || "확인 불가(로컬 실행)"}
           </dd>
         </dl>
         <AdminTestEmailForm />
