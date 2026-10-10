@@ -394,7 +394,7 @@ function GuestPhoneLookup() {
           {loading ? "조회 중..." : "조회"}
         </button>
       </form>
-      <p className="mt-2 text-xs text-ink-faint">주문번호는 결제 완료 화면에서 확인할 수 있습니다. 회원은 로그인하면 주문번호 없이 주문내역을 볼 수 있습니다.</p>
+      <p className="mt-2 text-xs text-ink-faint">주문번호는 결제 완료 화면과 주문 확인 메일에서 확인할 수 있습니다. 회원은 로그인하면 주문번호 없이 주문내역을 볼 수 있습니다.</p>
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
       {artworkOrders && merchOrders && (

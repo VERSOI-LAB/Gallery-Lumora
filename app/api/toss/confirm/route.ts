@@ -1,9 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { isValidPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { supabaseService } from "@/lib/supabase/service";
 import { isHighValueArtwork } from "@/lib/format";
 import { tossOrderIdPrefix } from "@/lib/tosspayments";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 import { cancelTossPayment, confirmTossPayment, tossPaymentMethodLabel } from "@/lib/tossServer";
 
 interface PendingOrder {
@@ -51,7 +52,7 @@ export async function POST(req: NextRequest) {
   const supabase = await createServerSupabaseClient();
   const { data: artwork, error: artworkError } = await supabase
     .from("artworks")
-    .select("price, sold")
+    .select("title, price, sold")
     .eq("id", order.artworkId)
     .maybeSingle();
   if (artworkError || !artwork) {
@@ -109,6 +110,22 @@ export async function POST(req: NextRequest) {
       { status: 500 }
     );
   }
+
+  // 주문 확인 메일은 응답을 보낸 뒤 발송합니다. 결제·주문은 이미 끝났으므로 실패해도 기록만 남깁니다.
+  const confirmedOrder = rows[0];
+  after(async () => {
+    try {
+      await sendOrderConfirmationEmail({
+        to: order.email,
+        buyerName: order.name,
+        lines: [{ orderNumber: confirmedOrder.order_number, title: artwork.title, amount: confirmedOrder.amount }],
+        paymentMethod,
+        shippingAddress: order.shippingAddress,
+      });
+    } catch (err) {
+      console.error("[email] 주문 확인 메일 발송 실패", confirmedOrder.order_number, err);
+    }
+  });
 
   return NextResponse.json({
     orderNumber: rows[0].order_number,

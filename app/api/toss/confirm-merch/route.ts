@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { isValidPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { supabaseService } from "@/lib/supabase/service";
@@ -8,6 +8,7 @@ import {
   type PendingMerchItem,
   type PendingMerchOrder,
 } from "@/lib/tosspayments";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 import { cancelTossPayment, confirmTossPayment, tossPaymentMethodLabel } from "@/lib/tossServer";
 
 const MAX_ITEMS = 20;
@@ -49,11 +50,11 @@ function isValidOrder(order: unknown): order is PendingMerchOrder {
 }
 
 /** purchase_merch와 같은 규칙으로 품목별 결제 금액을 계산합니다. 구매할 수 없는 품목이면 오류 메시지를 반환합니다. */
-async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[] } | { error: string }> {
+async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[]; titles: string[] } | { error: string }> {
   const productIds = Array.from(new Set(items.map((i) => i.productId)));
   const { data: products, error } = await supabaseService
     .from("merch_products")
-    .select("id, price, fulfillment, has_variants, is_template")
+    .select("id, title, price, fulfillment, has_variants, is_template")
     .in("id", productIds)
     .eq("active", true);
   if (error) return { error: "상품 정보를 불러오지 못했습니다." };
@@ -61,6 +62,7 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
 
   const editionDemand = new Map<string, number>();
   const amounts: number[] = [];
+  const titles: string[] = [];
   for (const item of items) {
     const product = productById.get(item.productId);
     if (!product) return { error: "판매 중이 아닌 상품이 포함되어 있습니다." };
@@ -82,6 +84,7 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
       unitPrice += variant.price_delta;
     }
     amounts.push(unitPrice * item.quantity);
+    titles.push(item.quantity > 1 ? `${product.title} × ${item.quantity}` : product.title);
   }
 
   for (const [productId, demand] of editionDemand) {
@@ -92,7 +95,7 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
       .eq("sold", false);
     if ((count ?? 0) < demand) return { error: "품절된 한정판 상품이 포함되어 있습니다." };
   }
-  return { amounts };
+  return { amounts, titles };
 }
 
 export async function POST(req: NextRequest) {
@@ -143,6 +146,7 @@ export async function POST(req: NextRequest) {
   // purchase_merch는 결제 없이 호출되지 않도록 service_role로만 호출합니다. service_role에는
   // auth.uid()가 없으므로, 로그인한 구매자의 주문은 user_id를 직접 채워 "내 주문"에 연결합니다.
   const receipts: { orderNumber: string; amount: number }[] = [];
+  const emailLines: { orderNumber: string; title: string; amount: number }[] = [];
   let failedAmount = 0;
   for (const [index, item] of order.items.entries()) {
     const { data: rows, error } = await supabaseService.rpc("purchase_merch", {
@@ -173,6 +177,7 @@ export async function POST(req: NextRequest) {
       if (linkError) console.error("[toss] 굿즈 주문 회원 연결 실패", row.order_number, linkError);
     }
     receipts.push({ orderNumber: row.order_number, amount: row.amount });
+    emailLines.push({ orderNumber: row.order_number, title: priced.titles[index], amount: row.amount });
   }
 
   if (receipts.length === 0) {
@@ -195,6 +200,21 @@ export async function POST(req: NextRequest) {
       failedAmount
     ));
   }
+
+  // 주문 확인 메일은 응답을 보낸 뒤 발송합니다. 결제·주문은 이미 끝났으므로 실패해도 기록만 남깁니다.
+  after(async () => {
+    try {
+      await sendOrderConfirmationEmail({
+        to: order.email,
+        buyerName: order.name,
+        lines: emailLines,
+        paymentMethod,
+        shippingAddress: order.shippingAddress,
+      });
+    } catch (err) {
+      console.error("[email] 굿즈 주문 확인 메일 발송 실패", orderId, err);
+    }
+  });
 
   return NextResponse.json({
     receipts,
