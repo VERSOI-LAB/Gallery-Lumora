@@ -2,6 +2,7 @@ import Link from "next/link";
 import ArtworkThumbnail from "./ArtworkThumbnail";
 import MerchThumbnail from "./MerchThumbnail";
 import OrderNoteEditor from "./OrderNoteEditor";
+import AdminRefundButton from "./AdminRefundButton";
 import { formatDate, formatKRW } from "@/lib/format";
 import { ORDER_STATUS_BADGE_STYLE, ORDER_STATUS_LABEL } from "@/lib/orderStatus";
 import type { ArtworkOrder, MerchOrder } from "@/lib/types";
@@ -40,12 +41,14 @@ export default function AdminOrderDetail({
   customerArtworkOrders,
   customerMerchOrders,
   staffNote,
+  refundedAt,
 }: {
   kind: "artwork" | "merch";
   order: ArtworkOrder | MerchOrder;
   customerArtworkOrders: ArtworkOrder[];
   customerMerchOrders: MerchOrder[];
   staffNote: string;
+  refundedAt: string | null;
 }) {
   const title = kind === "artwork" ? (order as ArtworkOrder).artworkTitle : (order as MerchOrder).productTitle;
   const otherOrderCount =
@@ -87,9 +90,12 @@ export default function AdminOrderDetail({
             )}
           </div>
         </div>
-        <span className={`border px-2 py-1 text-xs ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
-          {ORDER_STATUS_LABEL[order.status]}
-        </span>
+        <div className="flex flex-col items-end gap-2">
+          <span className={`border px-2 py-1 text-xs ${ORDER_STATUS_BADGE_STYLE[order.status]}`}>
+            {ORDER_STATUS_LABEL[order.status]}
+          </span>
+          <AdminRefundButton kind={kind} orderId={order.id} amount={order.amount} refundedAt={refundedAt} />
+        </div>
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2">
