@@ -1159,6 +1159,7 @@ export type Database = {
           p_payment_method: string
           p_phone: string
           p_shipping_address: string
+          p_user_id?: string
         }
         Returns: {
           amount: number

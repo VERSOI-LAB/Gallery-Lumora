@@ -815,35 +815,6 @@ export async function updateInquiryStatus(
   if (error) throw error;
 }
 
-export interface PurchaseInput {
-  artworkId: string;
-  shippingAddress: string;
-  phone: string;
-  name: string;
-  email: string;
-  paymentMethod: string;
-  insured: boolean;
-  marketingOptIn?: boolean;
-}
-
-export async function purchaseArtwork(
-  input: PurchaseInput
-): Promise<{ orderNumber: string; amount: number }> {
-  const { data, error } = await supabase.rpc("purchase_artwork", {
-    p_artwork_id: input.artworkId,
-    p_shipping_address: input.shippingAddress,
-    p_phone: input.phone,
-    p_name: input.name,
-    p_email: input.email,
-    p_payment_method: input.paymentMethod,
-    p_insured: input.insured,
-    p_marketing_opt_in: input.marketingOptIn ?? true,
-  });
-  if (error) throw error;
-  const row = data[0];
-  return { orderNumber: row.order_number, amount: row.amount };
-}
-
 function slugify(title: string): string {
   const base = title
     .trim()
