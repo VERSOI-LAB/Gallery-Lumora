@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { supabaseService } from "@/lib/supabase/service";
 import { isHighValueArtwork } from "@/lib/format";
 import { tossOrderIdPrefix } from "@/lib/tosspayments";
 
@@ -106,7 +107,12 @@ export async function POST(req: NextRequest) {
   }
 
   const paymentMethod = `TossPayments ${payment.easyPay?.provider ?? payment.method ?? ""}`.trim();
-  const { data: rows, error: purchaseError } = await supabase.rpc("purchase_artwork", {
+  // purchase_artwork는 결제 없이 호출되지 않도록 service_role만 실행할 수 있습니다.
+  // service_role에는 auth.uid()가 없으므로 로그인한 구매자 ID를 직접 넘겨 "내 주문"에 연결합니다.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const { data: rows, error: purchaseError } = await supabaseService.rpc("purchase_artwork", {
     p_artwork_id: order.artworkId,
     p_shipping_address: order.shippingAddress,
     p_phone: order.phone,
@@ -115,6 +121,7 @@ export async function POST(req: NextRequest) {
     p_payment_method: paymentMethod,
     p_insured: order.insured,
     p_marketing_opt_in: order.marketingOptIn,
+    p_user_id: user?.id,
   });
 
   if (purchaseError || !rows?.[0]) {
