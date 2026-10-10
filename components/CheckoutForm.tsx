@@ -8,6 +8,7 @@ import { computeVatBreakdown, formatKRW } from "@/lib/format";
 import { getMyProfile } from "@/lib/queries";
 import { SHIPPING_PERIOD_STANDARD } from "@/lib/shipping";
 import { TOSS_WIDGET_CLIENT_KEY, tossOrderIdPrefix } from "@/lib/tosspayments";
+import { tossErrorMessage } from "./useTossPaymentWidget";
 import type { Artist, Artwork } from "@/lib/types";
 import type { PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk";
 
@@ -102,9 +103,9 @@ export default function CheckoutForm({
         failUrl: `${window.location.origin}/works/${artwork.slug}/checkout/fail`,
       });
       // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
-    } catch {
+    } catch (err) {
       sessionStorage.removeItem(`${TOSS_ORDER_STORAGE_PREFIX}${orderId}`);
-      setError("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
+      setError(tossErrorMessage(err));
       setSubmitting(false);
     }
   }

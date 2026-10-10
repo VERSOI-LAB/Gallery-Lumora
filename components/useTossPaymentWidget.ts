@@ -59,3 +59,17 @@ export function useTossPaymentWidget({
 export function newTossOrderId(prefix: string): string {
   return `${prefix}${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
+
+/** requestPayment 등에서 던진 오류를 사용자에게 보여줄 문구로 바꿉니다. 원인 파악을 위해
+ * TossPayments 오류 코드와 메시지를 그대로 노출하고, 콘솔에도 남깁니다. */
+export function tossErrorMessage(err: unknown): string {
+  console.error("[toss] 결제 요청 실패", err);
+  const e = (err ?? {}) as { code?: unknown; message?: unknown };
+  const code = typeof e.code === "string" ? e.code : null;
+  const message = typeof e.message === "string" && e.message ? e.message : null;
+  if (code === "USER_CANCEL" || code === "PAY_PROCESS_CANCELED") {
+    return "결제를 취소했습니다.";
+  }
+  if (message) return code ? `${message} (${code})` : message;
+  return "결제가 취소되었거나 실패했습니다. 다시 시도해주세요.";
+}

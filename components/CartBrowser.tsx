@@ -7,7 +7,7 @@ import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
 import { useCart } from "./CartContext";
-import { newTossOrderId, useTossPaymentWidget } from "./useTossPaymentWidget";
+import { newTossOrderId, tossErrorMessage, useTossPaymentWidget } from "./useTossPaymentWidget";
 import { getMerchProductsByIds, getMyProfile } from "@/lib/queries";
 import {
   MERCH_MAX_QUANTITY,
@@ -113,9 +113,9 @@ export default function CartBrowser() {
         failUrl: `${window.location.origin}/shop/checkout/fail?from=${encodeURIComponent("/shop/cart")}`,
       });
       // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
-    } catch {
+    } catch (err) {
       sessionStorage.removeItem(storageKey);
-      setError("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
+      setError(tossErrorMessage(err));
       setSubmitting(false);
     }
   }
