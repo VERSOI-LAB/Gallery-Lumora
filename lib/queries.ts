@@ -1909,10 +1909,29 @@ export async function updateSiteAsset(
   if (error) throw error;
 }
 
-export async function uploadMedia(path: string, file: File): Promise<string> {
-  const { error } = await supabase.storage.from("media").upload(path, file, { upsert: true });
+/** 로그인한 작가·회원(자기 폴더)과 비로그인 고객(merch-designs/, 새 파일만)이 media 버킷에
+ * 직접 올릴 때 사용합니다. 허용 경로는 storage.objects RLS 정책이 정합니다. 같은 경로에 덮어쓰지
+ * 않는 업로드는 upsert: false로 호출해야 비로그인 상태에서도 동작합니다. */
+export async function uploadMedia(path: string, file: File, { upsert = true }: { upsert?: boolean } = {}): Promise<string> {
+  const { error } = await supabase.storage.from("media").upload(path, file, { upsert });
   if (error) throw error;
   const { data } = supabase.storage.from("media").getPublicUrl(path);
+  return `${data.publicUrl}?v=${Date.now()}`;
+}
+
+/** 관리자 화면 전용 업로드 — 서버(/api/admin/upload-url)에서 관리자 세션을 확인하고 발급한
+ * 서명 URL로 업로드합니다. */
+export async function uploadAdminMedia(path: string, file: File): Promise<string> {
+  const res = await fetch("/api/admin/upload-url", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path }),
+  });
+  const signed = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(signed.error || "업로드 URL을 만들지 못했습니다.");
+  const { error } = await supabase.storage.from("media").uploadToSignedUrl(signed.path, signed.token, file);
+  if (error) throw error;
+  const { data } = supabase.storage.from("media").getPublicUrl(signed.path);
   return `${data.publicUrl}?v=${Date.now()}`;
 }
 

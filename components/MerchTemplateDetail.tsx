@@ -31,7 +31,8 @@ export default function MerchTemplateDetail({
     if (!blob) return null;
     const file = new File([blob], "design.png", { type: "image/png" });
     const path = `merch-designs/${product.slug}/${crypto.randomUUID()}.png`;
-    return uploadMedia(path, file);
+    // 비로그인 고객도 올릴 수 있도록 새 파일로만 업로드합니다(덮어쓰기 권한 없음).
+    return uploadMedia(path, file, { upsert: false });
   }
 
   return (
