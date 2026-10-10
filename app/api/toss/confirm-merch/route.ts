@@ -99,6 +99,15 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
 }
 
 export async function POST(req: NextRequest) {
+  // 비회원 결제는 받지 않습니다. 토스 승인 전에 거부하므로 결제는 일어나지 않습니다.
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "로그인 후 결제할 수 있습니다." }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   const { paymentKey, orderId, amount, order } = body ?? {};
   if (
@@ -137,10 +146,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   const paymentMethod = tossPaymentMethodLabel(payment);
 
   // purchase_merch는 결제 없이 호출되지 않도록 service_role로만 호출합니다. service_role에는

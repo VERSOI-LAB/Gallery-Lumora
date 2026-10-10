@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { loginHref } from "@/lib/loginRedirect";
 import PhoneInput from "./PhoneInput";
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
@@ -21,6 +24,7 @@ import type { MerchProduct } from "@/lib/types";
 
 export default function CartBrowser() {
   const { items, updateQuantity, removeItem } = useCart();
+  const pathname = usePathname();
   const [products, setProducts] = useState<Record<string, MerchProduct>>({});
   const [loaded, setLoaded] = useState(false);
 
@@ -48,6 +52,15 @@ export default function CartBrowser() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.map((i) => i.productId).join(",")]);
 
+  // 비회원 결제는 받지 않습니다. 로그인 여부를 확인하기 전(null)에는 결제창을 띄우지 않습니다.
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.auth
+      .getUser()
+      .then(({ data }) => setLoggedIn(Boolean(data.user)))
+      .catch(() => setLoggedIn(false));
+  }, []);
+
   useEffect(() => {
     getMyProfile()
       .then((profile) => {
@@ -70,7 +83,7 @@ export default function CartBrowser() {
     amount: total,
     methodsId: "toss-cart-payment-methods",
     agreementId: "toss-cart-agreement",
-    enabled: loaded && purchasableItems.length > 0,
+    enabled: loaded && purchasableItems.length > 0 && loggedIn === true,
   });
 
   async function handleCheckout(e: FormEvent) {
@@ -173,11 +186,7 @@ export default function CartBrowser() {
                   <button
                     type="button"
                     onClick={() =>
-                      updateQuantity(
-                        item.productId,
-                        item.variantId,
-                        Math.min(MERCH_MAX_QUANTITY, item.quantity + 1)
-                      )
+                      updateQuantity(item.productId, item.variantId, Math.min(MERCH_MAX_QUANTITY, item.quantity + 1))
                     }
                     className="h-8 w-8 border border-line-strong text-sm"
                   >
@@ -203,51 +212,62 @@ export default function CartBrowser() {
           <span>총 결제금액</span>
           <span>{formatKRW(total)}</span>
         </div>
-        <form onSubmit={handleCheckout} className="space-y-4">
-          <Field label="이름">
-            <input
-              required
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-            />
-          </Field>
-          <Field label="이메일">
-            <input
-              required
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-            />
-          </Field>
-          <Field label="배송지">
-            <AddressSearchField onChange={setShippingAddress} />
-          </Field>
-          <Field label="연락처">
-            <PhoneInput
-              required
-              value={phone}
-              onChange={setPhone}
-            />
-          </Field>
-          <Field label="결제 수단 (TossPayments)">
-            <div id="toss-cart-payment-methods" />
-            <div id="toss-cart-agreement" className="mt-2" />
-            {!toss.ready && !toss.loadError && (
-              <p className="mt-2 text-xs text-ink-faint">결제창을 불러오는 중...</p>
-            )}
-            {toss.loadError && (
-              <p className="mt-2 text-xs text-red-600">결제창을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.</p>
-            )}
-          </Field>
-          <ShippingNotice kind="standard" />
-          <button type="submit" disabled={submitting || !toss.ready} className={`w-full ${buttonClasses("primary")}`}>
-            {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
-          </button>
-          {error && <p className="text-xs text-red-600">{error}</p>}
-        </form>
+        {loggedIn === false ? (
+          <div className="border border-line p-5 text-center text-sm">
+            <p className="mb-4 text-sm text-ink-soft">로그인한 회원만 결제할 수 있습니다.</p>
+            <Link href={loginHref(pathname)} className={buttonClasses("primary", "sm")}>
+              로그인하고 결제하기
+            </Link>
+            <p className="mt-3 text-xs text-ink-faint">
+              계정이 없으신가요?{" "}
+              <Link href="/signup" className="underline hover:text-ink">
+                회원가입
+              </Link>
+            </p>
+          </div>
+        ) : (
+          <form onSubmit={handleCheckout} className="space-y-4">
+            <Field label="이름">
+              <input
+                required
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="이메일">
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+              />
+            </Field>
+            <Field label="배송지">
+              <AddressSearchField onChange={setShippingAddress} />
+            </Field>
+            <Field label="연락처">
+              <PhoneInput required value={phone} onChange={setPhone} />
+            </Field>
+            <Field label="결제 수단 (TossPayments)">
+              <div id="toss-cart-payment-methods" />
+              <div id="toss-cart-agreement" className="mt-2" />
+              {!toss.ready && !toss.loadError && <p className="mt-2 text-xs text-ink-faint">결제창을 불러오는 중...</p>}
+              {toss.loadError && (
+                <p className="mt-2 text-xs text-red-600">
+                  결제창을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.
+                </p>
+              )}
+            </Field>
+            <ShippingNotice kind="standard" />
+            <button type="submit" disabled={submitting || !toss.ready} className={`w-full ${buttonClasses("primary")}`}>
+              {submitting ? "결제 처리 중..." : `${formatKRW(total)} 결제하기`}
+            </button>
+            {error && <p className="text-xs text-red-600">{error}</p>}
+          </form>
+        )}
       </aside>
     </div>
   );

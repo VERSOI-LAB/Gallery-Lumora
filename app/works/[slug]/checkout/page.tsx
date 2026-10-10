@@ -1,8 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import CheckoutForm from "@/components/CheckoutForm";
 import { getArtistById, getArtwork } from "@/lib/queries";
 import { decodeSlugParam } from "@/lib/params";
 import { isHighValueArtwork } from "@/lib/format";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { loginHref } from "@/lib/loginRedirect";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +14,14 @@ export default async function CheckoutPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  // 비회원 결제는 받지 않습니다 — 로그인 후 이 결제 페이지로 돌아오게 합니다.
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect(loginHref(`/works/${encodeURIComponent(decodeSlugParam(slug))}/checkout`));
+
   const artwork = await getArtwork(decodeSlugParam(slug));
   if (!artwork) notFound();
   const artist = await getArtistById(artwork.artistId);

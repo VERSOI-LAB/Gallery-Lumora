@@ -33,6 +33,15 @@ function isValidOrder(order: unknown): order is PendingOrder {
 }
 
 export async function POST(req: NextRequest) {
+  // 비회원 결제는 받지 않습니다. 토스 승인 전에 거부하므로 결제는 일어나지 않습니다.
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "로그인 후 결제할 수 있습니다." }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   const { paymentKey, orderId, amount, order } = body ?? {};
   if (
@@ -49,7 +58,6 @@ export async function POST(req: NextRequest) {
 
   // 결제위젯 금액은 브라우저에서 정해지므로, 승인 전에 DB의 작품 가격과 반드시 대조합니다.
   // 승인 요청을 보내지 않으면 TossPayments가 인증된 결제를 자동으로 만료시킵니다.
-  const supabase = await createServerSupabaseClient();
   const { data: artwork, error: artworkError } = await supabase
     .from("artworks")
     .select("title, price, sold")
@@ -83,9 +91,6 @@ export async function POST(req: NextRequest) {
   const paymentMethod = tossPaymentMethodLabel(payment);
   // purchase_artwork는 결제 없이 호출되지 않도록 service_role만 실행할 수 있습니다.
   // service_role에는 auth.uid()가 없으므로 로그인한 구매자 ID를 직접 넘겨 "내 주문"에 연결합니다.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
   const { data: rows, error: purchaseError } = await supabaseService.rpc("purchase_artwork", {
     p_artwork_id: order.artworkId,
     p_shipping_address: order.shippingAddress,

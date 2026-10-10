@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { loginHref } from "@/lib/loginRedirect";
 import PhoneInput from "./PhoneInput";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
@@ -49,6 +53,16 @@ export default function MerchPurchaseForm({
   const [profileAddress, setProfileAddress] = useState("");
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const { addItem } = useCart();
+  const pathname = usePathname();
+
+  // 비회원 결제는 받지 않습니다. 로그인 여부를 확인하기 전(null)에는 결제창을 띄우지 않습니다.
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.auth
+      .getUser()
+      .then(({ data }) => setLoggedIn(Boolean(data.user)))
+      .catch(() => setLoggedIn(false));
+  }, []);
 
   useEffect(() => {
     getMyProfile()
@@ -92,7 +106,7 @@ export default function MerchPurchaseForm({
     amount: total,
     methodsId: "toss-merch-payment-methods",
     agreementId: "toss-merch-agreement",
-    enabled: !soldOut,
+    enabled: !soldOut && loggedIn === true,
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -162,9 +176,22 @@ export default function MerchPurchaseForm({
   }
 
   if (soldOut) {
+    return <div className="border border-line p-5 text-center text-sm text-ink-faint">일시 품절되었습니다.</div>;
+  }
+
+  if (loggedIn === false) {
     return (
-      <div className="border border-line p-5 text-center text-sm text-ink-faint">
-        일시 품절되었습니다.
+      <div className="border border-line p-5 text-center">
+        <p className="mb-4 text-sm text-ink-soft">로그인한 회원만 결제할 수 있습니다.</p>
+        <Link href={loginHref(pathname)} className={buttonClasses("primary", "sm")}>
+          로그인하고 결제하기
+        </Link>
+        <p className="mt-3 text-xs text-ink-faint">
+          계정이 없으신가요?{" "}
+          <Link href="/signup" className="underline hover:text-ink">
+            회원가입
+          </Link>
+        </p>
       </div>
     );
   }
@@ -214,7 +241,9 @@ export default function MerchPurchaseForm({
       )}
 
       {product.fulfillment === "edition" && (
-        <p className="text-xs text-ink-faint">한정 {product.editionSize}점 중 {editionsRemaining}점 남음</p>
+        <p className="text-xs text-ink-faint">
+          한정 {product.editionSize}점 중 {editionsRemaining}점 남음
+        </p>
       )}
 
       <Field label="이름">
@@ -258,11 +287,7 @@ export default function MerchPurchaseForm({
         )}
       </Field>
       <Field label="연락처">
-        <PhoneInput
-          required
-          value={phone}
-          onChange={setPhone}
-        />
+        <PhoneInput required value={phone} onChange={setPhone} />
       </Field>
       <Field label="결제 수단 (TossPayments)">
         <div id="toss-merch-payment-methods" />
