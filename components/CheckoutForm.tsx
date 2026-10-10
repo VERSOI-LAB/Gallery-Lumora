@@ -7,7 +7,7 @@ import { buttonClasses } from "@/lib/ui";
 import { computeVatBreakdown, formatKRW } from "@/lib/format";
 import { getMyProfile } from "@/lib/queries";
 import { SHIPPING_PERIOD_STANDARD } from "@/lib/shipping";
-import { TOSS_WIDGET_CLIENT_KEY } from "@/lib/tosspayments";
+import { TOSS_WIDGET_CLIENT_KEY, tossOrderIdPrefix } from "@/lib/tosspayments";
 import type { Artist, Artwork } from "@/lib/types";
 import type { PaymentWidgetInstance } from "@tosspayments/payment-widget-sdk";
 
@@ -84,7 +84,7 @@ export default function CheckoutForm({
     setSubmitting(true);
     setError(null);
 
-    const orderId = `gl_${artwork.id.slice(0, 8)}_${Date.now()}`;
+    const orderId = `${tossOrderIdPrefix(artwork.id)}${Date.now()}`;
     // TossPayments 결제창은 orderId/orderName/고객정보만 함께 넘어가므로, 배송지 등
     // 나머지 주문 정보는 결제 승인 후 완료 페이지에서 이어받을 수 있도록 세션에 잠시 보관합니다.
     sessionStorage.setItem(
