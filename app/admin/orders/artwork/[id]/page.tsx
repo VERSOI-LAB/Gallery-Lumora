@@ -10,7 +10,7 @@ export default async function AdminArtworkOrderDetailPage({ params }: { params: 
 
   const [customerArtworkOrders, customerMerchOrders, staffNote] = await Promise.all([
     getArtworkOrdersByPhone(order.phone, supabaseService),
-    getMerchOrdersByPhone(order.phone),
+    getMerchOrdersByPhone(order.phone, supabaseService),
     getOrderStaffNote("artwork", id, supabaseService),
   ]);
 

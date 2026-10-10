@@ -420,15 +420,22 @@ function toArtworkOrderByPhone(row: ArtworkOrderByPhoneRow): ArtworkOrder {
   };
 }
 
-/** Guest (unauthenticated) order lookup by phone — goes through the
- * SECURITY DEFINER `get_artwork_orders_by_phone` RPC since the `orders`
- * table's RLS policy only allows a caller to see their own `user_id`-linked
- * rows. Distinct from `getArtworkOrdersByPhone` below, which is a plain
- * table select used server-side (admin) with an explicit trusted client. */
-export async function getArtworkOrdersByPhoneRpc(phone: string): Promise<ArtworkOrder[]> {
-  const { data, error } = await supabase.rpc("get_artwork_orders_by_phone", { p_phone: phone });
-  if (error) throw error;
-  return data.map(toArtworkOrderByPhone);
+/** Guest (unauthenticated) order lookup — requires both the phone number and
+ * the order number, so knowing someone's phone alone doesn't reveal their
+ * name/email/address. Goes through SECURITY DEFINER RPCs since the order
+ * tables' RLS only exposes a caller's own `user_id`-linked rows. */
+export async function getGuestOrders(
+  phone: string,
+  orderNumber: string
+): Promise<{ artworkOrders: ArtworkOrder[]; merchOrders: MerchOrder[] }> {
+  const args = { p_phone: phone, p_order_number: orderNumber };
+  const [artwork, merch] = await Promise.all([
+    supabase.rpc("get_guest_artwork_orders", args),
+    supabase.rpc("get_guest_merch_orders", args),
+  ]);
+  if (artwork.error) throw artwork.error;
+  if (merch.error) throw merch.error;
+  return { artworkOrders: artwork.data.map(toArtworkOrderByPhone), merchOrders: merch.data.map(toMerchOrder) };
 }
 
 /** Customer-initiated cancellation, allowed only while an order is still
@@ -1215,8 +1222,10 @@ export async function addMerchEditions(
   if (sizeError) throw sizeError;
 }
 
-export async function getMerchOrdersByPhone(phone: string): Promise<MerchOrder[]> {
-  const { data, error } = await supabase.rpc("get_merch_orders_by_phone", { p_phone: phone });
+/** Admin only — all merch orders for a phone number. The RPC is executable by
+ * service_role only, so callers must pass `supabaseService`. */
+export async function getMerchOrdersByPhone(phone: string, client: SupabaseClient<Database>): Promise<MerchOrder[]> {
+  const { data, error } = await client.rpc("get_merch_orders_by_phone", { p_phone: phone });
   if (error) throw error;
   return data.map(toMerchOrder);
 }
@@ -2162,7 +2171,7 @@ export async function getCustomerDetail(
 
   const [artworkOrders, merchOrders, notificationRows] = await Promise.all([
     getArtworkOrdersByPhone(row.phone, client),
-    getMerchOrdersByPhone(row.phone),
+    getMerchOrdersByPhone(row.phone, client),
     client
       .from("customer_notifications")
       .select("*, artworks ( title )")

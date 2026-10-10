@@ -9,8 +9,7 @@ import { computeVatBreakdown, formatKRW, formatDate } from "@/lib/format";
 import { getMerchCategoryLabel } from "@/lib/merchTaxonomy";
 import {
   cancelOrder,
-  getArtworkOrdersByPhoneRpc,
-  getMerchOrdersByPhone,
+  getGuestOrders,
   getMyArtworkOrders,
   getMyMerchOrders,
 } from "@/lib/queries";
@@ -318,6 +317,7 @@ function LoggedInOrders() {
 
 function GuestPhoneLookup() {
   const [phone, setPhone] = useState("");
+  const [orderNumber, setOrderNumber] = useState("");
   const [artworkOrders, setArtworkOrders] = useState<ArtworkOrder[] | null>(null);
   const [merchOrders, setMerchOrders] = useState<MerchOrder[] | null>(null);
   const [loading, setLoading] = useState(false);
@@ -349,16 +349,13 @@ function GuestPhoneLookup() {
     if (saved) setPhone(saved);
   }, []);
 
-  async function lookup(targetPhone: string) {
+  async function lookup(targetPhone: string, targetOrderNumber: string) {
     setLoading(true);
     setError(null);
     try {
-      const [artworkResult, merchResult] = await Promise.all([
-        getArtworkOrdersByPhoneRpc(targetPhone),
-        getMerchOrdersByPhone(targetPhone),
-      ]);
-      setArtworkOrders(artworkResult);
-      setMerchOrders(merchResult);
+      const result = await getGuestOrders(targetPhone, targetOrderNumber);
+      setArtworkOrders(result.artworkOrders);
+      setMerchOrders(result.merchOrders);
       localStorage.setItem(LAST_PHONE_KEY, targetPhone);
     } catch {
       setError("주문내역을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -369,13 +366,14 @@ function GuestPhoneLookup() {
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!phone.trim()) return;
-    lookup(phone.trim());
+    if (!phone.trim() || !orderNumber.trim()) return;
+    lookup(phone.trim(), orderNumber.trim());
   }
 
   return (
     <div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      {/* 연락처만으로는 다른 사람의 주문(이름·주소 등)을 볼 수 없도록 주문번호를 함께 받습니다. */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row">
         <PhoneInput
           required
           value={phone}
@@ -383,16 +381,26 @@ function GuestPhoneLookup() {
           placeholder="주문 시 입력한 연락처"
           className="h-10 flex-1 border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
+        <input
+          required
+          type="text"
+          value={orderNumber}
+          onChange={(e) => setOrderNumber(e.target.value.toUpperCase())}
+          placeholder="주문번호 (예: LM-2026-AB12CD34)"
+          autoComplete="off"
+          className="h-10 flex-1 border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+        />
         <button type="submit" disabled={loading} className={buttonClasses("primary", "sm")}>
           {loading ? "조회 중..." : "조회"}
         </button>
       </form>
+      <p className="mt-2 text-xs text-ink-faint">주문번호는 결제 완료 화면에서 확인할 수 있습니다. 회원은 로그인하면 주문번호 없이 주문내역을 볼 수 있습니다.</p>
       {error && <p className="mt-3 text-xs text-red-600">{error}</p>}
 
       {artworkOrders && merchOrders && (
         <div className="mt-8 space-y-8">
           {artworkOrders.length === 0 && merchOrders.length === 0 ? (
-            <p className="text-sm text-ink-faint">해당 연락처로 조회된 주문내역이 없습니다.</p>
+            <p className="text-sm text-ink-faint">연락처와 주문번호가 일치하는 주문이 없습니다.</p>
           ) : (
             <>
               {artworkOrders.length > 0 && (
