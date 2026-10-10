@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { formatKRW } from "@/lib/format";
-import { getMyProfile, purchaseMerch } from "@/lib/queries";
+import { getMyProfile } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
 import ShippingNotice from "@/components/ShippingNotice";
+import { newTossOrderId, useTossPaymentWidget } from "@/components/useTossPaymentWidget";
+import {
+  MERCH_MAX_QUANTITY,
+  TOSS_MERCH_ORDER_PREFIX,
+  TOSS_MERCH_ORDER_STORAGE_PREFIX,
+  type PendingMerchOrder,
+} from "@/lib/tosspayments";
 import type { MerchProduct, MerchVariant } from "@/lib/types";
 
 export default function MerchPurchaseForm({
@@ -34,11 +40,9 @@ export default function MerchPurchaseForm({
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("신용/체크카드");
   const [marketingOptIn, setMarketingOptIn] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [receipt, setReceipt] = useState<{ orderNumber: string; amount: number } | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
   const [profileAddress, setProfileAddress] = useState("");
   const [useProfileAddress, setUseProfileAddress] = useState(false);
@@ -65,18 +69,16 @@ export default function MerchPurchaseForm({
   }
 
   const selectedVariant = variants.find((v) => v.id === variantId) ?? null;
-  // Cart checkout re-runs purchaseMerch per line item (see /shop/cart), which
+  // Cart checkout runs purchase_merch per line item (see /shop/cart), which
   // doesn't model editions' one-at-a-time draw well across multiple cart
   // sessions, and cart items don't carry a per-item artwork selection — so
   // only plain made-to-order, non-template items support "add to cart";
   // editions/variants/template products stay direct-purchase-only.
   const cartEligible = product.fulfillment === "made_to_order" && !product.hasVariants && !requiresArtworkSelection;
 
-  const MADE_TO_ORDER_MAX_QUANTITY = 10;
-
   const maxQuantity = useMemo(() => {
     if (product.fulfillment === "edition") return 1;
-    return MADE_TO_ORDER_MAX_QUANTITY;
+    return MERCH_MAX_QUANTITY;
   }, [product]);
 
   const soldOut = product.fulfillment === "edition" ? (editionsRemaining ?? 0) <= 0 : false;
@@ -84,46 +86,62 @@ export default function MerchPurchaseForm({
   const unitPrice = product.price + (selectedVariant?.priceDelta ?? 0);
   const total = unitPrice * quantity;
 
+  const toss = useTossPaymentWidget({
+    amount: total,
+    methodsId: "toss-merch-payment-methods",
+    agreementId: "toss-merch-agreement",
+    enabled: !soldOut,
+  });
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    const widget = toss.widgetRef.current;
+    if (!widget) {
+      setError("결제창이 아직 준비되지 않았습니다. 잠시 후 다시 시도해주세요.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
+
+    const orderId = newTossOrderId(TOSS_MERCH_ORDER_PREFIX);
+    const storageKey = `${TOSS_MERCH_ORDER_STORAGE_PREFIX}${orderId}`;
     try {
       const designImageUrl = requiresArtworkSelection && exportDesignImage ? await exportDesignImage() : null;
-      const result = await purchaseMerch({
-        productId: product.id,
-        variantId: product.hasVariants ? variantId : null,
-        artworkId: selectedArtworkId,
-        designImageUrl,
-        quantity,
+      // TossPayments 결제창에는 orderId/orderName/고객정보만 넘어가므로, 나머지 주문 정보는
+      // 결제 완료 페이지에서 이어받을 수 있도록 세션에 잠시 보관합니다.
+      const pending: PendingMerchOrder = {
+        items: [
+          {
+            productId: product.id,
+            variantId: product.hasVariants ? variantId : null,
+            quantity,
+            artworkId: selectedArtworkId,
+            designImageUrl,
+          },
+        ],
         shippingAddress,
         phone,
         name,
         email,
-        paymentMethod,
         marketingOptIn,
+        fromCart: false,
+      };
+      sessionStorage.setItem(storageKey, JSON.stringify(pending));
+
+      await widget.requestPayment({
+        orderId,
+        orderName: product.title,
+        customerName: name,
+        customerEmail: email,
+        successUrl: `${window.location.origin}/shop/checkout/success`,
+        failUrl: `${window.location.origin}/shop/checkout/fail?from=${encodeURIComponent(window.location.pathname)}`,
       });
-      setReceipt(result);
+      // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
     } catch {
-      setError("결제에 실패했습니다. 품절되었거나 일시적인 오류일 수 있습니다.");
-    } finally {
+      sessionStorage.removeItem(storageKey);
+      setError("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }
-  }
-
-  if (receipt) {
-    return (
-      <div className="border border-patina p-6 text-center">
-        <p className="mb-2 text-xs font-semibold tracking-wide text-patina uppercase">결제 완료</p>
-        <p className="mb-1 text-sm font-semibold">
-          주문번호 {receipt.orderNumber}
-        </p>
-        <p className="mb-5 text-sm text-ink-soft">{formatKRW(receipt.amount)} 결제가 완료되었습니다.</p>
-        <Link href="/shop" className={buttonClasses("ghost", "sm")}>
-          Shop으로 돌아가기
-        </Link>
-      </div>
-    );
   }
 
   if (soldOut) {
@@ -230,16 +248,13 @@ export default function MerchPurchaseForm({
           className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
       </Field>
-      <Field label="결제 수단">
-        <select
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-        >
-          <option>신용/체크카드</option>
-          <option>계좌이체</option>
-          <option>간편결제</option>
-        </select>
+      <Field label="결제 수단 (TossPayments)">
+        <div id="toss-merch-payment-methods" />
+        <div id="toss-merch-agreement" className="mt-2" />
+        {!toss.ready && !toss.loadError && <p className="mt-2 text-xs text-ink-faint">결제창을 불러오는 중...</p>}
+        {toss.loadError && (
+          <p className="mt-2 text-xs text-red-600">결제창을 불러오지 못했습니다. 새로고침 후 다시 시도해주세요.</p>
+        )}
       </Field>
       <label className="flex cursor-pointer items-center gap-2 text-sm text-ink-soft">
         <input
@@ -269,7 +284,10 @@ export default function MerchPurchaseForm({
         <button
           type="submit"
           disabled={
-            submitting || (product.hasVariants && !variantId) || (requiresArtworkSelection && !selectedArtworkId)
+            submitting ||
+            !toss.ready ||
+            (product.hasVariants && !variantId) ||
+            (requiresArtworkSelection && !selectedArtworkId)
           }
           className={`flex-1 ${buttonClasses("primary")} disabled:opacity-40`}
         >

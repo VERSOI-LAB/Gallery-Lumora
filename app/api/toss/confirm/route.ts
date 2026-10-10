@@ -3,12 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { supabaseService } from "@/lib/supabase/service";
 import { isHighValueArtwork } from "@/lib/format";
 import { tossOrderIdPrefix } from "@/lib/tosspayments";
-
-// TossPayments 결제위젯 시크릿 키(live_gsk_... / test_gsk_...). 서버에서만 사용하며 절대 커밋하지 마세요.
-// 비워두면 TossPayments 문서에 공개된 테스트 전용 시크릿 키로 동작합니다(실 결제 승인 불가).
-const TOSS_WIDGET_SECRET_KEY =
-  process.env.TOSS_WIDGET_SECRET_KEY || "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
-const TOSS_API_BASE = "https://api.tosspayments.com/v1/payments";
+import { cancelTossPayment, confirmTossPayment, tossPaymentMethodLabel } from "@/lib/tossServer";
 
 interface PendingOrder {
   artworkId: string;
@@ -18,23 +13,6 @@ interface PendingOrder {
   email: string;
   insured: boolean;
   marketingOptIn: boolean;
-}
-
-function tossHeaders() {
-  const basicAuth = Buffer.from(`${TOSS_WIDGET_SECRET_KEY}:`).toString("base64");
-  return { Authorization: `Basic ${basicAuth}`, "Content-Type": "application/json" };
-}
-
-async function cancelPayment(paymentKey: string, cancelReason: string) {
-  const res = await fetch(`${TOSS_API_BASE}/${encodeURIComponent(paymentKey)}/cancel`, {
-    method: "POST",
-    headers: tossHeaders(),
-    body: JSON.stringify({ cancelReason }),
-  });
-  if (!res.ok) {
-    console.error("[toss] 결제 자동취소 실패", paymentKey, await res.text().catch(() => ""));
-  }
-  return res.ok;
 }
 
 function isValidOrder(order: unknown): order is PendingOrder {
@@ -84,29 +62,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "결제 금액이 올바르지 않습니다." }, { status: 400 });
   }
 
-  const confirmRes = await fetch(`${TOSS_API_BASE}/confirm`, {
-    method: "POST",
-    headers: tossHeaders(),
-    body: JSON.stringify({ paymentKey, orderId, amount }),
-  });
-  const payment = await confirmRes.json();
-  if (!confirmRes.ok) {
-    return NextResponse.json(
-      { error: payment.message || "결제 승인에 실패했습니다." },
-      { status: confirmRes.status }
-    );
+  const confirmed = await confirmTossPayment(paymentKey, orderId, amount);
+  if (!confirmed.ok) {
+    return NextResponse.json({ error: confirmed.message }, { status: confirmed.status });
   }
+  const { payment } = confirmed;
 
   // 가상계좌(WAITING_FOR_DEPOSIT) 등 즉시 완료되지 않는 결제는 입금 확인 웹훅이 없으므로 받지 않습니다.
   if (payment.status !== "DONE") {
-    await cancelPayment(paymentKey, "즉시 결제가 완료되지 않는 결제수단");
+    await cancelTossPayment(paymentKey, "즉시 결제가 완료되지 않는 결제수단");
     return NextResponse.json(
       { error: "해당 결제수단은 지원하지 않습니다. 카드·간편결제 등 다른 결제수단을 이용해주세요." },
       { status: 400 }
     );
   }
 
-  const paymentMethod = `TossPayments ${payment.easyPay?.provider ?? payment.method ?? ""}`.trim();
+  const paymentMethod = tossPaymentMethodLabel(payment);
   // purchase_artwork는 결제 없이 호출되지 않도록 service_role만 실행할 수 있습니다.
   // service_role에는 auth.uid()가 없으므로 로그인한 구매자 ID를 직접 넘겨 "내 주문"에 연결합니다.
   const {
@@ -126,7 +97,7 @@ export async function POST(req: NextRequest) {
 
   if (purchaseError || !rows?.[0]) {
     console.error("[toss] 주문 등록 실패", orderId, paymentKey, purchaseError);
-    const canceled = await cancelPayment(paymentKey, "주문 등록 실패로 인한 자동취소");
+    const canceled = await cancelTossPayment(paymentKey, "주문 등록 실패로 인한 자동취소");
     return NextResponse.json(
       {
         error: canceled
