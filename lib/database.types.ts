@@ -1121,6 +1121,59 @@ export type Database = {
           vehicle_number: string
         }[]
       }
+      get_guest_artwork_orders: {
+        Args: { p_order_number: string; p_phone: string }
+        Returns: {
+          amount: number
+          artist_name: string
+          artist_payout_amount: number
+          artwork_id: string
+          artwork_title: string
+          courier_name: string
+          courier_phone: string
+          created_at: string
+          email: string
+          hue: number
+          id: string
+          image_urls: string[]
+          insured: boolean
+          name: string
+          order_number: string
+          payment_method: string
+          phone: string
+          shipping_address: string
+          shipping_method: string
+          status: string
+          tax_status: string
+          tracking_carrier: string
+          tracking_number: string
+          variant: number
+          vehicle_number: string
+        }[]
+      }
+      get_guest_merch_orders: {
+        Args: { p_order_number: string; p_phone: string }
+        Returns: {
+          amount: number
+          cover_hue: number
+          cover_variant: number
+          created_at: string
+          edition_number: number
+          id: string
+          order_number: string
+          payment_method: string
+          phone: string
+          product_category: string
+          product_id: string
+          product_slug: string
+          product_title: string
+          quantity: number
+          shipping_address: string
+          status: string
+          unit_price: number
+          variant_label: string
+        }[]
+      }
       get_merch_orders_by_phone: {
         Args: { p_phone: string }
         Returns: {
