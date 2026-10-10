@@ -86,3 +86,27 @@ export async function refundTossPayment(
   console.error("[toss] 환불 실패", paymentKey, data);
   return { ok: false, message: data?.message || "결제 취소에 실패했습니다." };
 }
+
+/** 키의 종류·모드만 알려주는 접두사(예: live_gsk, test_gck). 키 값 자체는 노출하지 않습니다. */
+function keyKind(key: string | undefined): string | null {
+  const match = key?.trim().match(/^(live|test)_(gck|gsk|ck|sk)_/);
+  return match ? `${match[1]}_${match[2]}` : key?.trim() ? "알 수 없는 형식" : null;
+}
+
+/** 관리자 화면에 보여줄 토스 키 설정 상태. 결제위젯에는 같은 모드의 gck(클라이언트)·gsk(시크릿) 짝이
+ * 필요합니다. 문서용 공개 테스트 키로 대신 동작 중인지도 함께 알려줍니다. */
+export function getTossConfigStatus(): {
+  clientKey: string | null;
+  secretKey: string | null;
+  usingDocsFallback: boolean;
+  problem: string | null;
+} {
+  const clientKind = keyKind(process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY);
+  const secretKind = keyKind(process.env.TOSS_WIDGET_SECRET_KEY);
+  const usingDocsFallback = !process.env.TOSS_WIDGET_SECRET_KEY?.trim() || !process.env.NEXT_PUBLIC_TOSS_CLIENT_KEY?.trim();
+  let problem: string | null = null;
+  if (usingDocsFallback) problem = "키가 설정되지 않아 토스 문서용 테스트 키로 동작 중입니다(실결제 불가).";
+  else if (clientKind !== "live_gck" || secretKind !== "live_gsk")
+    problem = "실결제에는 결제위젯 연동 키(live_gck / live_gsk) 짝이 필요합니다.";
+  return { clientKey: clientKind, secretKey: secretKind, usingDocsFallback, problem };
+}
