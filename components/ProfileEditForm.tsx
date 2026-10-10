@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import AddressSearchField from "./AddressSearchField";
 import { buttonClasses } from "@/lib/ui";
 import { getMyProfile, updateMyEmail, updateMyPassword, updateMyProfile } from "@/lib/queries";
 import type { Profile } from "@/lib/types";
@@ -18,17 +19,24 @@ function ProfileFields({ profile }: { profile: Profile }) {
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone);
   const [address, setAddress] = useState(profile.address);
+  // 저장된 주소가 있으면 그대로 보여주고, "주소 변경"을 누를 때만 주소 찾기 입력을 엽니다.
+  const [editingAddress, setEditingAddress] = useState(!profile.address);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!address.trim()) {
+      setError("주소 찾기로 주소를 입력해주세요.");
+      return;
+    }
     setSubmitting(true);
     setError(null);
     setSaved(false);
     try {
       await updateMyProfile({ name, phone, address });
+      setEditingAddress(false);
       setSaved(true);
     } catch {
       setError("저장하지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -56,15 +64,43 @@ function ProfileFields({ profile }: { profile: Profile }) {
           className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />
       </Field>
-      <Field label="주소">
-        <input
-          required
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="배송지로 사용할 주소를 입력해주세요"
-          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-        />
-      </Field>
+      {/* 주소 찾기 버튼이 들어가므로 <label> 대신 <div>로 감쌉니다. */}
+      <div>
+        <span className="mb-2 block text-[11px] tracking-wide text-ink-soft uppercase">주소</span>
+        {editingAddress ? (
+          <>
+            <AddressSearchField onChange={setAddress} />
+            {profile.address && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAddress(profile.address);
+                  setEditingAddress(false);
+                }}
+                className="mt-2 text-xs text-ink-soft hover:text-ink hover:underline"
+              >
+                취소
+              </button>
+            )}
+          </>
+        ) : (
+          <div className="flex items-start gap-3">
+            <p className="min-h-10 flex-1 border border-line-strong bg-paper-raised px-3 py-2.5 text-sm">{address}</p>
+            <button
+              type="button"
+              onClick={() => {
+                setAddress("");
+                setSaved(false);
+                setEditingAddress(true);
+              }}
+              className="h-10 shrink-0 border border-line-strong px-4 text-sm text-ink hover:bg-paper-raised"
+            >
+              주소 변경
+            </button>
+          </div>
+        )}
+        <p className="mt-2 text-xs text-ink-faint">결제할 때 &quot;등록된 주소와 동일&quot;을 선택하면 이 주소로 배송됩니다.</p>
+      </div>
 
       <button type="submit" disabled={submitting} className={buttonClasses("primary", "sm")}>
         {submitting ? "저장 중..." : "저장"}
