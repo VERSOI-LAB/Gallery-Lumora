@@ -53,11 +53,19 @@ export function tossPaymentMethodLabel(payment: TossPayment): string {
 
 /** 토스 주문번호(orderId, 예: glm_…)로 결제를 조회해 paymentKey를 찾습니다. 결제 키를 저장하기 전의
  * 주문을 환불할 때 사용합니다. */
-export async function findTossPaymentKeyByOrderId(orderId: string): Promise<string | null> {
-  const res = await fetch(`${TOSS_API_BASE}/orders/${encodeURIComponent(orderId)}`, { headers: tossHeaders() });
-  if (!res.ok) return null;
+export async function findTossPaymentKeyByOrderId(
+  orderId: string
+): Promise<{ paymentKey: string } | { error: string }> {
+  const res = await fetch(`${TOSS_API_BASE}/orders/${encodeURIComponent(orderId)}`, {
+    headers: tossHeaders(),
+    cache: "no-store",
+  });
   const data = await res.json().catch(() => null);
-  return typeof data?.paymentKey === "string" ? data.paymentKey : null;
+  if (res.ok && typeof data?.paymentKey === "string") return { paymentKey: data.paymentKey };
+  // 조회 실패 원인(키 불일치·주문 없음 등)을 관리자 화면에서 바로 볼 수 있도록 그대로 돌려줍니다.
+  const detail = [data?.code, data?.message].filter(Boolean).join(" ");
+  console.error("[toss] 주문번호로 결제 조회 실패", orderId, res.status, data);
+  return { error: `토스 결제 조회 실패 (HTTP ${res.status}${detail ? `, ${detail}` : ""}, 주문번호 ${orderId})` };
 }
 
 /** 환불용 결제 취소 — 실패 사유를 함께 돌려줍니다. 토스 상점관리자 등에서 이미 취소된 결제는

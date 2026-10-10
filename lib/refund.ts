@@ -76,8 +76,12 @@ export async function refundOrder(
 ): Promise<{ ok: true; alreadyCanceled: boolean } | { ok: false; error: string }> {
   if (order.refundedAt) return { ok: false, error: "이미 환불된 주문입니다." };
 
-  const paymentKey =
-    order.paymentKey ?? (order.tossOrderId ? await findTossPaymentKeyByOrderId(order.tossOrderId) : null);
+  let paymentKey = order.paymentKey;
+  if (!paymentKey && order.tossOrderId) {
+    const found = await findTossPaymentKeyByOrderId(order.tossOrderId);
+    if ("error" in found) return { ok: false, error: found.error };
+    paymentKey = found.paymentKey;
+  }
   if (!paymentKey) {
     return {
       ok: false,
