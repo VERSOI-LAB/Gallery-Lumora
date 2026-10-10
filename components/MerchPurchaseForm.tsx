@@ -6,7 +6,7 @@ import { formatKRW } from "@/lib/format";
 import { getMyProfile } from "@/lib/queries";
 import { useCart } from "@/components/CartContext";
 import ShippingNotice from "@/components/ShippingNotice";
-import { newTossOrderId, useTossPaymentWidget } from "@/components/useTossPaymentWidget";
+import { newTossOrderId, tossErrorMessage, useTossPaymentWidget } from "@/components/useTossPaymentWidget";
 import {
   MERCH_MAX_QUANTITY,
   TOSS_MERCH_ORDER_PREFIX,
@@ -106,7 +106,18 @@ export default function MerchPurchaseForm({
     const orderId = newTossOrderId(TOSS_MERCH_ORDER_PREFIX);
     const storageKey = `${TOSS_MERCH_ORDER_STORAGE_PREFIX}${orderId}`;
     try {
-      const designImageUrl = requiresArtworkSelection && exportDesignImage ? await exportDesignImage() : null;
+      let designImageUrl: string | null = null;
+      if (requiresArtworkSelection && exportDesignImage) {
+        try {
+          designImageUrl = await exportDesignImage();
+        } catch (err) {
+          console.error("[merch] 디자인 이미지 저장 실패", err);
+          const detail = err instanceof Error && err.message ? ` (${err.message})` : "";
+          setError(`디자인 이미지를 저장하지 못했습니다. 다시 시도해주세요.${detail}`);
+          setSubmitting(false);
+          return;
+        }
+      }
       // TossPayments 결제창에는 orderId/orderName/고객정보만 넘어가므로, 나머지 주문 정보는
       // 결제 완료 페이지에서 이어받을 수 있도록 세션에 잠시 보관합니다.
       const pending: PendingMerchOrder = {
@@ -137,9 +148,9 @@ export default function MerchPurchaseForm({
         failUrl: `${window.location.origin}/shop/checkout/fail?from=${encodeURIComponent(window.location.pathname)}`,
       });
       // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
-    } catch {
+    } catch (err) {
       sessionStorage.removeItem(storageKey);
-      setError("결제가 취소되었거나 실패했습니다. 다시 시도해주세요.");
+      setError(tossErrorMessage(err));
       setSubmitting(false);
     }
   }
