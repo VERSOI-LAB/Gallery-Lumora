@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import AddressSearchField from "./AddressSearchField";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
 import { isUsernameAvailable } from "@/lib/queries";
@@ -56,6 +57,10 @@ export default function SignupForm() {
     e.preventDefault();
     setError(null);
 
+    if (!address.trim()) {
+      setError("주소 찾기로 주소를 입력해주세요.");
+      return;
+    }
     if (password.length < 8) {
       setError("비밀번호는 8자 이상이어야 합니다.");
       return;
@@ -212,16 +217,11 @@ export default function SignupForm() {
             className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
           />
         </Field>
-        <Field label="주소">
-          <input
-            required
-            type="text"
-            placeholder="배송지로 사용할 주소를 입력해주세요"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
-          />
-        </Field>
+        {/* 주소 찾기 버튼이 들어가므로 <label> 대신 <div>로 감쌉니다. */}
+        <div>
+          <span className="mb-2 block text-[11px] tracking-wide text-ink-soft uppercase">주소</span>
+          <AddressSearchField onChange={setAddress} />
+        </div>
         <Field label="이메일">
           <input
             required
