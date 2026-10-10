@@ -80,12 +80,15 @@ export async function sendOrderConfirmationEmail({
   lines,
   paymentMethod,
   shippingAddress,
+  test = false,
 }: {
   to: string;
   buyerName: string;
   lines: OrderConfirmationLine[];
   paymentMethod: string;
   shippingAddress: string;
+  /** 관리자 테스트 발송 — 제목에 [테스트]를 붙입니다. */
+  test?: boolean;
 }): Promise<void> {
   const fromAddress = process.env.MAIL_FROM_ADDRESS;
   if (!fromAddress) throw new Error("MAIL_FROM_ADDRESS가 설정되지 않았습니다.");
@@ -131,8 +134,16 @@ export async function sendOrderConfirmationEmail({
   const { error } = await resend.emails.send({
     from: fromAddress,
     to,
-    subject: `[Gallery Lumora] 주문이 완료되었습니다 (${lines[0].orderNumber}${lines.length > 1 ? ` 외 ${lines.length - 1}건` : ""})`,
+    subject: `${test ? "[테스트] " : ""}[Gallery Lumora] 주문이 완료되었습니다 (${lines[0].orderNumber}${lines.length > 1 ? ` 외 ${lines.length - 1}건` : ""})`,
     html,
   });
   if (error) throw new Error(error.message);
+}
+
+/** 관리자 화면에 보여줄 메일 발송 설정 상태(API 키 값 자체는 노출하지 않음). */
+export function getEmailConfigStatus(): { hasApiKey: boolean; fromAddress: string | null } {
+  return {
+    hasApiKey: Boolean(process.env.RESEND_API_KEY),
+    fromAddress: process.env.MAIL_FROM_ADDRESS || null,
+  };
 }

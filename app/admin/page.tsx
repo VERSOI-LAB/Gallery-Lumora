@@ -7,6 +7,8 @@ import {
   getAdminAnalytics,
 } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
+import { getEmailConfigStatus } from "@/lib/email";
+import AdminTestEmailForm from "@/components/AdminTestEmailForm";
 
 const STAT_CARDS: {
   key: keyof Awaited<ReturnType<typeof getAdminDashboardStats>>;
@@ -31,6 +33,7 @@ export default async function AdminDashboardPage() {
     getGeneralInquiries(supabaseService),
     getAdminAnalytics(supabaseService),
   ]);
+  const emailConfig = getEmailConfigStatus();
   const maxDailyRevenue = Math.max(1, ...analytics.dailyRevenue.map((d) => d.amount));
   const maxTopArtist = Math.max(1, ...analytics.topArtists.map((a) => a.amount));
 
@@ -145,6 +148,21 @@ export default async function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      <section className="mt-10 border-t border-line pt-8">
+        <h2 className="mb-3 text-sm font-semibold text-ink">메일 발송 설정 (주문 확인·신작 알림)</h2>
+        <dl className="mb-4 grid grid-cols-[120px_1fr] gap-y-1 text-xs">
+          <dt className="text-ink-faint">RESEND_API_KEY</dt>
+          <dd className={emailConfig.hasApiKey ? "text-patina" : "text-red-600"}>
+            {emailConfig.hasApiKey ? "설정됨" : "설정되지 않음 — Vercel 환경변수에 추가 후 재배포하세요"}
+          </dd>
+          <dt className="text-ink-faint">MAIL_FROM_ADDRESS</dt>
+          <dd className={emailConfig.fromAddress ? "text-ink" : "text-red-600"}>
+            {emailConfig.fromAddress ?? "설정되지 않음 — 예: Gallery Lumora <order@gallerylumora.com>"}
+          </dd>
+        </dl>
+        <AdminTestEmailForm />
+      </section>
     </div>
   );
 }

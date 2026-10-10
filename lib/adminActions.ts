@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { assertAdminSession } from "./adminAuth";
 import { supabaseService } from "./supabase/service";
-import { sendNewArtworkEmail } from "./email";
+import { sendNewArtworkEmail, sendOrderConfirmationEmail } from "./email";
 import {
   updateArtwork,
   deleteArtwork,
@@ -296,4 +296,28 @@ export async function adminSendNewArtworkNotification(
   await log("send_notification", "artwork", artworkId, { customerCount: eligible.length });
   revalidatePath("/admin/customers");
   return { sentCount: eligible.length };
+}
+
+/** 주문 확인 메일과 같은 형식의 테스트 메일을 보내 Resend 설정을 확인합니다. 실패하면 Resend가
+ * 돌려준 오류 문구를 그대로 반환해 관리자 화면에서 원인을 바로 볼 수 있게 합니다. */
+export async function adminSendTestEmail(to: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  await assertAdminSession();
+  const email = to.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return { ok: false, error: "올바른 이메일 주소를 입력해주세요." };
+  }
+  try {
+    await sendOrderConfirmationEmail({
+      to: email,
+      buyerName: "테스트 고객",
+      lines: [{ orderNumber: "LM-TEST-00000000", title: "테스트 작품", amount: 10000 }],
+      paymentMethod: "TossPayments 카드",
+      shippingAddress: "(06236) 서울 강남구 테헤란로 152 테스트",
+      test: true,
+    });
+    await log("send_test_email", "email", null, { to: email });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
 }
