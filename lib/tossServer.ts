@@ -50,3 +50,31 @@ export async function cancelTossPayment(paymentKey: string, cancelReason: string
 export function tossPaymentMethodLabel(payment: TossPayment): string {
   return `TossPayments ${payment.easyPay?.provider ?? payment.method ?? ""}`.trim();
 }
+
+/** 토스 주문번호(orderId, 예: glm_…)로 결제를 조회해 paymentKey를 찾습니다. 결제 키를 저장하기 전의
+ * 주문을 환불할 때 사용합니다. */
+export async function findTossPaymentKeyByOrderId(orderId: string): Promise<string | null> {
+  const res = await fetch(`${TOSS_API_BASE}/orders/${encodeURIComponent(orderId)}`, { headers: tossHeaders() });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  return typeof data?.paymentKey === "string" ? data.paymentKey : null;
+}
+
+/** 환불용 결제 취소 — 실패 사유를 함께 돌려줍니다. 토스 상점관리자 등에서 이미 취소된 결제는
+ * 성공으로 간주해 DB 상태만 맞출 수 있게 합니다. */
+export async function refundTossPayment(
+  paymentKey: string,
+  cancelReason: string,
+  cancelAmount: number
+): Promise<{ ok: true; alreadyCanceled: boolean } | { ok: false; message: string }> {
+  const res = await fetch(`${TOSS_API_BASE}/${encodeURIComponent(paymentKey)}/cancel`, {
+    method: "POST",
+    headers: tossHeaders(),
+    body: JSON.stringify({ cancelReason, cancelAmount }),
+  });
+  if (res.ok) return { ok: true, alreadyCanceled: false };
+  const data = await res.json().catch(() => ({}));
+  if (data?.code === "ALREADY_CANCELED_PAYMENT") return { ok: true, alreadyCanceled: true };
+  console.error("[toss] 환불 실패", paymentKey, data);
+  return { ok: false, message: data?.message || "결제 취소에 실패했습니다." };
+}

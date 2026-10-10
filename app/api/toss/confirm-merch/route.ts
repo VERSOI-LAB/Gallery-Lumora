@@ -8,7 +8,7 @@ import {
   type PendingMerchItem,
   type PendingMerchOrder,
 } from "@/lib/tosspayments";
-import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationEmail, type OrderConfirmationLine } from "@/lib/email";
 import { cancelTossPayment, confirmTossPayment, tossPaymentMethodLabel } from "@/lib/tossServer";
 
 const MAX_ITEMS = 20;
@@ -50,11 +50,11 @@ function isValidOrder(order: unknown): order is PendingMerchOrder {
 }
 
 /** purchase_merch와 같은 규칙으로 품목별 결제 금액을 계산합니다. 구매할 수 없는 품목이면 오류 메시지를 반환합니다. */
-async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[]; titles: string[] } | { error: string }> {
+async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[]; titles: string[]; imageUrls: (string | null)[] } | { error: string }> {
   const productIds = Array.from(new Set(items.map((i) => i.productId)));
   const { data: products, error } = await supabaseService
     .from("merch_products")
-    .select("id, title, price, fulfillment, has_variants, is_template")
+    .select("id, title, price, fulfillment, has_variants, is_template, image_urls")
     .in("id", productIds)
     .eq("active", true);
   if (error) return { error: "상품 정보를 불러오지 못했습니다." };
@@ -63,6 +63,8 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
   const editionDemand = new Map<string, number>();
   const amounts: number[] = [];
   const titles: string[] = [];
+  // 메일에 보여줄 이미지 — 템플릿 상품은 고객이 만든 디자인, 그 외에는 상품 사진.
+  const imageUrls: (string | null)[] = [];
   for (const item of items) {
     const product = productById.get(item.productId);
     if (!product) return { error: "판매 중이 아닌 상품이 포함되어 있습니다." };
@@ -85,6 +87,7 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
     }
     amounts.push(unitPrice * item.quantity);
     titles.push(item.quantity > 1 ? `${product.title} × ${item.quantity}` : product.title);
+    imageUrls.push((product.is_template ? item.designImageUrl : null) ?? product.image_urls?.[0] ?? null);
   }
 
   for (const [productId, demand] of editionDemand) {
@@ -95,7 +98,7 @@ async function priceItems(items: PendingMerchItem[]): Promise<{ amounts: number[
       .eq("sold", false);
     if ((count ?? 0) < demand) return { error: "품절된 한정판 상품이 포함되어 있습니다." };
   }
-  return { amounts, titles };
+  return { amounts, titles, imageUrls };
 }
 
 export async function POST(req: NextRequest) {
@@ -151,7 +154,7 @@ export async function POST(req: NextRequest) {
   // purchase_merch는 결제 없이 호출되지 않도록 service_role로만 호출합니다. service_role에는
   // auth.uid()가 없으므로, 로그인한 구매자의 주문은 user_id를 직접 채워 "내 주문"에 연결합니다.
   const receipts: { orderNumber: string; amount: number }[] = [];
-  const emailLines: { orderNumber: string; title: string; amount: number }[] = [];
+  const emailLines: OrderConfirmationLine[] = [];
   let failedAmount = 0;
   for (const [index, item] of order.items.entries()) {
     const { data: rows, error } = await supabaseService.rpc("purchase_merch", {
@@ -174,15 +177,20 @@ export async function POST(req: NextRequest) {
       failedAmount += priced.amounts[index];
       continue;
     }
-    if (user) {
-      const { error: linkError } = await supabaseService
-        .from("merch_orders")
-        .update({ user_id: user.id })
-        .eq("order_number", row.order_number);
-      if (linkError) console.error("[toss] 굿즈 주문 회원 연결 실패", row.order_number, linkError);
-    }
+    // 회원 연결과 함께 환불(결제 취소)에 쓸 토스 결제 키·주문번호를 저장합니다.
+    const { error: linkError } = await supabaseService
+      .from("merch_orders")
+      .update({ user_id: user.id, payment_key: paymentKey, toss_order_id: orderId })
+      .eq("order_number", row.order_number);
+    if (linkError) console.error("[toss] 굿즈 주문 결제정보 저장 실패", row.order_number, linkError);
     receipts.push({ orderNumber: row.order_number, amount: row.amount });
-    emailLines.push({ orderNumber: row.order_number, title: priced.titles[index], amount: row.amount });
+    emailLines.push({
+      orderNumber: row.order_number,
+      title: priced.titles[index],
+      subtitle: "Gallery Lumora Goods",
+      imageUrl: priced.imageUrls[index],
+      amount: row.amount,
+    });
   }
 
   if (receipts.length === 0) {

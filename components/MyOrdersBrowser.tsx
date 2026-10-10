@@ -54,10 +54,12 @@ function CancelOrderButton({
     <button
       type="button"
       disabled={pending}
-      onClick={onCancel}
+      onClick={() => {
+        if (window.confirm("주문을 취소할까요? 결제하신 금액은 결제수단으로 환불됩니다.")) onCancel();
+      }}
       className="text-xs text-red-600 hover:underline disabled:opacity-50"
     >
-      {pending ? "취소 처리 중..." : "주문 취소"}
+      {pending ? "취소·환불 처리 중..." : "주문 취소"}
     </button>
   );
 }
@@ -264,8 +266,8 @@ function LoggedInOrders() {
           prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
         );
       }
-    } catch {
-      setError("주문 취소에 실패했습니다. 이미 배송이 시작되었을 수 있습니다.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "주문 취소에 실패했습니다.");
     } finally {
       setCancellingId(null);
     }
@@ -327,7 +329,7 @@ function GuestPhoneLookup() {
   async function handleCancel(kind: "artwork" | "merch", id: string) {
     setCancellingId(id);
     try {
-      await cancelOrder(kind, id, phone.trim());
+      await cancelOrder(kind, id, { phone: phone.trim(), orderNumber: orderNumber.trim() });
       if (kind === "artwork") {
         setArtworkOrders((prev) =>
           prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
@@ -337,8 +339,8 @@ function GuestPhoneLookup() {
           prev ? prev.map((o) => (o.id === id ? { ...o, status: "cancelled" } : o)) : prev
         );
       }
-    } catch {
-      setError("주문 취소에 실패했습니다. 이미 배송이 시작되었을 수 있습니다.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "주문 취소에 실패했습니다.");
     } finally {
       setCancellingId(null);
     }

@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
   // 승인 요청을 보내지 않으면 TossPayments가 인증된 결제를 자동으로 만료시킵니다.
   const { data: artwork, error: artworkError } = await supabase
     .from("artworks")
-    .select("title, price, sold")
+    .select("title, price, sold, image_urls, artists ( name )")
     .eq("id", order.artworkId)
     .maybeSingle();
   if (artworkError || !artwork) {
@@ -118,12 +118,26 @@ export async function POST(req: NextRequest) {
 
   // 주문 확인 메일은 응답을 보낸 뒤 발송합니다. 결제·주문은 이미 끝났으므로 실패해도 기록만 남깁니다.
   const confirmedOrder = rows[0];
+  // 환불(결제 취소)에 쓸 토스 결제 키·주문번호를 저장합니다.
+  const { error: paymentSaveError } = await supabaseService
+    .from("orders")
+    .update({ payment_key: paymentKey, toss_order_id: orderId })
+    .eq("order_number", confirmedOrder.order_number);
+  if (paymentSaveError) console.error("[toss] 작품 주문 결제정보 저장 실패", confirmedOrder.order_number, paymentSaveError);
   after(async () => {
     try {
       await sendOrderConfirmationEmail({
         to: order.email,
         buyerName: order.name,
-        lines: [{ orderNumber: confirmedOrder.order_number, title: artwork.title, amount: confirmedOrder.amount }],
+        lines: [
+          {
+            orderNumber: confirmedOrder.order_number,
+            title: artwork.title,
+            subtitle: artwork.artists?.name ?? null,
+            imageUrl: artwork.image_urls?.[0] ?? null,
+            amount: confirmedOrder.amount,
+          },
+        ],
         paymentMethod,
         shippingAddress: order.shippingAddress,
       });

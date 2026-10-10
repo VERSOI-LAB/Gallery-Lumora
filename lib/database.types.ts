@@ -579,6 +579,9 @@ export type Database = {
           user_id: string | null
           variant_id: string | null
           vehicle_number: string | null
+          payment_key: string | null
+          refunded_at: string | null
+          toss_order_id: string | null
         }
         Insert: {
           amount: number
@@ -610,6 +613,9 @@ export type Database = {
           user_id?: string | null
           variant_id?: string | null
           vehicle_number?: string | null
+          payment_key?: string | null
+          refunded_at?: string | null
+          toss_order_id?: string | null
         }
         Update: {
           amount?: number
@@ -641,6 +647,9 @@ export type Database = {
           user_id?: string | null
           variant_id?: string | null
           vehicle_number?: string | null
+          payment_key?: string | null
+          refunded_at?: string | null
+          toss_order_id?: string | null
         }
         Relationships: [
           {
@@ -799,6 +808,9 @@ export type Database = {
           tracking_number: string | null
           user_id: string | null
           vehicle_number: string | null
+          payment_key: string | null
+          refunded_at: string | null
+          toss_order_id: string | null
         }
         Insert: {
           amount: number
@@ -825,6 +837,9 @@ export type Database = {
           tracking_number?: string | null
           user_id?: string | null
           vehicle_number?: string | null
+          payment_key?: string | null
+          refunded_at?: string | null
+          toss_order_id?: string | null
         }
         Update: {
           amount?: number
@@ -851,6 +866,9 @@ export type Database = {
           tracking_number?: string | null
           user_id?: string | null
           vehicle_number?: string | null
+          payment_key?: string | null
+          refunded_at?: string | null
+          toss_order_id?: string | null
         }
         Relationships: [
           {

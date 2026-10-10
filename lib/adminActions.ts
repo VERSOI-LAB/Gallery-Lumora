@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertAdminSession } from "./adminAuth";
 import { supabaseService } from "./supabase/service";
 import { sendNewArtworkEmail, sendOrderConfirmationEmail } from "./email";
+import { getRefundableOrder, refundOrder } from "./refund";
 import {
   updateArtwork,
   deleteArtwork,
@@ -307,10 +308,26 @@ export async function adminSendTestEmail(to: string): Promise<{ ok: true } | { o
     return { ok: false, error: "올바른 이메일 주소를 입력해주세요." };
   }
   try {
+    // 실제 메일과 같은 모습으로 확인할 수 있도록 등록된 작품 하나의 이미지·작가명을 사용합니다.
+    const { data: sample } = await supabaseService
+      .from("artworks")
+      .select("title, price, image_urls, artists ( name )")
+      .not("image_urls", "eq", "{}")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
     await sendOrderConfirmationEmail({
       to: email,
       buyerName: "테스트 고객",
-      lines: [{ orderNumber: "LM-TEST-00000000", title: "테스트 작품", amount: 10000 }],
+      lines: [
+        {
+          orderNumber: "LM-TEST-00000000",
+          title: sample?.title ?? "테스트 작품",
+          subtitle: sample?.artists?.name ?? null,
+          imageUrl: sample?.image_urls?.[0] ?? null,
+          amount: sample?.price ?? 10000,
+        },
+      ],
       paymentMethod: "TossPayments 카드",
       shippingAddress: "(06236) 서울 강남구 테헤란로 152 테스트",
       test: true,
@@ -320,4 +337,25 @@ export async function adminSendTestEmail(to: string): Promise<{ ok: true } | { o
   } catch (err) {
     return { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
+}
+
+/** 관리자 환불 — 토스 결제를 취소하고 주문을 취소 처리합니다. 고객 취소와 달리 배송 상태와 관계없이
+ * 아직 환불되지 않은 주문이면 진행합니다(예: 반품 완료 후 환불, 상태만 취소로 바뀐 예전 주문). */
+export async function adminRefundOrder(
+  kind: "artwork" | "merch",
+  id: string
+): Promise<{ ok: true; alreadyCanceled: boolean } | { ok: false; error: string }> {
+  await assertAdminSession();
+  const order = await getRefundableOrder(kind, id);
+  if (!order) return { ok: false, error: "주문을 찾을 수 없습니다." };
+  const result = await refundOrder(kind, order, "관리자 환불 처리");
+  if (result.ok) {
+    await log("refund", kind === "artwork" ? "artwork_order" : "merch_order", id, {
+      orderNumber: order.orderNumber,
+      amount: order.amount,
+      alreadyCanceled: result.alreadyCanceled,
+    });
+    revalidatePath("/admin/orders");
+  }
+  return result;
 }

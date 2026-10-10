@@ -438,20 +438,23 @@ export async function getGuestOrders(
   return { artworkOrders: artwork.data.map(toArtworkOrderByPhone), merchOrders: merch.data.map(toMerchOrder) };
 }
 
-/** Customer-initiated cancellation, allowed only while an order is still
- * `paid`/`preparing` (server-side enforced in the `cancel_order` RPC).
- * `phone` lets a guest (no session) cancel an order looked up by phone. */
+/** Customer-initiated cancellation + TossPayments refund, allowed only while an
+ * order is still `paid`/`preparing` (enforced server-side in /api/orders/cancel).
+ * `guest` lets a guest (no session) cancel an order looked up by phone + order number. */
 export async function cancelOrder(
   kind: "artwork" | "merch",
   orderId: string,
-  phone?: string
+  guest?: { phone: string; orderNumber: string }
 ): Promise<void> {
-  const { error } = await supabase.rpc("cancel_order", {
-    p_kind: kind,
-    p_order_id: orderId,
-    p_phone: phone,
+  const res = await fetch("/api/orders/cancel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, orderId, ...guest }),
   });
-  if (error) throw error;
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "주문 취소에 실패했습니다.");
+  }
 }
 
 export async function getArtists(): Promise<Artist[]> {
