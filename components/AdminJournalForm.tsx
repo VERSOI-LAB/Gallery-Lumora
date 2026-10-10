@@ -47,7 +47,8 @@ export default function AdminJournalForm({ post }: { post?: JournalPost }) {
       let coverImageUrl = post?.coverImageUrl ?? null;
       if (coverFile) {
         const ext = coverFile.name.split(".").pop() || "jpg";
-        coverImageUrl = await uploadAdminMedia(`journal/${finalSlug}.${ext}`, coverFile);
+        // Storage 경로에는 한글을 쓸 수 없어(Invalid key) slug 대신 무작위 id를 씁니다.
+        coverImageUrl = await uploadAdminMedia(`journal/${crypto.randomUUID()}.${ext}`, coverFile);
       }
       const input: JournalPostInput = {
         slug: finalSlug,
