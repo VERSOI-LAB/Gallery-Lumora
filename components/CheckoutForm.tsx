@@ -104,8 +104,9 @@ export default function CheckoutForm({
         orderName: artwork.title,
         customerName: name,
         customerEmail: email,
-        successUrl: `${window.location.origin}/works/${artwork.slug}/checkout/success`,
-        failUrl: `${window.location.origin}/works/${artwork.slug}/checkout/fail`,
+        // 토스는 한글이 그대로 들어간 URL을 거부하므로(INCORRECT_FAIL_URL_FORMAT) slug를 인코딩합니다.
+        successUrl: `${window.location.origin}/works/${encodeURIComponent(artwork.slug)}/checkout/success`,
+        failUrl: `${window.location.origin}/works/${encodeURIComponent(artwork.slug)}/checkout/fail`,
       });
       // 정상 흐름에서는 TossPayments 결제창이 successUrl/failUrl로 이동시키므로 여기까지 오지 않습니다.
     } catch (err) {
