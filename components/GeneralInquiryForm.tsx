@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import { buttonClasses } from "@/lib/ui";
 import { submitGeneralInquiry } from "@/lib/queries";
 
@@ -87,11 +88,9 @@ export default function GeneralInquiryForm() {
         />
       </Field>
       <Field label="연락처">
-        <input
-          type="tel"
+        <PhoneInput
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          onChange={setPhone}
         />
       </Field>
       <Field label="문의 내용">

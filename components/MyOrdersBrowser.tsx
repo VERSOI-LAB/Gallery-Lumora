@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import Link from "next/link";
 import MerchThumbnail from "./MerchThumbnail";
 import { buttonClasses } from "@/lib/ui";
@@ -375,11 +376,10 @@ function GuestPhoneLookup() {
   return (
     <div>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <input
+        <PhoneInput
           required
-          type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
+          onChange={setPhone}
           placeholder="주문 시 입력한 연락처"
           className="h-10 flex-1 border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
         />

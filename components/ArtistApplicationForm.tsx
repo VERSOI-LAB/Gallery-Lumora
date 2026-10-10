@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import Link from "next/link";
 import { buttonClasses } from "@/lib/ui";
 import { supabase } from "@/lib/supabase";
@@ -273,12 +274,10 @@ function ArtistApplicationFields({ profile }: { profile: Profile }) {
         />
       </Field>
       <Field label="연락처">
-        <input
+        <PhoneInput
           required
-          type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          onChange={setPhone}
         />
       </Field>
       <Field label="이메일">

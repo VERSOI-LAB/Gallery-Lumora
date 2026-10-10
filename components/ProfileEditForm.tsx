@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import AddressSearchField from "./AddressSearchField";
 import { buttonClasses } from "@/lib/ui";
 import { getMyProfile, updateMyEmail, updateMyPassword, updateMyProfile } from "@/lib/queries";
@@ -56,12 +57,10 @@ function ProfileFields({ profile }: { profile: Profile }) {
         />
       </Field>
       <Field label="연락처">
-        <input
+        <PhoneInput
           required
-          type="tel"
           value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+          onChange={setPhone}
         />
       </Field>
       {/* 주소 찾기 버튼이 들어가므로 <label> 대신 <div>로 감쌉니다. */}
