@@ -30,7 +30,8 @@ export default function MerchTemplateDetail({
     const blob = await canvasRef.current?.exportPng();
     if (!blob) return null;
     const file = new File([blob], "design.png", { type: "image/png" });
-    const path = `merch-designs/${product.slug}/${crypto.randomUUID()}.png`;
+    // Storage 경로에는 한글을 쓸 수 없어(Invalid key) slug 대신 상품 id를 씁니다.
+    const path = `merch-designs/${product.id}/${crypto.randomUUID()}.png`;
     // 비로그인 고객도 올릴 수 있도록 새 파일로만 업로드합니다(덮어쓰기 권한 없음).
     return uploadMedia(path, file, { upsert: false });
   }
