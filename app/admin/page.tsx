@@ -8,6 +8,7 @@ import {
 } from "@/lib/queries";
 import { supabaseService } from "@/lib/supabase/service";
 import { getEmailConfigStatus } from "@/lib/email";
+import { getTossConfigStatus } from "@/lib/tossServer";
 import AdminTestEmailForm from "@/components/AdminTestEmailForm";
 
 const STAT_CARDS: {
@@ -34,6 +35,7 @@ export default async function AdminDashboardPage() {
     getAdminAnalytics(supabaseService),
   ]);
   const emailConfig = getEmailConfigStatus();
+  const tossConfig = getTossConfigStatus();
   const maxDailyRevenue = Math.max(1, ...analytics.dailyRevenue.map((d) => d.amount));
   const maxTopArtist = Math.max(1, ...analytics.topArtists.map((a) => a.amount));
 
@@ -148,6 +150,23 @@ export default async function AdminDashboardPage() {
           )}
         </div>
       </div>
+
+      <section className="mt-10 border-t border-line pt-8">
+        <h2 className="mb-3 text-sm font-semibold text-ink">결제 설정 (TossPayments)</h2>
+        <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-xs">
+          <dt className="text-ink-faint">클라이언트 키</dt>
+          <dd className={tossConfig.clientKey === "live_gck" ? "text-patina" : "text-red-600"}>
+            {tossConfig.clientKey ?? "설정되지 않음"}
+          </dd>
+          <dt className="text-ink-faint">시크릿 키</dt>
+          <dd className={tossConfig.secretKey === "live_gsk" ? "text-patina" : "text-red-600"}>
+            {tossConfig.secretKey ?? "설정되지 않음"}
+          </dd>
+        </dl>
+        <p className={`mt-2 text-xs ${tossConfig.problem ? "text-red-600" : "text-patina"}`}>
+          {tossConfig.problem ?? "실결제용 결제위젯 키(live_gck / live_gsk)가 설정되어 있습니다."}
+        </p>
+      </section>
 
       <section className="mt-10 border-t border-line pt-8">
         <h2 className="mb-3 text-sm font-semibold text-ink">메일 발송 설정 (주문 확인·신작 알림)</h2>
