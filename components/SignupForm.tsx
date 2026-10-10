@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AddressSearchField from "./AddressSearchField";
@@ -208,13 +209,11 @@ export default function SignupForm() {
           />
         </Field>
         <Field label="연락처">
-          <input
+          <PhoneInput
             required
-            type="tel"
-            placeholder="010-0000-0000"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+            onChange={setPhone}
+            placeholder="010-0000-0000"
           />
         </Field>
         {/* 주소 찾기 버튼이 들어가므로 <label> 대신 <div>로 감쌉니다. */}

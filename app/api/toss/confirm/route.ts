@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { isValidPhone } from "@/lib/phone";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { supabaseService } from "@/lib/supabase/service";
 import { isHighValueArtwork } from "@/lib/format";
@@ -22,6 +23,7 @@ function isValidOrder(order: unknown): order is PendingOrder {
     typeof o.artworkId === "string" &&
     typeof o.shippingAddress === "string" &&
     typeof o.phone === "string" &&
+    isValidPhone(o.phone) &&
     typeof o.name === "string" &&
     typeof o.email === "string" &&
     typeof o.insured === "boolean" &&

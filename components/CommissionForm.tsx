@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import Link from "next/link";
 import ShippingNotice from "./ShippingNotice";
 import { buttonClasses } from "@/lib/ui";
@@ -215,11 +216,9 @@ export default function CommissionForm({ artist }: { artist: Artist }) {
               />
             </Field>
             <Field label="연락처">
-              <input
-                type="tel"
+              <PhoneInput
                 value={form.phone}
-                onChange={(e) => update("phone", e.target.value)}
-                className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+                onChange={(v) => update("phone", v)}
               />
             </Field>
 

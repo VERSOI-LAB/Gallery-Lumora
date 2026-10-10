@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import PhoneInput from "./PhoneInput";
 import ArtistAvatar from "./ArtistAvatar";
 import { buttonClasses } from "@/lib/ui";
 import { updateArtist, uploadMedia, type ArtistInput } from "@/lib/queries";
@@ -300,12 +301,10 @@ export default function ArtistProfileEditForm({ artist }: { artist: Artist }) {
             />
           </Field>
           <Field label="연락처">
-            <input
-              type="tel"
-              placeholder="010-0000-0000"
+            <PhoneInput
               value={businessPhone}
-              onChange={(e) => setBusinessPhone(e.target.value)}
-              className="h-10 w-full border border-line-strong bg-paper-raised px-3 text-sm outline-patina"
+              onChange={setBusinessPhone}
+              placeholder="010-0000-0000"
             />
           </Field>
         </div>
