@@ -162,6 +162,10 @@ export default async function AdminDashboardPage() {
           <dd className={tossConfig.secretKey === "live_gsk" ? "text-patina" : "text-red-600"}>
             {tossConfig.secretKey ?? "설정되지 않음"}
           </dd>
+          <dt className="text-ink-faint">API 시크릿 키 (환불·조회)</dt>
+          <dd className={tossConfig.apiSecretKey === "live_sk" ? "text-patina" : "text-ink-soft"}>
+            {tossConfig.apiSecretKey ?? "설정되지 않음 — TOSS_SECRET_KEY에 API 개별 연동 키(live_sk) 권장"}
+          </dd>
         </dl>
         <p className={`mt-2 text-xs ${tossConfig.problem ? "text-red-600" : "text-patina"}`}>
           {tossConfig.problem ?? "실결제용 결제위젯 키(live_gck / live_gsk)가 설정되어 있습니다."}
