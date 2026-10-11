@@ -6,9 +6,34 @@ const TOSS_WIDGET_SECRET_KEY =
   process.env.TOSS_WIDGET_SECRET_KEY || "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
 const TOSS_API_BASE = "https://api.tosspayments.com/v1/payments";
 
-function tossHeaders() {
-  const basicAuth = Buffer.from(`${TOSS_WIDGET_SECRET_KEY}:`).toString("base64");
+function tossHeaders(secretKey: string = TOSS_WIDGET_SECRET_KEY) {
+  const basicAuth = Buffer.from(`${secretKey}:`).toString("base64");
   return { Authorization: `Basic ${basicAuth}`, "Content-Type": "application/json" };
+}
+
+// 결제 조회·취소 같은 코어 API는 상점아이디(MID)에 묶인 "API 개별 연동 키"의 시크릿 키(live_sk_…)를
+// 요구하는 경우가 있어(NOT_FOUND_MERCHANT), 결제위젯 시크릿 키로 실패하면 TOSS_SECRET_KEY로 다시
+// 시도합니다. 실패한 조회·취소 요청은 아무것도 바꾸지 않으므로 재시도해도 안전합니다.
+const RETRY_WITH_OTHER_KEY_CODES = new Set([
+  "NOT_FOUND_MERCHANT",
+  "UNAUTHORIZED_KEY",
+  "INVALID_API_KEY",
+  "NOT_FOUND_PAYMENT",
+  "FORBIDDEN_REQUEST",
+]);
+
+async function tossCoreFetch(path: string, init: { method?: string; body?: string } = {}) {
+  const keys = Array.from(
+    new Set([TOSS_WIDGET_SECRET_KEY, process.env.TOSS_SECRET_KEY?.trim()].filter((k): k is string => Boolean(k)))
+  );
+  let last: { res: Response; data: { code?: string; message?: string; paymentKey?: string } | null } | null = null;
+  for (const key of keys) {
+    const res = await fetch(`${TOSS_API_BASE}${path}`, { ...init, headers: tossHeaders(key), cache: "no-store" });
+    const data = await res.json().catch(() => null);
+    last = { res, data };
+    if (res.ok || !RETRY_WITH_OTHER_KEY_CODES.has(data?.code ?? "")) break;
+  }
+  return last!;
 }
 
 export interface TossPayment {
@@ -36,14 +61,11 @@ export async function confirmTossPayment(
 
 /** cancelAmount를 생략하면 전액 취소, 지정하면 해당 금액만 부분 취소합니다. */
 export async function cancelTossPayment(paymentKey: string, cancelReason: string, cancelAmount?: number) {
-  const res = await fetch(`${TOSS_API_BASE}/${encodeURIComponent(paymentKey)}/cancel`, {
+  const { res, data } = await tossCoreFetch(`/${encodeURIComponent(paymentKey)}/cancel`, {
     method: "POST",
-    headers: tossHeaders(),
     body: JSON.stringify(cancelAmount === undefined ? { cancelReason } : { cancelReason, cancelAmount }),
   });
-  if (!res.ok) {
-    console.error("[toss] 결제 자동취소 실패", paymentKey, await res.text().catch(() => ""));
-  }
+  if (!res.ok) console.error("[toss] 결제 자동취소 실패", paymentKey, data);
   return res.ok;
 }
 
@@ -56,11 +78,7 @@ export function tossPaymentMethodLabel(payment: TossPayment): string {
 export async function findTossPaymentKeyByOrderId(
   orderId: string
 ): Promise<{ paymentKey: string } | { error: string }> {
-  const res = await fetch(`${TOSS_API_BASE}/orders/${encodeURIComponent(orderId)}`, {
-    headers: tossHeaders(),
-    cache: "no-store",
-  });
-  const data = await res.json().catch(() => null);
+  const { res, data } = await tossCoreFetch(`/orders/${encodeURIComponent(orderId)}`);
   if (res.ok && typeof data?.paymentKey === "string") return { paymentKey: data.paymentKey };
   // 조회 실패 원인(키 불일치·주문 없음 등)을 관리자 화면에서 바로 볼 수 있도록 그대로 돌려줍니다.
   const detail = [data?.code, data?.message].filter(Boolean).join(" ");
@@ -75,13 +93,11 @@ export async function refundTossPayment(
   cancelReason: string,
   cancelAmount: number
 ): Promise<{ ok: true; alreadyCanceled: boolean } | { ok: false; message: string }> {
-  const res = await fetch(`${TOSS_API_BASE}/${encodeURIComponent(paymentKey)}/cancel`, {
+  const { res, data } = await tossCoreFetch(`/${encodeURIComponent(paymentKey)}/cancel`, {
     method: "POST",
-    headers: tossHeaders(),
     body: JSON.stringify({ cancelReason, cancelAmount }),
   });
   if (res.ok) return { ok: true, alreadyCanceled: false };
-  const data = await res.json().catch(() => ({}));
   if (data?.code === "ALREADY_CANCELED_PAYMENT") return { ok: true, alreadyCanceled: true };
   console.error("[toss] 환불 실패", paymentKey, data);
   return { ok: false, message: data?.message || "결제 취소에 실패했습니다." };
@@ -98,6 +114,7 @@ function keyKind(key: string | undefined): string | null {
 export function getTossConfigStatus(): {
   clientKey: string | null;
   secretKey: string | null;
+  apiSecretKey: string | null;
   usingDocsFallback: boolean;
   problem: string | null;
 } {
@@ -108,5 +125,11 @@ export function getTossConfigStatus(): {
   if (usingDocsFallback) problem = "키가 설정되지 않아 토스 문서용 테스트 키로 동작 중입니다(실결제 불가).";
   else if (clientKind !== "live_gck" || secretKind !== "live_gsk")
     problem = "실결제에는 결제위젯 연동 키(live_gck / live_gsk) 짝이 필요합니다.";
-  return { clientKey: clientKind, secretKey: secretKind, usingDocsFallback, problem };
+  return {
+    clientKey: clientKind,
+    secretKey: secretKind,
+    apiSecretKey: keyKind(process.env.TOSS_SECRET_KEY),
+    usingDocsFallback,
+    problem,
+  };
 }
